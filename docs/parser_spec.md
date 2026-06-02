@@ -40,6 +40,12 @@
    - 8.1 [End-to-end pipeline](#81-end-to-end-pipeline)
    - 8.2 [Lifecycle summary](#82-lifecycle-summary)
    - 8.3 [Ownership model](#83-ownership-model)
+9. [Open design decisions](#9-open-design-decisions)
+   - 9.1 [Memory ownership](#91-memory-ownership--blocknode-and-inlinenode)
+   - 9.2 [Link ref def scanning timing](#92-maybescanlinkRefdefs--when-to-scan)
+   - 9.3 [appendText from_byte when a tab is split](#93-appendtext-from_byte-when-a-tab-is-split)
+   - 9.4 [processEmphasis / bracket deactivation](#94-processemphasis--bracket-deactivation-interaction)
+   - 9.5 [Unicode case folding](#95-unicode-case-folding-for-link-reference-labels)
 
 ---
 
@@ -305,13 +311,13 @@ recorded as unmatched — it is not closed yet (see §3.3).
 | Block type | Continuation condition |
 |---|---|
 | **Document** | Always matches. |
-| **BlockQuote** | Line has a `>` marker at 0–3 spaces of indent. The `>` and one optional space are consumed via `consumeColumns`. Lazy continuation applies: if the tip is a Paragraph, the line may continue without the `>` marker. |
+| **BlockQuote** | Line has a `>` marker at 0–3 spaces of indent. The `>` and one optional space are consumed via `consumeColumns`. Lazy continuation applies: if the tip is a Paragraph, the line may continue without the `>` marker. **Exception:** a setext underline (`===` / `---`) is never a valid lazy continuation line (spec §5.1); the missing `>` causes the block quote to close, and the `---` becomes a thematic break rather than promoting the paragraph. |
 | **List** | Delegates to its current Item. |
-| **Item** | Line is blank, **or** `virtual_indent ≥ item.padding`. The padding columns are consumed. A blank line does not continue an item if two consecutive blanks have been seen. |
+| **Item** | Line is blank, **or** `virtual_indent ≥ item.padding`. The padding columns are consumed. Blank lines do not terminate item continuation — they may appear inside an item (triggering loose-list rendering via `last_line_blank`). |
 | **Indented code block** | Line is blank, **or** `virtual_indent ≥ 4` relative to the block's base indent. Trailing blank lines are removed at finalization. |
 | **Fenced code block** | Always continues **unless** the line is a valid closing fence: same fence character, length ≥ opening fence length, indent ≤ 3, nothing but optional trailing spaces after the fence run. |
 | **ATX heading** | Never continues — single-line block. Always fails the predicate; block is closed at the end of the line that opened it. |
-| **Setext heading** | A Paragraph is promoted to a Setext heading when its next continuation line is a setext underline (`===` or `---`). The underline line closes and transforms the paragraph rather than continuing it. |
+| **Setext heading** | A Paragraph is promoted to a Setext heading when its next continuation line is a setext underline (`===` or `---`, indent 0–3, optional trailing spaces). The underline line closes and transforms the paragraph rather than continuing it. Leading/trailing blank lines are stripped from the accumulated `string_content` before the heading is finalised. The setext underline itself is never added to `string_content`. |
 | **HTML block** | Types 1–5: continue until the type-specific end condition. Type 6: continue until a blank line. Type 7: single block, never continues. |
 | **Paragraph** | Line is not blank. Blank lines close the paragraph. Non-blank lines that fail to open a new block are absorbed as lazy continuation even when ancestor container conditions fail. |
 
@@ -321,13 +327,11 @@ Checked against `content[next_non_space..]` and `virtual_indent` after step 1
 has consumed container prefixes. First match wins.
 
 1. **BlockQuote** — `>` at 0–3 spaces indent.
-2. **ATX heading** — 1–6 `#` chars followed by space or end-of-line, indent 0–3.
+2. **ATX heading** — 1–6 `#` chars followed by a space, tab, or end-of-line, indent 0–3. The `string_content` is the heading text after stripping the leading `#` run and its trailing space/tab. A trailing sequence of `#` characters (optionally preceded by a space or tab) is also stripped from the content (spec §4.2).
 3. **Fenced code block** — 3+ `` ` `` or `~`, indent 0–3; optional info string follows.
-4. **HTML block** — matches one of the 7 start patterns (checked type 1 → 7).
+4. **HTML block** — matches one of the 7 start patterns (checked type 1 → 7). **Type 7 cannot interrupt a paragraph** (spec §4.6): the type-7 pattern is not attempted when the current tip is an open Paragraph.
 5. **ThematicBreak** — 3+ `*`, `-`, or `_` with optional spaces, indent 0–3.
-6. **List item / List** — bullet (`-`, `*`, `+`) or ordered marker (`1.`, `1)`, …)
-   followed by at least one space. Opens a new List if none is open or if marker
-   type differs, then always opens an Item.
+6. **List item / List** — bullet (`-`, `*`, `+`) or ordered marker (`N.` or `N)` for N ≥ 0, up to 9 digits) followed by at least one space or tab. Opens a new List if none is open or if the marker type/delimiter differs, then always opens an Item. **Paragraph interruption constraint:** when an open Paragraph is the current tip, only a bullet marker or an ordered marker whose start number is exactly `1` may open a new list (spec §5.3). An ordered marker with start number ≠ 1 in this context is not recognised as a list opener.
 7. **Indented code block** — `virtual_indent ≥ 4`, tip is not a Paragraph, not
    inside a list-item blank-line continuation.
 8. **Paragraph** — fallback for any non-blank line matching nothing above.
@@ -344,7 +348,7 @@ lazy continuation decision can be made with full information.
 | No new block, not lazy | Same: all unmatched blocks. Text falls into the deepest matched block. |
 | No new block, lazy | Unmatched ancestor blocks are intentionally **kept open**. Paragraph absorbs the line. |
 | Blank line in Paragraph | The Paragraph is closed. |
-| Block interruption | ATX heading, ThematicBreak, fenced code, HTML block types 1–6 can interrupt a Paragraph mid-content. |
+| Block interruption | ATX heading, ThematicBreak, fenced code, HTML block types 1–6 can interrupt a Paragraph mid-content. HTML block type 7 **cannot** interrupt a paragraph. |
 | Setext underline | Closes and transforms the open Paragraph into a Heading before any new block opens. |
 | End of input | `finalize()` closes all open blocks tip-first. |
 
@@ -472,6 +476,18 @@ private:
     int line_number_      = 0;  // current 1-based line counter
     int last_line_length_ = 0;  // column length of the previous line;
                                 // used for setext heading detection
+
+    // List tightness tracking (spec §5.3):
+    // A list becomes loose if any of its constituent items are separated by a
+    // blank line, or if any item directly contains two block-level elements
+    // separated by a blank line.
+    //
+    // Implementation: whenever a blank line is processed, walk the spine and
+    // set last_line_blank = true on the current tip AND on any Item ancestor.
+    // When an Item is closed (closeBlock), if last_line_blank is true on that
+    // Item, set ListData::tight = false on the parent List. Similarly, when a
+    // new Item opens inside a List, if the previous Item's last_line_blank is
+    // true, set tight = false. A List starts with tight = true.
 
     // ── per-line cursor state ─────────────────────────────────────────────
     // Both fields are reset to 0 at the top of every processLine() call.
@@ -839,16 +855,23 @@ void SpineHandler::finalize()
 
 void SpineHandler::parseInlineContent(BlockNode* node)
 {
-    const bool is_leaf =
+    // Only Paragraph and Heading have inline structure.
+    // CodeBlock and HtmlBlock are raw literal content — they must NOT be
+    // passed to the inline parser (spec §4.5, §4.6).
+    const bool needs_inline =
         node->type == NodeType::Paragraph ||
-        node->type == NodeType::Heading   ||
-        node->type == NodeType::CodeBlock ||
-        node->type == NodeType::HtmlBlock;
+        node->type == NodeType::Heading;
 
-    if (is_leaf) {
+    const bool is_container =
+        node->type == NodeType::Document   ||
+        node->type == NodeType::BlockQuote ||
+        node->type == NodeType::List       ||
+        node->type == NodeType::Item;
+
+    if (needs_inline) {
         // string_content is complete and ref_map_ is fully populated.
         inline_parser_.parse(node, ref_map_);
-    } else {
+    } else if (is_container) {
         // Recurse into container children.
         for (BlockNode* child = node->first_child;
              child != nullptr;
@@ -857,6 +880,8 @@ void SpineHandler::parseInlineContent(BlockNode* node)
             parseInlineContent(child);
         }
     }
+    // CodeBlock and HtmlBlock: leave inline_children = nullptr; string_content
+    // is used verbatim as the rendered output.
 }
 ```
 
@@ -949,9 +974,12 @@ InlineNode* InlineParser::parseInline();
 // ── leaf scanners ─────────────────────────────────────────────────────────
 
 // Scan a backtick string: find matching closing backtick run of the same
-// length. Normalise interior whitespace (collapse runs to single space,
-// strip leading/trailing). Returns a Code node, or nullptr if no closing
-// run is found.
+// length. Normalise interior content per spec §6.1:
+//   1. Line endings are converted to spaces.
+//   2. If the result begins AND ends with a space, and is not entirely spaces,
+//      strip exactly one leading and one trailing space.
+//      (e.g. " foo " → "foo", "  " → "  " — all-spaces strings are not stripped)
+// Returns a Code node, or nullptr if no closing run is found.
 InlineNode* InlineParser::parseBacktickString();
 
 // Match <URI> or <email> autolink forms. Returns a Link node on success,
@@ -1187,3 +1215,109 @@ finalize()
 > `first_child` and delete the chain, or all nodes must be allocated from a flat
 > arena owned by `SpineHandler`. Deep document trees risk stack overflow on
 > recursive deletion; an arena or iterative destructor is recommended.
+
+---
+
+## 9. Open design decisions
+
+These items were identified as ambiguous or unresolved during specification review.
+They **must** be decided before the corresponding component is implemented.
+
+### 9.1 Memory ownership — BlockNode and InlineNode
+
+**Problem:** `openBlock` allocates each `BlockNode` with `raw new`. The tree is
+nominally owned via parent→child linked-list chains, but `std::unique_ptr<BlockNode>
+document_` only frees the Document root. Every other node leaks. The same applies
+to `InlineNode` objects created by `InlineParser::makeNode()`.
+
+**Options (choose one):**
+
+A. **Iterative destructor on `BlockNode`:** `~BlockNode()` walks `first_child → next`
+   iteratively (not recursively) and `delete`s each child, then recurses into the
+   now-empty `first_child = nullptr` state. This avoids stack overflow for deep trees.
+   `InlineNode` gets a similar iterative destructor chaining through `next` and `children`.
+
+B. **Arena / `std::pmr::monotonic_buffer_resource`:** `SpineHandler` owns a
+   `std::pmr::monotonic_buffer_resource`; all `BlockNode` and `InlineNode` objects are
+   allocated from it. The entire arena is freed at `SpineHandler` destruction. No
+   destructors needed on individual nodes. Recommended for high-throughput use.
+
+### 9.2 `maybeScanLinkRefDefs` — when to scan
+
+**Problem:** The spec places `maybeScanLinkRefDefs()` in `step3AppendText`, which is
+skipped for blank lines (`if (line.is_blank) return`). A paragraph closed by a blank
+line therefore never has its link reference definitions extracted during step 3.
+
+**Resolution:** Link reference definition scanning must happen inside `closeBlock()`
+for Paragraph nodes (or a dedicated `finalizeBlock()` hook called from `closeBlock`),
+not in `step3AppendText`. The step 3 placement described in §5.3 should be removed.
+The correct call site is:
+
+```cpp
+void SpineHandler::closeBlock(BlockNode* node) {
+    if (node->type == NodeType::Paragraph)
+        scanLinkRefDefs(node);   // extracts into ref_map_, trims string_content
+    node->end_line = line_number_;
+    node->is_open  = false;
+    spine_.erase(std::find(spine_.begin(), spine_.end(), node));
+}
+```
+
+### 9.3 `appendText` `from_byte` when a tab is split
+
+**Problem:** §5.3 calls `appendText(line.content, line.next_non_space)`. The `appendText`
+implementation does `++from_byte` to skip the split tab byte. But `next_non_space` is the
+byte of the first **non-whitespace** character (already past all indent bytes). If the split
+tab is in the indent region, `++from_byte` would skip a content byte, not the tab.
+
+The §7.3 worked example is internally consistent because `from_byte` passed to `appendText`
+is the position of the split tab (byte 1), not `next_non_space` (byte 2). The pseudocode
+in §5.3 is wrong about which value to pass.
+
+**Resolution:** `step3AppendText` (and more broadly, any caller of `appendText`) must pass
+the **current byte cursor position** maintained by the step-1/step-2 walk — the position
+immediately after the last byte consumed by `consumeColumns` — not `line.next_non_space`.
+`SpineHandler` should maintain a `current_byte_` field (analogous to `current_col_`) that
+is updated by `consumeColumns` alongside `current_col_`, so the correct offset is always
+available.
+
+### 9.4 `processEmphasis` / bracket deactivation interaction
+
+**Problem:** When a `[` opener turns out to be invalid (no matching link found),
+`BracketEntry::delim_top` is used to deactivate delimiters. The spec (§6.2) mentions
+`delim_top` but does not specify:
+
+- Whether `delim_top` is a **count** (stack size at `[` time) or an **index** (first
+  delimiter added after `[`).
+- Which branch of `handleBracketCloser` triggers deactivation vs. the "emit `]` as Text"
+  path.
+
+**Resolution (per CommonMark appendix algorithm):**
+- `delim_top` is the **size** of `delimiters_` at the moment `[` is pushed. It is used as
+  the exclusive lower bound: deactivate all entries in `delimiters_[delim_top .. top]`.
+- Deactivation means setting `can_open = false` and `can_close = false` on those entries.
+- Deactivation happens when `handleBracketCloser` concludes that the bracket opener is
+  not a valid link/image (i.e., no inline/reference/collapsed/shortcut form is found, and
+  the entry is popped from the bracket stack as failed).
+- `processEmphasis(stack_bottom)` is called with `stack_bottom = bracket.delim_top` when
+  a **valid** link/image is resolved, to process emphasis within the link's content before
+  the link node is constructed.
+
+### 9.5 Unicode case folding for link reference labels
+
+**Problem:** `normaliseLabel` must apply Unicode case folding (spec §4.7). C++20's
+standard library provides no Unicode case-folding function.
+
+**Options (choose one):**
+
+A. **ASCII-only `tolower`:** Non-conformant for labels containing non-ASCII letters (e.g.
+   `[Ñoño]` vs `[ñoño]`). Acceptable if the test suite does not exercise non-ASCII labels.
+
+B. **Embed a minimal case-folding table:** Include the Unicode simple case-fold mapping
+   (a ~1400-entry lookup table derived from `CaseFolding.txt`) as a generated header.
+   This is what `cmark` does.
+
+C. **Use ICU or a small Unicode library:** Adds an external dependency.
+
+**Recommendation:** Option B — embed the simple case-fold table. It covers all CommonMark
+spec test cases and avoids external dependencies.
