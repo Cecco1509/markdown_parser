@@ -9,7 +9,7 @@ They **must** be decided before the corresponding component is implemented.
 
 ---
 
-## 9.1 Memory ownership — BlockNode and InlineNode
+## 9.1 Memory ownership — BlockNode and InlineNode (SOLVED)
 
 **Problem:** `openBlock` (see [§5.4](05_spine_handler.md#54-tree-mutation-primitives)) allocates each `BlockNode` with `raw new`. The tree is
 nominally owned via parent→child linked-list chains, but `std::unique_ptr<BlockNode>

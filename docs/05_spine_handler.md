@@ -38,12 +38,15 @@ private:
     // ── persistent state ──────────────────────────────────────────────────
 
     // The open block stack. spine_[0] is always the Document root.
-    // spine_.back() is the current tip. All entries are non-owning raw
-    // pointers into the tree owned by document_.
-    std::vector<BlockNode*> spine_;
+    // spine_.back() is the current tip.
+    // Each entry owns its BlockNode. When a block is closed it is moved
+    // (std::move) out of the spine and appended to its parent's children
+    // vector. The Document node is the last to leave the spine, captured
+    // by document_ inside finalize().
+    std::vector<std::unique_ptr<BlockNode>> spine_;
 
-    // Owns the Document root and transitively every BlockNode in the tree
-    // via the parent → child linked-list chains.
+    // Populated by finalize() when the Document root is closed and moved
+    // out of spine_. Empty during the block phase.
     std::unique_ptr<BlockNode> document_;
 
     // Link reference definitions extracted from Paragraph string_content
@@ -153,7 +156,7 @@ SpineMatchResult SpineHandler::step1WalkSpine(const ScannedLine& line)
     result.first_unmatched = spine_.size(); // optimistic: all match
 
     for (std::size_t i = 1; i < spine_.size(); ++i) {
-        if (continuationMatches(spine_[i], line)) {
+        if (continuationMatches(spine_[i].get(), line)) {
             // Block passes its continuation predicate. consumeColumns() has
             // advanced current_col_ and possibly set partial_tab_remaining_.
             result.deepest_matched = i;
@@ -235,60 +238,48 @@ The continuation predicates tested in step 1 are described in [§3.1](03_continu
 ```cpp
 // ── openBlock ─────────────────────────────────────────────────────────────
 //
-// Tree attachment happens HERE at open time.
-// The node is permanently wired into the tree as a child of tip() before it
-// is pushed onto the spine. closeBlock() does not move nodes in the tree.
+// Allocate a new BlockNode and push it onto the spine. The spine takes
+// ownership via unique_ptr. Tree attachment (into the parent's children
+// vector) is deferred to closeBlock(), not done here.
 
 BlockNode* SpineHandler::openBlock(NodeType type, BlockData data)
 {
-    // Allocate the new node. The tree owns all nodes via the parent→child
-    // linked-list chain rooted at document_. The spine holds non-owning
-    // raw pointers.
-    BlockNode* node    = new BlockNode();
-    node->type         = type;
-    node->data         = std::move(data);
-    node->start_line   = line_number_;
-    node->is_open      = true;
+    auto node_ptr    = std::make_unique<BlockNode>();
+    BlockNode* node  = node_ptr.get();
+    node->type       = type;
+    node->data       = std::move(data);
+    node->start_line = line_number_;
+    node->is_open    = true;
 
-    BlockNode* parent  = tip();
-
-    // Wire the new node into the parent's child list.
-    // This attachment is permanent — closeBlock() will not undo it.
-    node->parent = parent;
-    if (parent->last_child) {
-        parent->last_child->next = node;
-        node->prev               = parent->last_child;
-    } else {
-        parent->first_child = node;
-    }
-    parent->last_child = node;
-
-    // Push onto the spine. The spine entry is non-owning.
-    spine_.push_back(node);
+    spine_.push_back(std::move(node_ptr));
     return node;
 }
 
 // ── closeBlock ────────────────────────────────────────────────────────────
 //
-// Finalise a block. Does NOT move the node in the tree — the node stays as a
-// child of its parent exactly where it was placed by openBlock().
-// Does NOT trigger inline parsing — that is phase 2, initiated by finalize().
+// Finalise the tip block (spine_.back()):
+//   1. Move ownership out of the spine.
+//   2. Record end_line and mark is_open = false.
+//   3a. If a parent exists (spine non-empty): append to parent's children.
+//   3b. If closing the Document root (spine now empty): capture in document_.
+//
+// Inline parsing is NOT triggered here — that is phase 2, via finalize().
 
-void SpineHandler::closeBlock(BlockNode* node)
+void SpineHandler::closeBlock()
 {
-    // Record the closing line.
+    auto node = std::move(spine_.back());
+    spine_.pop_back();
+
     node->end_line = line_number_;
+    node->is_open  = false;
 
-    // Mark the block as no longer open.
-    node->is_open = false;
-
-    // Pop from the spine. The node remains in the tree; only the spine
-    // reference is removed. Tree integrity is unchanged.
-    spine_.erase(std::find(spine_.begin(), spine_.end(), node));
-
-    // Inline parsing (InlineParser::parse) is intentionally NOT called here.
-    // It runs in phase 2 via finalize() → parseInlineContent(), after all
-    // lines have been processed and ref_map_ is fully populated.
+    if (!spine_.empty()) {
+        // Transfer ownership to the parent's children vector.
+        spine_.back()->children.push_back(std::move(node));
+    } else {
+        // Closing the Document root — capture it for releaseDocument().
+        document_ = std::move(node);
+    }
 }
 
 // ── closeUnmatched ────────────────────────────────────────────────────────
@@ -299,7 +290,7 @@ void SpineHandler::closeBlock(BlockNode* node)
 void SpineHandler::closeUnmatched(std::size_t from_index)
 {
     while (spine_.size() > from_index) {
-        closeBlock(spine_.back());
+        closeBlock();
     }
 }
 
@@ -327,7 +318,7 @@ void SpineHandler::appendText(std::string_view line, std::size_t from_byte)
 
 BlockNode* SpineHandler::tip() const noexcept
 {
-    return spine_.back();
+    return spine_.back().get();
 }
 
 // ── incorporatesLazyContinuation ─────────────────────────────────────────
@@ -347,7 +338,7 @@ bool SpineHandler::incorporatesLazyContinuation(
 }
 ```
 
-Memory ownership implications of `new BlockNode()` are discussed in [§9.1](09_open_decisions.md#91-memory-ownership--blocknode-and-inlinenode) and [§8.3](08_data_flow.md#83-ownership-model).
+Ownership model: `spine_` holds `unique_ptr<BlockNode>` for every open block. `closeBlock()` transfers ownership to the parent's `children` vector (or to `document_` for the root). After `finalize()` the entire tree is owned transitively by `document_`. See [§8.3](08_data_flow.md#83-ownership-model).
 
 ---
 
@@ -439,14 +430,14 @@ The virtual column arithmetic used here is specified in [§7.1](07_tab_algorithm
 
 void SpineHandler::finalize()
 {
-    // Close all blocks except Document (index 0), tip-first.
-    while (spine_.size() > 1) {
-        closeBlock(spine_.back());
+    // Close all blocks tip-first, including Document.
+    // Each closeBlock() moves the node from spine_ into its parent's children
+    // (or into document_ for the Document root).
+    while (!spine_.empty()) {
+        closeBlock();
     }
-    // Close Document itself.
-    closeBlock(document_.get());
 
-    // Phase 2: walk the tree and inline-parse every leaf block.
+    // Phase 2: walk the completed tree and inline-parse every leaf block.
     parseInlineContent(document_.get());
 }
 
@@ -474,12 +465,8 @@ void SpineHandler::parseInlineContent(BlockNode* node)
         // string_content is complete and ref_map_ is fully populated.
         inline_parser_.parse(node, ref_map_);
     } else if (is_container) {
-        // Recurse into container children.
-        for (BlockNode* child = node->first_child;
-             child != nullptr;
-             child = child->next)
-        {
-            parseInlineContent(child);
+        for (const auto& child : node->children) {
+            parseInlineContent(child.get());
         }
     }
     // CodeBlock and HtmlBlock: leave inline_children = nullptr; string_content
