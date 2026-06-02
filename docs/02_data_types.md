@@ -71,7 +71,6 @@ struct ListData {
 };
 
 struct ItemData {
-    ListData*  list_data;       // non-owning pointer to the parent List's data
     int        marker_offset;   // column where the marker begins
     int        padding;         // columns to consume for continuation (marker width + spacing)
 };
@@ -127,20 +126,15 @@ struct BlockNode {
     NodeType   type;
     BlockData  data;            // std::monostate for container/empty nodes
 
-    // --- tree links (doubly-linked child list under each parent) ---
-    BlockNode* parent      = nullptr;   // null only for Document
-    BlockNode* first_child = nullptr;
-    BlockNode* last_child  = nullptr;   // maintained for O(1) append
-    BlockNode* next        = nullptr;   // next sibling
-    BlockNode* prev        = nullptr;   // previous sibling
-
     // --- source location ---
     int start_line = 0;     // 1-based line where this block opened
     int end_line   = 0;     // 1-based line where this block was finalized
     int start_col  = 0;     // 0-based column of the opening marker
 
     // --- state ---
-    bool is_open         = true;    // true while on the spine; false after closeBlock()
+    // is_open is redundant with spine membership (a node is open iff it is on the
+    // spine) but kept as a cheap local flag for assertions and future use.
+    bool is_open         = true;
     bool last_line_blank = false;   // true if the last line processed for this block
                                     // was blank; used to compute list tightness
 
@@ -150,9 +144,15 @@ struct BlockNode {
     // are prepended by appendText() when a tab is split across a container boundary.
     std::string  string_content;
 
-    // Head of the inline node linked list, populated by InlineParser::parse()
-    // during phase 2. Null for container blocks and ThematicBreak.
-    InlineNode*  inline_children = nullptr;
+    // --- children ---
+    // Block children, owned. During the block phase only *closed* children are here;
+    // the currently-open child lives on SpineHandler::spine_ until closeBlock() moves
+    // it in. After the block phase the vector holds the complete ordered child list.
+    std::vector<std::unique_ptr<BlockNode>>  children;
+
+    // Inline children, owned. Populated by InlineParser::parse() during phase 2.
+    // Empty for container blocks and ThematicBreak.
+    std::vector<std::unique_ptr<InlineNode>> inline_children;
 };
 ```
 
@@ -168,10 +168,9 @@ struct BlockNode {
 struct InlineNode {
     InlineType   type;
     std::string  literal;       // Text content for Text, Code, HtmlInline nodes
-    InlineNode*  prev     = nullptr;
-    InlineNode*  next     = nullptr;
-    InlineNode*  children = nullptr;    // head of child list for Emph, Strong, Link, Image
     InlineData   data;          // LinkData for Link/Image; monostate otherwise
+    // Children for Emph, Strong, Link, Image; empty for leaf nodes.
+    std::vector<std::unique_ptr<InlineNode>> children;
 };
 
 // Internal to InlineParser. One entry per delimiter run (* or _) on the

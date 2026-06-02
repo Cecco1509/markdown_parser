@@ -23,8 +23,7 @@ ScannedLine  { content, indent, virtual_indent, next_non_space, is_blank }
   │
   ├─ step 2: step2NewBlocks()
   │    new block found?       → closeUnmatched() + openBlock()
-  │                               openBlock() wires tree pointers (attachment)
-  │                               then pushes onto spine_
+  │                               openBlock() pushes onto spine_
   │    lazy continuation?     → keep unmatched open, no close, no open
   │    neither?               → closeUnmatched()
   │
