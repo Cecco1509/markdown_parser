@@ -54,3 +54,8 @@
    - 10.5 [tryOpen](10_block_rules.md#105-tryopen)
    - 10.6 [tryOpen — container loop](10_block_rules.md#106-tryopen--container-loop)
    - 10.7 [onClose](10_block_rules.md#107-onclose)
+11. [Link reference definitions](11_link_reference_definitions.md)
+   - 11.1 [Spec rules summary](11_link_reference_definitions.md#111-spec-rules-summary)
+   - 11.2 [Data representation](11_link_reference_definitions.md#112-data-representation)
+   - 11.3 [Implementation — scanLinkRefDefs](11_link_reference_definitions.md#113-implementation--scanlinkRefdefs)
+   - 11.4 [Integration points](11_link_reference_definitions.md#114-integration-points)

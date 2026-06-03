@@ -3,6 +3,8 @@
 #include "BlockNode.hpp"
 #include "ScannedLine.hpp"
 #include "Types.hpp"
+#include <algorithm>
+#include <optional>
 #include <string_view>
 #include <vector>
 #include <memory>
@@ -66,6 +68,7 @@ private:
                                std::size_t      n_cols);
 
     void maybeScanLinkRefDefs(BlockNode* node);
+    bool tryScanOneLinkRefDef(std::string_view content, std::size_t& pos);
     void stripTrailingBlankLines(std::string& content);
     void parseInlineContent(BlockNode* node);
 };

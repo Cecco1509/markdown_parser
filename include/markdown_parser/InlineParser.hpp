@@ -36,6 +36,11 @@ private:
     void handleEmphasis(char delim_char, std::size_t run_len);
     void processEmphasis(std::optional<std::size_t> stack_bottom);
 
-    static std::string          normaliseLabel(std::string_view label);
     std::unique_ptr<InlineNode> makeNode(InlineType type);
+
+public:
+    // Shared with SpineHandler for phase-1 ref_map_ key insertion.
+    // Collapses interior whitespace runs to a single space, trims leading/trailing
+    // whitespace, and applies Unicode simple case folding.
+    static std::string normaliseLabel(std::string_view label);
 };

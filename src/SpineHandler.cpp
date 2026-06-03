@@ -2,6 +2,8 @@
 #include "markdown_parser/PreScanner.hpp"
 #include "markdown_parser/InlineParser.hpp"
 #include "markdown_parser/block_rules.hpp"
+#include <algorithm>
+#include <optional>
 
 SpineHandler::SpineHandler(PreScanner& scanner, InlineParser& inline_parser)
     : scanner_(scanner), inline_parser_(inline_parser)
@@ -168,8 +170,14 @@ void SpineHandler::closeBlock() {
     auto node = std::move(spine_.back());
     spine_.pop_back();
 
-    if (node->type == NodeType::Paragraph)
+    if (node->type == NodeType::Paragraph) {
         maybeScanLinkRefDefs(node.get());
+        // Paragraph carried only link reference definitions: discard it.
+        const auto& sc = node->string_content;
+        const bool blank = std::all_of(sc.begin(), sc.end(),
+            [](char c){ return c == ' ' || c == '\t' || c == '\n'; });
+        if (blank) return;
+    }
 
     block_rules::onClose(*node);
 
@@ -288,6 +296,171 @@ void SpineHandler::parseInlineContent(BlockNode* node) {
     }
 }
 
-void SpineHandler::maybeScanLinkRefDefs(BlockNode*) {}
+// Returns true and advances pos past the consumed definition.
+// Returns false (pos unchanged) if no valid definition starts at pos.
+// Inserts into ref_map_ on success (first-definition-wins: skips duplicates).
+bool SpineHandler::tryScanOneLinkRefDef(std::string_view content, std::size_t& pos) {
+    const std::size_t len = content.size();
+    std::size_t p = pos;
+
+    // 0–3 spaces of leading indentation (4+ would have been a code block already)
+    std::size_t indent = 0;
+    while (indent < 3 && p < len && content[p] == ' ') { ++p; ++indent; }
+
+    if (p >= len || content[p] != '[') return false;
+    ++p;
+
+    // Scan label: everything up to the first unescaped ']'.
+    // Newlines inside the label are allowed (issue 3); fail only if ']' is never found
+    // or the normalised content is empty (all-whitespace).
+    std::size_t label_start = p;
+    while (p < len && content[p] != ']') ++p;
+    if (p >= len) return false;
+    std::string raw_label(content.substr(label_start, p - label_start));
+    ++p;  // skip ']'
+
+    std::string norm_key = InlineParser::normaliseLabel(raw_label);
+    if (norm_key.empty()) return false;
+
+    if (p >= len || content[p] != ':') return false;
+    ++p;
+
+    // Skip spaces/tabs and at most one newline before destination.
+    // Two consecutive newlines (blank line) → no destination → fail.
+    while (p < len && (content[p] == ' ' || content[p] == '\t')) ++p;
+    if (p < len && content[p] == '\n') {
+        ++p;
+        if (p < len && content[p] == '\n') return false;  // blank line
+        while (p < len && (content[p] == ' ' || content[p] == '\t')) ++p;
+    }
+    if (p >= len || content[p] == '\n') return false;  // no destination
+
+    // Scan destination.
+    std::string destination;
+    if (content[p] == '<') {
+        ++p;
+        bool closed = false;
+        while (p < len) {
+            const char c = content[p];
+            if (c == '\n' || c == '<') break;           // not allowed unescaped
+            if (c == '>') { closed = true; ++p; break; }
+            if (c == '\\' && p + 1 < len) { destination += content[p + 1]; p += 2; }
+            else { destination += c; ++p; }
+        }
+        if (!closed) return false;
+    } else {
+        int depth = 0;
+        while (p < len) {
+            const char c = content[p];
+            if (c == ' ' || c == '\t' || c == '\n') break;
+            if (static_cast<unsigned char>(c) < 0x20 || c == '\x7f') break;
+            if (c == '(') { ++depth; destination += c; ++p; }
+            else if (c == ')') {
+                if (depth == 0) break;
+                --depth; destination += c; ++p;
+            } else if (c == '\\' && p + 1 < len) {
+                destination += content[p + 1]; p += 2;
+            } else { destination += c; ++p; }
+        }
+        if (depth != 0 || destination.empty()) return false;
+    }
+
+    // pos_after_dest: byte right after the last destination character, before any
+    // trailing whitespace or newline. This is the rewind point if title parsing
+    // fails on a separate line (issue 1).
+    const std::size_t pos_after_dest = p;
+
+    // Try to scan an optional title.
+    std::optional<std::string> title;
+    {
+        std::size_t tp = p;
+        bool crossed_newline = false;
+
+        while (tp < len && (content[tp] == ' ' || content[tp] == '\t')) ++tp;
+        if (tp < len && content[tp] == '\n') {
+            crossed_newline = true;
+            ++tp;
+            while (tp < len && (content[tp] == ' ' || content[tp] == '\t')) ++tp;
+        }
+
+        if (tp < len && (content[tp] == '"' || content[tp] == '\'' || content[tp] == '(')) {
+            const char open_d  = content[tp];
+            const char close_d = (open_d == '(') ? ')' : open_d;
+            ++tp;
+            std::string buf;
+            bool title_ok = false;
+            bool prev_nl  = false;
+            while (tp < len) {
+                const char c = content[tp];
+                if (c == '\n') {
+                    if (prev_nl) { title_ok = false; break; }  // blank line inside title
+                    prev_nl = true;
+                    buf += c; ++tp;
+                    continue;
+                }
+                prev_nl = false;
+                if (c == close_d) { title_ok = true; ++tp; break; }
+                if (c == '\\' && tp + 1 < len) { buf += content[tp + 1]; tp += 2; }
+                else { buf += c; ++tp; }
+            }
+
+            if (title_ok) {
+                // Check for garbage after the closing delimiter (issue 4).
+                // "skip trailing spaces/tabs only — stop at '\n'" (issue 2).
+                std::size_t ap = tp;
+                while (ap < len && (content[ap] == ' ' || content[ap] == '\t')) ++ap;
+
+                if (ap >= len || content[ap] == '\n') {
+                    // Clean: title accepted; point p at the '\n' (or EOI).
+                    title = std::move(buf);
+                    p = ap;
+                } else if (crossed_newline) {
+                    // Garbage after a same-line title, but the title was on the next
+                    // line — rewind to pos_after_dest and accept the definition
+                    // without a title (issues 1 & 4). The title line stays as
+                    // paragraph text.
+                    p = pos_after_dest;
+                } else {
+                    // Garbage on the same line as the destination → whole definition
+                    // fails (issue 4).
+                    return false;
+                }
+            } else {
+                // Title parse failed (no closing delimiter, or blank line inside).
+                if (crossed_newline) {
+                    p = pos_after_dest;  // rewind (issue 1)
+                } else {
+                    return false;
+                }
+            }
+        }
+        // If no title delimiter was found at all, p remains at pos_after_dest and
+        // title stays nullopt.
+    }
+
+    // Issue 2: skip trailing spaces and tabs only — do NOT consume '\n' here.
+    while (p < len && (content[p] == ' ' || content[p] == '\t')) ++p;
+
+    // Any non-whitespace before the line terminator invalidates the definition.
+    if (p < len && content[p] != '\n') return false;
+
+    // Issue 2: consume the line terminator as a separate step.
+    if (p < len) ++p;
+
+    if (ref_map_.find(norm_key) == ref_map_.end())
+        ref_map_[norm_key] = LinkDef{ std::move(destination), std::move(title) };
+
+    pos = p;
+    return true;
+}
+
+void SpineHandler::maybeScanLinkRefDefs(BlockNode* node) {
+    std::string_view content = node->string_content;
+    std::size_t pos = 0;
+    while (pos < content.size()) {
+        if (!tryScanOneLinkRefDef(content, pos)) break;
+    }
+    node->string_content = std::string(content.substr(pos));
+}
 
 void SpineHandler::stripTrailingBlankLines(std::string&) {}
