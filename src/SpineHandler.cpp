@@ -53,7 +53,7 @@ SpineMatchResult SpineHandler::step1WalkSpine(const ScannedLine &line) {
   result.first_unmatched = spine_.size();
 
   for (std::size_t i = 1; i < spine_.size(); ++i) {
-    auto cr = block_rules::continuationMatches(*spine_[i], line);
+    auto cr = block_rules::continuationMatches(*spine_[i], line, current_col_);
     if (cr.matched) {
       if (cr.cols_to_consume > 0)
         consumeColumns(line.content, current_byte_, cr.cols_to_consume);
@@ -119,13 +119,17 @@ bool SpineHandler::tryOpenNewBlock(const ScannedLine &line,
       // When an indented code block is suppressed inside a list item after a
       // blank line, consume the 4-col code-block indent so the paragraph text
       // starts at the right position (CommonMark §5.3).
-      if (inside_list_blank && cur.virtual_indent >= 4)
+      if (inside_list_blank && cur.virtual_indent == 4)
         consumeColumns(line.content, current_byte_, 4);
       break;
     }
 
     if (!any_opened) {
       closeUnmatched(match.first_unmatched);
+      // A new block opener always closes an open paragraph (paragraphs are
+      // leaves and cannot contain block-level children).
+      if (tip()->type == NodeType::Paragraph)
+        closeBlock();
       any_opened = true;
     }
 

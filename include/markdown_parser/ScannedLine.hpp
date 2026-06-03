@@ -9,4 +9,5 @@ struct ScannedLine {
     std::size_t      virtual_indent;
     std::size_t      next_non_space;
     bool             is_blank;
+    std::size_t      base_col = 0; // absolute column where this scan started
 };

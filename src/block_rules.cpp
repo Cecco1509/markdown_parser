@@ -48,7 +48,8 @@ static void stripTrailingBlankLines(std::string& s) {
 
 // ── §3.1 Continuation ────────────────────────────────────────────────────────
 
-ContinuationResult continuationMatches(const BlockNode& node, const ScannedLine& line) {
+ContinuationResult continuationMatches(const BlockNode& node, const ScannedLine& line,
+                                       std::size_t current_col) {
     switch (node.type) {
 
     case NodeType::Document:
@@ -77,8 +78,12 @@ ContinuationResult continuationMatches(const BlockNode& node, const ScannedLine&
         const auto& item = std::get<ItemData>(node.data);
         if (line.is_blank)
             return {true};
-        if (line.virtual_indent >= static_cast<std::size_t>(item.padding))
-            return {true, static_cast<std::size_t>(item.padding)};
+        if (line.virtual_indent >= static_cast<std::size_t>(item.padding)) {
+            // cols_to_consume is relative to current_col (already consumed by
+            // parent containers), so subtract what's already been consumed.
+            const std::size_t rel = static_cast<std::size_t>(item.padding) - current_col;
+            return {true, rel};
+        }
         return {false};
     }
 
@@ -383,27 +388,47 @@ static std::optional<OpenResult> tryOpenListItem(const ScannedLine& line, bool t
         return std::nullopt;
 
     const int marker_width = static_cast<int>(marker_end - i);
+    // Count visual columns of whitespace after the marker (tabs expand to tab
+    // stops of 4). The starting column is marker_col + marker_width.
     int spaces = 0;
     std::size_t content_start = marker_end;
-    while (content_start < s.size()
-            && (s[content_start] == ' ' || s[content_start] == '\t')) {
-        ++spaces; ++content_start;
+    {
+        int col = static_cast<int>(line.virtual_indent) + marker_width;
+        while (content_start < s.size()
+                && (s[content_start] == ' ' || s[content_start] == '\t')) {
+            if (s[content_start] == '\t') {
+                const int tab_w = (col / 4 + 1) * 4 - col;
+                spaces += tab_w;
+                col += tab_w;
+            } else {
+                ++spaces;
+                ++col;
+            }
+            ++content_start;
+        }
     }
 
     const bool empty_item = (content_start >= s.size());
     // Paragraph interruption: empty list item cannot interrupt a paragraph.
     if (tip_is_paragraph && empty_item) return std::nullopt;
 
-    // padding = marker_offset + marker_width + space(s), capped at marker+1 for
-    // empty items or excessive leading spaces (> 4).
-    const int padding = static_cast<int>(line.virtual_indent) + marker_width
-                      + (empty_item || spaces > 4 ? 1 : spaces);
+    // padding (absolute) = absolute_marker_col + marker_width + spaces, capped
+    // at marker+1 for empty items or excessive leading spaces (> 4).
+    // Stored in ItemData for continuation matching (compared against the
+    // original line's virtual_indent which is also absolute from col 0).
+    // cols_consumed is relative to the current scan start (base_col), i.e. the
+    // number of columns to advance from the current position.
+    const int abs_marker_col = static_cast<int>(line.base_col + line.virtual_indent);
+    const int capped_spaces  = (empty_item || spaces > 4) ? 1 : spaces;
+    const int padding        = abs_marker_col + marker_width + capped_spaces;
+    const std::size_t cols_consumed =
+        static_cast<std::size_t>(static_cast<int>(line.virtual_indent) + marker_width + capped_spaces);
 
     ItemData item_data{static_cast<int>(line.virtual_indent), padding};
     ListData list_data{ltype, bullet, start, delim, /*tight=*/true, padding};
 
     return OpenResult{NodeType::Item, item_data, list_data, {},
-                      false, static_cast<std::size_t>(padding)};
+                      false, cols_consumed};
 }
 
 // 7. Indented code block
@@ -411,7 +436,11 @@ static std::optional<OpenResult> tryOpenIndentedCode(const ScannedLine& line,
                                                       bool tip_is_paragraph,
                                                       bool inside_list_blank) {
     if (tip_is_paragraph) return std::nullopt;
-    if (inside_list_blank) return std::nullopt;
+    // After a blank line in a list item, suppress a code block only when it
+    // sits at the minimum threshold (exactly 4 cols).  Deeper indentation
+    // (virtual_indent > 4) is an unambiguous code-block signal and must not
+    // be suppressed (CommonMark §5.3, Tabs examples 4 & 5).
+    if (inside_list_blank && line.virtual_indent == 4) return std::nullopt;
     if (line.virtual_indent < 4) return std::nullopt;
     if (line.is_blank) return std::nullopt;
     return OpenResult{NodeType::CodeBlock,

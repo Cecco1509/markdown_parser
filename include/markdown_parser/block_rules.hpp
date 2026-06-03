@@ -17,7 +17,10 @@ struct ContinuationResult {
     bool        swallow_line    = false;
 };
 
-ContinuationResult continuationMatches(const BlockNode& node, const ScannedLine& line);
+// current_col is the absolute column position already consumed by parent
+// containers; used to compute the relative cols_to_consume for Item nodes.
+ContinuationResult continuationMatches(const BlockNode& node, const ScannedLine& line,
+                                       std::size_t current_col = 0);
 
 // Post-append check for HTML block types 1–5: returns true when `line_content`
 // satisfies the type-specific end condition.  Call after step-3 appends the line.
