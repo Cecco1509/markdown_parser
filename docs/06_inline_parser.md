@@ -89,6 +89,15 @@ void InlineParser::parse(
 // Dispatch on the current character. Returns the constructed InlineNode (owned),
 // or nullptr if the character is absorbed without producing a node (e.g. a
 // delimiter that was pushed onto the delimiter stack).
+//
+// '\n' handling (spec §6.7): when the current character is '\n' (the line
+// separator written by appendText), parseInline() looks backward in the
+// accumulated literal text:
+//   - Two or more trailing spaces before '\n'  → emit LineBreak, strip spaces.
+//   - A backslash immediately before '\n'       → emit LineBreak, strip backslash.
+//   - Otherwise                                 → emit SoftBreak.
+// In all cases the '\n' byte itself is consumed without being added to any
+// literal text node.
 
 std::unique_ptr<InlineNode> InlineParser::parseInline();
 

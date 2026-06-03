@@ -4,12 +4,36 @@
 
 ---
 
-The PreScanner's only job is to strip the line ending, compute indent metrics,
-and detect blank lines. It does **not** expand tabs and does **not** classify the
-line. Classification is the responsibility of each block's own continuation
-predicate (see [§3.1](03_continuation_rules.md#31-continuation-rules-per-block-type)) and the opener checks in step 2 (see [§3.2](03_continuation_rules.md#32-open-block-rules--step-2-triggers)).
+The PreScanner's only job is to strip the line ending, replace null bytes,
+compute indent metrics, and detect blank lines. It does **not** expand tabs and
+does **not** classify the line. Classification is the responsibility of each
+block's own continuation predicate (see [§3.1](03_continuation_rules.md#31-continuation-rules-per-block-type)) and the opener checks in step 2
+(see [§3.2](03_continuation_rules.md#32-open-block-rules--step-2-triggers)).
 
 Tab virtual-column arithmetic is described in [§7](07_tab_algorithm.md).
+
+---
+
+## 4.0 Input preprocessing — null byte replacement
+
+**Spec §2.3 requirement:** any `U+0000` (null byte) in the input must be replaced
+with `U+FFFD` (replacement character, UTF-8: `\xEF\xBF\xBD`) before any other
+processing. This is the only mandatory input transformation; all other bytes are
+passed through unmodified.
+
+**Call site:** `PreScanner::scan()` performs this replacement on `raw` before
+returning `ScannedLine::content`. Because `content` is a `std::string_view` into
+the original buffer, and the replacement character is a different byte length than
+`\0`, the implementation must either:
+
+- Copy the raw line into an owned buffer (e.g. a `std::string` member on
+  `PreScanner`), replace null bytes in place, and return a view into that buffer, or
+- Require the caller (`SpineHandler::processLine`) to pre-sanitise lines before
+  passing them in.
+
+The first approach keeps null-byte handling encapsulated in the PreScanner. If the
+second approach is chosen, `scan()` must document that null bytes are caller's
+responsibility.
 
 ---
 

@@ -259,9 +259,18 @@ BlockNode* SpineHandler::openBlock(NodeType type, BlockData data)
 //
 // Finalise the tip block (spine_.back()):
 //   1. Move ownership out of the spine.
-//   2. Record end_line and mark is_open = false.
-//   3a. If a parent exists (spine non-empty): append to parent's children.
-//   3b. If closing the Document root (spine now empty): capture in document_.
+//   2. Per-type finalization hooks (before recording end_line):
+//      a. Paragraph: scan string_content for link reference definitions
+//         (maybeScanLinkRefDefs), extract into ref_map_, trim matched content.
+//         See §9.2.
+//      b. Indented CodeBlock: strip trailing blank lines from string_content
+//         (spec §4.4). A "blank line" in string_content is a '\n' preceded
+//         only by spaces. Strip from the end until a non-blank line is reached.
+//         Fenced code blocks are NOT stripped — their closing fence already
+//         delimits the content.
+//   3. Record end_line and mark is_open = false.
+//   4a. If a parent exists (spine non-empty): append to parent's children.
+//   4b. If closing the Document root (spine now empty): capture in document_.
 //
 // Inline parsing is NOT triggered here — that is phase 2, via finalize().
 
@@ -269,6 +278,19 @@ void SpineHandler::closeBlock()
 {
     auto node = std::move(spine_.back());
     spine_.pop_back();
+
+    // Per-type finalization.
+    if (node->type == NodeType::Paragraph) {
+        maybeScanLinkRefDefs(node.get());   // see §9.2
+    } else if (node->type == NodeType::CodeBlock) {
+        const auto& cbd = std::get<CodeBlockData>(node->data);
+        if (!cbd.fenced) {
+            // Strip trailing blank lines from indented code blocks (spec §4.4).
+            // string_content lines are '\n'-terminated; remove any suffix of
+            // lines that contain only spaces followed by '\n'.
+            stripTrailingBlankLines(node->string_content);
+        }
+    }
 
     node->end_line = line_number_;
     node->is_open  = false;
@@ -301,6 +323,14 @@ void SpineHandler::closeUnmatched(std::size_t from_index)
 // consumeColumns() call. The remaining virtual columns are materialised as
 // space characters here — this is the only place virtual spaces are written
 // into string_content. The raw tab byte is skipped (from_byte advances by 1).
+//
+// Line separator convention: for leaf blocks that accumulate multiple lines
+// (Paragraph, Heading), appendText() appends a '\n' after each line's content.
+// The InlineParser's parseInline() dispatches on '\n' to emit SoftBreak nodes
+// (or LineBreak if the preceding content ends with two spaces or a backslash).
+// Container blocks and CodeBlock/HtmlBlock are not inline-parsed, so the '\n'
+// is either structural (containers never call appendText) or literal (code/HTML
+// blocks preserve newlines verbatim as part of their raw string_content).
 
 void SpineHandler::appendText(std::string_view line, std::size_t from_byte)
 {
@@ -312,6 +342,7 @@ void SpineHandler::appendText(std::string_view line, std::size_t from_byte)
         ++from_byte;    // skip the raw tab byte whose columns are now spent
     }
     t->string_content += line.substr(from_byte);
+    t->string_content += '\n';  // line separator; parsed as SoftBreak/LineBreak by InlineParser
 }
 
 // ── tip ───────────────────────────────────────────────────────────────────

@@ -33,6 +33,7 @@ ScannedLine  { content, indent, virtual_indent, next_non_space, is_blank }
        normal?                → appendText() → tip()->string_content
                                   if partial_tab_remaining_ > 0:
                                     emit spaces, skip tab byte, clear flag
+                                  append '\n' as line separator
 
   [repeat for every line]
 

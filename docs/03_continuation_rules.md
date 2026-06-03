@@ -45,7 +45,9 @@ has consumed container prefixes. First match wins.
 3. **Fenced code block** — 3+ `` ` `` or `~`, indent 0–3; optional info string follows.
 4. **HTML block** — matches one of the 7 start patterns (checked type 1 → 7). **Type 7 cannot interrupt a paragraph** (spec §4.6): the type-7 pattern is not attempted when the current tip is an open Paragraph.
 5. **ThematicBreak** — 3+ `*`, `-`, or `_` with optional spaces, indent 0–3.
-6. **List item / List** — bullet (`-`, `*`, `+`) or ordered marker (`N.` or `N)` for N ≥ 0, up to 9 digits) followed by at least one space or tab. Opens a new List if none is open or if the marker type/delimiter differs, then always opens an Item. **Paragraph interruption constraint:** when an open Paragraph is the current tip, only a bullet marker or an ordered marker whose start number is exactly `1` may open a new list (spec §5.3). An ordered marker with start number ≠ 1 in this context is not recognised as a list opener.
+6. **List item / List** — bullet (`-`, `*`, `+`) or ordered marker (`N.` or `N)` for N ≥ 0, up to 9 digits) followed by at least one space or tab. Opens a new List if none is open or if the marker type/delimiter differs, then always opens an Item. **Paragraph interruption constraints** (spec §5.3): when an open Paragraph is the current tip, two additional restrictions apply:
+   - An ordered marker whose start number is not exactly `1` is not recognised as a list opener.
+   - An **empty list item** — a marker followed only by spaces or end-of-line, with no content on the same line — is not recognised as a list opener. `padding` would be 0 in such a case; the check `item_padding > 0` (or equivalently, that at least one space follows the marker and is itself followed by non-whitespace or another line) guards this.
 7. **Indented code block** — `virtual_indent ≥ 4`, tip is not a Paragraph, not
    inside a list-item blank-line continuation.
 8. **Paragraph** — fallback for any non-blank line matching nothing above.
