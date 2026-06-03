@@ -58,6 +58,18 @@ private:
     int last_line_length_ = 0;  // column length of the previous line;
                                 // used for setext heading detection
 
+    // ── per-line byte cursor ──────────────────────────────────────────────
+    // Tracks the real byte offset through the raw line in parallel with
+    // current_col_ (which tracks virtual columns). Both are reset to 0 at
+    // the top of every processLine() call. consumeColumns() advances
+    // current_byte_ alongside current_col_ so that step3AppendText() always
+    // has the exact byte position immediately after the last prefix byte
+    // consumed — even when a tab was split mid-indent. Passing current_byte_
+    // to appendText() instead of line.next_non_space avoids the bug where
+    // ++from_byte would skip a content byte rather than the split tab byte.
+    // See §9.3 for the full analysis.
+    std::size_t current_byte_ = 0;
+
     // List tightness tracking (spec §5.3):
     // A list becomes loose if any of its constituent items are separated by a
     // blank line, or if any item directly contains two block-level elements
@@ -123,6 +135,7 @@ void SpineHandler::processLine(std::string_view raw)
     // Reset ephemeral per-line cursor state.
     partial_tab_remaining_ = 0;
     current_col_           = 0;
+    current_byte_          = 0;
     ++line_number_;
 
     ScannedLine line = scanner_.scan(raw);
@@ -212,22 +225,13 @@ void SpineHandler::step3AppendText(
     // line is consumed here and nothing is appended to string_content.
     if (tryPromoteSetextHeading(line)) return;
 
-    // Special case B: link reference definition scan.
-    // When a Paragraph is being closed (its next line opens a new block or
-    // is blank), scan its accumulated string_content for link reference
-    // definitions before committing the remaining text. Extracted definitions
-    // are inserted into ref_map_. Any leftover content that is not a valid
-    // definition stays as the paragraph body.
-    maybeScanLinkRefDefs();
-
     // Normal case: append this line's content to the tip's string_content.
-    appendText(line.content, line.next_non_space);
+    // current_byte_ is the byte offset immediately after the last container
+    // prefix consumed by consumeColumns() — correct even when a tab was split.
+    // Do NOT use line.next_non_space here; see §9.3.
+    appendText(line.content, current_byte_);
 }
 ```
-
-> **Note:** the placement of `maybeScanLinkRefDefs()` in step 3 is incorrect for paragraphs closed by blank lines. See [§9.2](09_open_decisions.md#92-maybescanlinkRefdefs--when-to-scan) for the resolution.
-
-> **Note:** passing `line.next_non_space` to `appendText()` is incorrect when a tab is split in the indent region. See [§9.3](09_open_decisions.md#93-appendtext-from_byte-when-a-tab-is-split) for the resolution.
 
 The continuation predicates tested in step 1 are described in [§3.1](03_continuation_rules.md#31-continuation-rules-per-block-type). The open-block rules in step 2 are described in [§3.2](03_continuation_rules.md#32-open-block-rules--step-2-triggers).
 
@@ -262,7 +266,8 @@ BlockNode* SpineHandler::openBlock(NodeType type, BlockData data)
 //   2. Per-type finalization hooks (before recording end_line):
 //      a. Paragraph: scan string_content for link reference definitions
 //         (maybeScanLinkRefDefs), extract into ref_map_, trim matched content.
-//         See §9.2.
+//         Placed here — not in step3AppendText — so that paragraphs closed by
+//         a blank line (which skips step 3) are also scanned. See §9.2.
 //      b. Indented CodeBlock: strip trailing blank lines from string_content
 //         (spec §4.4). A "blank line" in string_content is a '\n' preceded
 //         only by spaces. Strip from the end until a non-blank line is reached.
@@ -281,7 +286,7 @@ void SpineHandler::closeBlock()
 
     // Per-type finalization.
     if (node->type == NodeType::Paragraph) {
-        maybeScanLinkRefDefs(node.get());   // see §9.2
+        maybeScanLinkRefDefs(node.get());   // correct site: covers blank-line closure too (§9.2)
     } else if (node->type == NodeType::CodeBlock) {
         const auto& cbd = std::get<CodeBlockData>(node->data);
         if (!cbd.fenced) {
@@ -380,7 +385,7 @@ Ownership model: `spine_` holds `unique_ptr<BlockNode>` for every open block. `c
 //
 // The single authoritative site for partial-tab decisions.
 // Advances byte_offset through line by exactly n_cols virtual columns,
-// updating current_col_ along the way.
+// updating current_col_ and current_byte_ along the way.
 //
 // If a tab straddles the n_cols boundary:
 //   - byte_offset is NOT advanced past the tab byte
@@ -389,6 +394,10 @@ Ownership model: `spine_` holds `unique_ptr<BlockNode>` for every open block. `c
 //
 // The next call to consumeColumns() or appendText() will drain
 // partial_tab_remaining_ before touching any new bytes.
+//
+// current_byte_ is updated to byte_offset at every step so that
+// step3AppendText() can read the correct content-start position even when
+// a tab was split mid-indent. See §9.3.
 //
 // Returns the new byte_offset.
 
@@ -435,6 +444,7 @@ std::size_t SpineHandler::consumeColumns(
             break; // non-whitespace: budget exhausted or no indent
         }
     }
+    current_byte_ = byte_offset;  // keep byte cursor in sync with col cursor (§9.3)
     return byte_offset;
 }
 ```

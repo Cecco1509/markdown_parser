@@ -46,7 +46,7 @@ private:
 };
 ```
 
-`Delimiter` and `BracketEntry` are defined in [§2.5](02_data_types.md#25-inlinenode-delimiter-bracketentry). The `delim_top` field of `BracketEntry` and its interaction with `processEmphasis` are clarified in [§9.4](09_open_decisions.md#94-processemphasis--bracket-deactivation-interaction).
+`Delimiter` and `BracketEntry` are defined in [§2.5](02_data_types.md#25-inlinenode-delimiter-bracketentry). `delim_top` is the size of `delimiters_` at the moment the bracket entry is pushed; see `handleBracketOpener` / `handleBracketCloser` in [§6.2](#62-inlineparser-methods) and [§9.4](09_open_decisions.md#94-processemphasis--bracket-deactivation-interaction).
 
 ---
 
@@ -123,8 +123,9 @@ std::unique_ptr<InlineNode> InlineParser::parseHtmlInline();
 // ── link and image ────────────────────────────────────────────────────────
 
 // Push a BracketEntry onto the bracket stack when '[' or '![' is seen.
-// Records whether this is an image opener and the current delimiter stack depth
-// (so delimiters inside an invalid link can be deactivated later).
+// Records whether this is an image opener and stores delim_top =
+// delimiters_.size() at the moment of the push — the exclusive lower bound
+// for deactivation if the bracket later turns out to be invalid (§9.4).
 void InlineParser::handleBracketOpener(bool is_image);
 
 // Called when ']' is seen. Pop the bracket stack and attempt to resolve:
@@ -132,8 +133,15 @@ void InlineParser::handleBracketOpener(bool is_image);
 //   2. Full ref link:   ] followed by [label]
 //   3. Collapsed ref:   ] followed by []
 //   4. Shortcut ref:    ] with the bracket text used as the label
-// On failure (no matching opener or no valid link), emit ']' as a Text node
-// and leave the bracket stack intact.
+//
+// On success: call processEmphasis(bracket.delim_top) to process emphasis
+// inside the link content before constructing the Link/Image node. Then pop
+// the bracket entry.
+//
+// On failure (no matching opener or none of the four forms match): emit ']'
+// as a Text node, set can_open = false and can_close = false on every
+// delimiter in delimiters_[bracket.delim_top .. top] to deactivate them
+// (CommonMark appendix algorithm §6.2), and pop the bracket entry.
 std::unique_ptr<InlineNode> InlineParser::handleBracketCloser();
 
 // Scan a link destination in one of two forms:
@@ -159,25 +167,36 @@ void InlineParser::handleEmphasis(char delim_char, std::size_t run_len);
 
 // Post-processing pass over the delimiter stack. Matches the innermost
 // opener/closer pairs first, wraps their content in Emph or Strong nodes,
-// and removes the matched entries. stack_bottom limits the search range;
-// std::nullopt means process the entire stack.
-// Called once at end of parse() with std::nullopt, and again with a saved
-// depth when a valid link/image is resolved (to process emphasis inside it).
+// and removes the matched entries.
+//
+// stack_bottom is an exclusive lower bound on the delimiter indices searched:
+//   - std::nullopt  → process the entire stack (called once at end of parse())
+//   - bracket.delim_top → process only delimiters added after the '[' opener
+//     (called from handleBracketCloser() when a valid link/image is resolved,
+//      so emphasis inside the link content is processed before the link node
+//      is constructed — §9.4)
 void InlineParser::processEmphasis(std::optional<std::size_t> stack_bottom);
 
 // ── utilities ─────────────────────────────────────────────────────────────
 
-// Collapse Unicode whitespace runs to a single space and fold to Unicode
-// case-fold for link reference label matching (spec §4.7).
+// Collapse Unicode whitespace runs to a single space and apply Unicode simple
+// case folding for link reference label matching (spec §4.7).
+//
+// Implementation: uses an embedded ~1400-entry lookup table derived from
+// Unicode CaseFolding.txt (the same approach as cmark). The table maps each
+// code point with a non-trivial simple fold to its folded code point(s).
+// ASCII letters are handled by a fast path before the table lookup.
+// This covers all CommonMark spec test cases without any external dependency.
+// See §9.5 (option B) for the rationale.
 static std::string InlineParser::normaliseLabel(std::string_view label);
 
 // Allocate a new InlineNode of the given type with default-initialised fields.
 std::unique_ptr<InlineNode> InlineParser::makeNode(InlineType type);
 ```
 
-`normaliseLabel` must apply Unicode case folding — the implementation options are discussed in [§9.5](09_open_decisions.md#95-unicode-case-folding-for-link-reference-labels).
+`normaliseLabel` applies Unicode simple case folding via an embedded lookup table (option B from [§9.5](09_open_decisions.md#95-unicode-case-folding-for-link-reference-labels)).
 
-The `processEmphasis` / bracket deactivation interaction (including the meaning of `stack_bottom`) is detailed in [§9.4](09_open_decisions.md#94-processemphasis--bracket-deactivation-interaction).
+The `processEmphasis` / bracket deactivation interaction — `delim_top` as a stack-size snapshot, deactivation on failed brackets, and `stack_bottom` on valid links — is specified in [§9.4](09_open_decisions.md#94-processemphasis--bracket-deactivation-interaction).
 
 Link reference definitions resolved via `ref_map_` are populated by [`SpineHandler`](05_spine_handler.md#51-state) during phase 1 and stored as [`LinkDef`](02_data_types.md#22-blockdata-union) values.
 

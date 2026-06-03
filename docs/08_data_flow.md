@@ -29,8 +29,8 @@ ScannedLine  { content, indent, virtual_indent, next_non_space, is_blank }
   │
   └─ step 3: step3AppendText()
        setext underline?      → tryPromoteSetextHeading(), return
-       link ref def?          → maybeScanLinkRefDefs(), extract into ref_map_
-       normal?                → appendText() → tip()->string_content
+       normal?                → appendText(line.content, current_byte_) → tip()->string_content
+                                  current_byte_ set by consumeColumns(), not line.next_non_space
                                   if partial_tab_remaining_ > 0:
                                     emit spaces, skip tab byte, clear flag
                                   append '\n' as line separator
@@ -77,6 +77,10 @@ processLine() [per line]
 
 closeBlock()
   ├─ move unique_ptr out of spine_.back(), pop spine_
+  ├─ per-type finalization (before end_line):
+  │    Paragraph  → maybeScanLinkRefDefs()  ← extracts into ref_map_, trims content
+  │                 (here, not step 3, so blank-line closure is also covered — §9.2)
+  │    CodeBlock (indented) → stripTrailingBlankLines()
   ├─ record end_line, set is_open = false
   └─ if parent exists: parent->children.push_back(std::move(node))  ← TREE ATTACH
      else (Document root): document_ = std::move(node)
