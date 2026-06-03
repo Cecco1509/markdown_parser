@@ -28,7 +28,7 @@ PreScanner::computeVirtualIndent(std::string_view content, std::size_t base_col)
             break;
         }
     }
-    return {indent, col, i};
+    return {indent, col - base_col, i};
 }
 
 std::string_view PreScanner::stripLineEnding(std::string_view raw) noexcept {
