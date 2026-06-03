@@ -20,13 +20,13 @@ void SpineHandler::processLine(std::string_view raw) {
 
   ScannedLine line = scanner_.scan(raw);
 
-  std::cout << "step 1" << std::endl;
+  // std::cout << "step 1" << std::endl;
   SpineMatchResult match = step1WalkSpine(line);
-  std::cout << "step 2" << std::endl;
+  // std::cout << "step 2" << std::endl;
   step2NewBlocks(line, match);
-  std::cout << "step 3" << std::endl;
+  // std::cout << "step 3" << std::endl;
   step3AppendText(line, match);
-  std::cout << "check html block end" << std::endl;
+  // std::cout << "check html block end" << std::endl;
   checkHtmlBlockEnd(line);
 
   // Track blank lines for loose-list detection.
@@ -65,7 +65,7 @@ SpineMatchResult SpineHandler::step1WalkSpine(const ScannedLine &line) {
                            t != NodeType::BlockQuote && t != NodeType::List &&
                            t != NodeType::Item;
       if (is_leaf) {
-        result.first_unmatched = i;
+        result.first_unmatched = i + 1;
         break;
       }
     } else {
@@ -111,12 +111,18 @@ bool SpineHandler::tryOpenNewBlock(const ScannedLine &line,
     }
 
     auto result = block_rules::tryOpen(cur, tip_para, inside_list_blank);
-    std::cerr << "  tryOpen result: " << (result ? "found" : "null")
-              << (result ? " cols=" + std::to_string(result->cols_consumed)
-                         : "")
-              << "\n";
-    if (!result)
+    // std::cerr << "  tryOpen result: " << (result ? "found" : "null")
+    //           << (result ? " cols=" + std::to_string(result->cols_consumed)
+    //                      : "")
+    //           << "\n";
+    if (!result) {
+      // When an indented code block is suppressed inside a list item after a
+      // blank line, consume the 4-col code-block indent so the paragraph text
+      // starts at the right position (CommonMark §5.3).
+      if (inside_list_blank && cur.virtual_indent >= 4)
+        consumeColumns(line.content, current_byte_, 4);
       break;
+    }
 
     if (!any_opened) {
       closeUnmatched(match.first_unmatched);
@@ -173,6 +179,17 @@ void SpineHandler::step2NewBlocks(const ScannedLine &line,
     // closeUnmatched already called inside tryOpenNewBlock
   } else if (incorporatesLazyContinuation(line, match)) {
     // lazy continuation: leave unmatched blocks open
+
+    // Debug cout
+    std::cout
+        << "incorporates lazy continuation, leaving spine unmatched from index "
+        << match.first_unmatched << " onward\n"
+        << "  line=\"" << line.content << "\" is_blank=" << line.is_blank
+        << " spine_size=" << spine_.size() << "\n"
+        << "  tip type=" << nodeTypeToString(tip()->type) << "\n"
+        << "  match.first_unmatched (type)="
+        << (nodeTypeToString(spine_[match.first_unmatched]->type)) << "\n";
+
   } else {
     closeUnmatched(match.first_unmatched);
   }
@@ -230,6 +247,13 @@ void SpineHandler::closeBlock() {
       return;
   }
 
+  // If a list item had a blank line inside or after it, the containing list
+  // is loose (CommonMark §5.3).
+  if (node->type == NodeType::Item && node->last_line_blank) {
+    if (!spine_.empty() && spine_.back()->type == NodeType::List)
+      std::get<ListData>(spine_.back()->data).tight = false;
+  }
+
   block_rules::onClose(*node);
 
   node->end_line = line_number_;
@@ -265,12 +289,21 @@ BlockNode *SpineHandler::tip() const noexcept { return spine_.back().get(); }
 
 bool SpineHandler::incorporatesLazyContinuation(
     const ScannedLine &line, const SpineMatchResult &match) const noexcept {
+
+  // Debug cout
+  std::cout << "incorporatesLazyContinuation? line=\"" << line.content
+            << "\" is_blank=" << line.is_blank
+            << " match.first_unmatched=" << match.first_unmatched
+            << " spine_size=" << spine_.size() << "\n";
   if (line.is_blank)
     return false;
   if (match.first_unmatched >= spine_.size())
     return false;
-  if (tip()->type != NodeType::Paragraph)
+  if (tip()->type != NodeType::Paragraph) {
+    std::cout << "tip is not paragraph, it's " << nodeTypeToString(tip()->type)
+              << "\n";
     return false;
+  }
   // A setext underline is never a valid lazy continuation (spec §5.1).
   if (block_rules::isSetextUnderline(line))
     return false;
