@@ -6,9 +6,12 @@
 
 The SpineHandler owns the open block stack (the "spine") and implements the
 three-step `processLine` algorithm. It is the sole owner of the AST root.
+All rule logic (continuation predicates, block openers, finalization hooks) lives
+in the stateless [`block_rules`](10_block_rules.md) module; SpineHandler is a
+pure orchestrator.
 
 For the block types and data structures it operates on, see [§2](02_data_types.md).  
-For the continuation and open/close rules it enforces, see [§3](03_continuation_rules.md).  
+For the continuation and open/close rules delegated to `block_rules`, see [§3](03_continuation_rules.md) and [§10](10_block_rules.md).  
 For tab accounting details, see [§7](07_tab_algorithm.md).
 
 ---
@@ -55,8 +58,7 @@ private:
     std::unordered_map<std::string, LinkDef> ref_map_;
 
     int line_number_      = 0;  // current 1-based line counter
-    int last_line_length_ = 0;  // column length of the previous line;
-                                // used for setext heading detection
+    int last_line_length_ = 0;  // column length of the previous line
 
     // ── per-line byte cursor ──────────────────────────────────────────────
     // Tracks the real byte offset through the raw line in parallel with
@@ -70,20 +72,8 @@ private:
     // See §9.3 for the full analysis.
     std::size_t current_byte_ = 0;
 
-    // List tightness tracking (spec §5.3):
-    // A list becomes loose if any of its constituent items are separated by a
-    // blank line, or if any item directly contains two block-level elements
-    // separated by a blank line.
-    //
-    // Implementation: whenever a blank line is processed, walk the spine and
-    // set last_line_blank = true on the current tip AND on any Item ancestor.
-    // When an Item is closed (closeBlock), if last_line_blank is true on that
-    // Item, set ListData::tight = false on the parent List. Similarly, when a
-    // new Item opens inside a List, if the previous Item's last_line_blank is
-    // true, set tight = false. A List starts with tight = true.
-
     // ── per-line cursor state ─────────────────────────────────────────────
-    // Both fields are reset to 0 at the top of every processLine() call.
+    // All three fields are reset to 0/false at the top of every processLine().
 
     // Virtual columns remaining from a tab that was partially consumed by a
     // container continuation predicate. Non-zero only between the moment a
@@ -96,6 +86,11 @@ private:
     // consumes container prefixes. Passed as base_col to scanWithOffset() so
     // that inner-block predicates see the correct column position.
     std::size_t current_col_ = 0;
+
+    // Set by step2 when an opener's OpenResult::swallow_line is true (ATX
+    // heading, ThematicBreak, fenced-code opener). Checked by step3AppendText
+    // to prevent the marker line from being appended as content.
+    bool swallow_current_line_ = false;
 
     // ── component references ──────────────────────────────────────────────
     PreScanner&   scanner_;
@@ -122,6 +117,11 @@ struct SpineMatchResult {
     // Spine index of the first block whose continuation predicate failed.
     // Equal to spine_.size() if every block matched (no unmatched blocks).
     std::size_t first_unmatched;
+
+    // Set when the failing block was a fenced code block and the line is the
+    // closing fence. step3AppendText returns early without appending the fence
+    // line to any block's string_content.
+    bool swallow_line = false;
 };
 ```
 
@@ -136,104 +136,158 @@ void SpineHandler::processLine(std::string_view raw)
     partial_tab_remaining_ = 0;
     current_col_           = 0;
     current_byte_          = 0;
+    swallow_current_line_  = false;
     ++line_number_;
 
     ScannedLine line = scanner_.scan(raw);
 
-    // ── Step 1 ────────────────────────────────────────────────────────────
-    // Walk the spine top-down. Test each open block's continuation predicate.
-    // Record which blocks matched and which did not.
-    // INVARIANT: no closeBlock() call happens inside step 1.
-    // Closing is deferred to step 2 so the lazy continuation check can be
-    // made with full information about what the line contains.
     SpineMatchResult match = step1WalkSpine(line);
-
-    // ── Step 2 ────────────────────────────────────────────────────────────
-    // Look for new block openers in the remainder of the line. Decide whether
-    // to close unmatched blocks, open new ones, or apply lazy continuation.
     step2NewBlocks(line, match);
-
-    // ── Step 3 ────────────────────────────────────────────────────────────
-    // Append remaining text to the deepest open block (the tip after step 2).
-    // Handles setext promotion and link reference definition scanning.
     step3AppendText(line, match);
+    checkHtmlBlockEnd(line);          // post-append end-condition check for HTML types 1–5
+
+    // Track blank lines for loose-list detection.
+    if (!spine_.empty())
+        tip()->last_line_blank = line.is_blank;
 }
 
 // ── Step 1 ────────────────────────────────────────────────────────────────
+// Walk the spine top-down. Delegate each block's continuation predicate to
+// block_rules::continuationMatches. Advance column cursor for matched blocks.
+// INVARIANT: no closeBlock() call anywhere in this function.
 
 SpineMatchResult SpineHandler::step1WalkSpine(const ScannedLine& line)
 {
-    // spine_[0] is Document — always matches; start from index 1.
     SpineMatchResult result;
     result.deepest_matched = 0;
     result.first_unmatched = spine_.size(); // optimistic: all match
 
     for (std::size_t i = 1; i < spine_.size(); ++i) {
-        if (continuationMatches(spine_[i].get(), line)) {
-            // Block passes its continuation predicate. consumeColumns() has
-            // advanced current_col_ and possibly set partial_tab_remaining_.
+        auto cr = block_rules::continuationMatches(*spine_[i], line);
+        if (cr.matched) {
+            if (cr.cols_to_consume > 0)
+                consumeColumns(line.content, current_byte_, cr.cols_to_consume);
             result.deepest_matched = i;
         } else {
             result.first_unmatched = i;
+            if (cr.swallow_line) result.swallow_line = true;  // fenced-code closing fence
             break;
         }
     }
     return result;
-    // No closeBlock() anywhere in this function.
 }
 
 // ── Step 2 ────────────────────────────────────────────────────────────────
+// tryOpenNewBlock runs a container loop: it calls block_rules::tryOpen
+// repeatedly, rescanning the remaining line after each container opener.
+// The loop breaks on a leaf opener (ATX, fenced code, thematic break, HTML,
+// indented code) or when no opener fires.
+//
+// block_rules::tryOpen does NOT return a Paragraph fallback. The implicit
+// Paragraph is opened in step 3 when the tip is still a container block after
+// all openers have been attempted.
 
-void SpineHandler::step2NewBlocks(
-    const ScannedLine&     line,
-    const SpineMatchResult& match)
+bool SpineHandler::tryOpenNewBlock(const ScannedLine& line, const SpineMatchResult& match)
+{
+    bool any_opened = false;
+    // Start from the current cursor position (already advanced by step 1).
+    ScannedLine cur = scanner_.scanWithOffset(
+        line.content.substr(current_byte_), current_col_);
+
+    while (true) {
+        const bool tip_para = (tip()->type == NodeType::Paragraph);
+
+        // Detect list-item blank-line continuation (suppresses indented code, §3.2 #7).
+        bool inside_list_blank = false;
+        for (auto it = spine_.rbegin(); it != spine_.rend(); ++it) {
+            const NodeType t = (*it)->type;
+            if (t == NodeType::Item) { inside_list_blank = (*it)->last_line_blank; break; }
+            if (t != NodeType::List) break;
+        }
+
+        auto result = block_rules::tryOpen(cur, tip_para, inside_list_blank);
+        if (!result) break;
+
+        if (!any_opened) {
+            closeUnmatched(match.first_unmatched);  // deferred close from step 1
+            any_opened = true;
+        }
+
+        // For Item openers: open a new List container if the current tip is not
+        // a compatible List (same list_type, delimiter, bullet_char).
+        if (result->type == NodeType::Item && result->list_data.has_value()) {
+            const auto& new_ld = *result->list_data;
+            bool need_new_list = (tip()->type != NodeType::List);
+            if (!need_new_list) {
+                const auto& cur_ld = std::get<ListData>(tip()->data);
+                need_new_list = cur_ld.list_type  != new_ld.list_type
+                             || cur_ld.delimiter   != new_ld.delimiter
+                             || (new_ld.list_type == ListType::Bullet
+                                 && cur_ld.bullet_char != new_ld.bullet_char);
+            }
+            if (need_new_list) openBlock(NodeType::List, new_ld);
+        }
+
+        BlockNode* new_node = openBlock(result->type, result->data);
+        if (!result->extracted_content.empty())
+            new_node->string_content = result->extracted_content;  // ATX heading text
+        if (result->cols_consumed > 0)
+            consumeColumns(line.content, current_byte_, result->cols_consumed);
+        if (result->swallow_line) {
+            swallow_current_line_ = true;   // prevent step3 from appending
+            break;
+        }
+
+        // Only container openers re-enter the loop.
+        const bool is_container = result->type == NodeType::BlockQuote
+                                || result->type == NodeType::List
+                                || result->type == NodeType::Item;
+        if (!is_container) break;
+
+        // Rescan remaining content with updated column base for the next opener.
+        cur = scanner_.scanWithOffset(line.content.substr(current_byte_), current_col_);
+    }
+
+    return any_opened;
+}
+
+void SpineHandler::step2NewBlocks(const ScannedLine& line, const SpineMatchResult& match)
 {
     const bool new_block_found = tryOpenNewBlock(line, match);
-
-    if (new_block_found) {
-        // A new block is opening. Now it is safe to close unmatched blocks
-        // because we know lazy continuation does not apply.
+    // closeUnmatched already called inside tryOpenNewBlock when any_opened.
+    if (!new_block_found && !incorporatesLazyContinuation(line, match))
         closeUnmatched(match.first_unmatched);
-        // openBlock() was already called inside tryOpenNewBlock().
-
-    } else if (incorporatesLazyContinuation(line, match)) {
-        // Tip is an open Paragraph, the line is not blank, and no new block
-        // opened. The unmatched ancestor blocks are intentionally kept open —
-        // this is the lazy continuation rule (spec §5.1).
-        // Text will be appended to the paragraph tip in step 3.
-
-    } else {
-        // No new block, no lazy continuation.
-        // Close the unmatched blocks and let text fall into the deepest
-        // matched block in step 3.
-        closeUnmatched(match.first_unmatched);
-    }
 }
 
 // ── Step 3 ────────────────────────────────────────────────────────────────
 
-void SpineHandler::step3AppendText(
-    const ScannedLine&     line,
-    const SpineMatchResult& match)
+void SpineHandler::step3AppendText(const ScannedLine& line, const SpineMatchResult& match)
 {
+    // Swallow conditions: fenced-code closing fence (step 1) or a single-line
+    // opener such as ATX heading or ThematicBreak (step 2).
+    if (match.swallow_line || swallow_current_line_) return;
     if (line.is_blank) return;
 
-    // Special case A: setext underline.
-    // If the current tip is a Paragraph and this line is a valid setext
-    // underline (a run of '=' or '-' with optional trailing spaces, indent
-    // 0–3), retroactively promote the Paragraph to a Heading. The underline
-    // line is consumed here and nothing is appended to string_content.
+    // Setext underline: promote the tip Paragraph to a Heading and close it.
+    // Uses block_rules::isSetextUnderline internally.
     if (tryPromoteSetextHeading(line)) return;
 
-    // Normal case: append this line's content to the tip's string_content.
-    // current_byte_ is the byte offset immediately after the last container
-    // prefix consumed by consumeColumns() — correct even when a tab was split.
-    // Do NOT use line.next_non_space here; see §9.3.
+    // Implicit Paragraph: if the tip is still a container block after step 2,
+    // open a Paragraph to receive the text. This replaces the Paragraph
+    // "fallback" that would otherwise live inside block_rules::tryOpen.
+    {
+        const NodeType tt = tip()->type;
+        if (tt == NodeType::Document || tt == NodeType::BlockQuote
+                || tt == NodeType::List || tt == NodeType::Item)
+            openBlock(NodeType::Paragraph, std::monostate{});
+    }
+
+    // Append content. current_byte_ is correct even when a tab was split; see §9.3.
     appendText(line.content, current_byte_);
 }
 ```
 
-The continuation predicates tested in step 1 are described in [§3.1](03_continuation_rules.md#31-continuation-rules-per-block-type). The open-block rules in step 2 are described in [§3.2](03_continuation_rules.md#32-open-block-rules--step-2-triggers).
+The continuation predicates are described in [§3.1](03_continuation_rules.md#31-continuation-rules-per-block-type) and implemented in [§10.2](10_block_rules.md#102-continuationmatches). The open-block rules are described in [§3.2](03_continuation_rules.md#32-open-block-rules--step-2-triggers) and implemented in [§10.5](10_block_rules.md#105-tryopen).
 
 ---
 
@@ -284,28 +338,24 @@ void SpineHandler::closeBlock()
     auto node = std::move(spine_.back());
     spine_.pop_back();
 
-    // Per-type finalization.
-    if (node->type == NodeType::Paragraph) {
-        maybeScanLinkRefDefs(node.get());   // correct site: covers blank-line closure too (§9.2)
-    } else if (node->type == NodeType::CodeBlock) {
-        const auto& cbd = std::get<CodeBlockData>(node->data);
-        if (!cbd.fenced) {
-            // Strip trailing blank lines from indented code blocks (spec §4.4).
-            // string_content lines are '\n'-terminated; remove any suffix of
-            // lines that contain only spaces followed by '\n'.
-            stripTrailingBlankLines(node->string_content);
-        }
-    }
+    // Paragraph: extract link reference definitions before any other cleanup,
+    // so that paragraphs closed by a blank line (which skips step 3) are also
+    // scanned. See §9.2.
+    if (node->type == NodeType::Paragraph)
+        maybeScanLinkRefDefs(node.get());
+
+    // Type-specific finalization delegated to the block_rules module (§10.7):
+    //   IndentedCodeBlock → strip trailing blank lines
+    //   SetextHeading     → strip leading/trailing blank lines
+    block_rules::onClose(*node);
 
     node->end_line = line_number_;
     node->is_open  = false;
 
     if (!spine_.empty()) {
-        // Transfer ownership to the parent's children vector.
         spine_.back()->children.push_back(std::move(node));
     } else {
-        // Closing the Document root — capture it for releaseDocument().
-        document_ = std::move(node);
+        document_ = std::move(node);   // Document root captured for releaseDocument()
     }
 }
 
@@ -363,6 +413,9 @@ BlockNode* SpineHandler::tip() const noexcept
 //   - at least one ancestor block failed continuation (first_unmatched < spine_.size())
 //   - the current tip is an open Paragraph
 //   - the line is not blank
+//   - the line is NOT a setext underline (spec §5.1: a setext underline never
+//     acts as a lazy continuation; the missing '>' closes the BlockQuote and
+//     the '---' becomes a thematic break instead of promoting the paragraph)
 
 bool SpineHandler::incorporatesLazyContinuation(
     const ScannedLine&     line,
@@ -370,7 +423,8 @@ bool SpineHandler::incorporatesLazyContinuation(
 {
     return !line.is_blank
         && match.first_unmatched < spine_.size()
-        && tip()->type == NodeType::Paragraph;
+        && tip()->type == NodeType::Paragraph
+        && !block_rules::isSetextUnderline(line);
 }
 ```
 

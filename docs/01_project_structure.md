@@ -17,13 +17,15 @@ markdown_parser/
 │       ├── BlockNode.hpp           # BlockNode struct
 │       ├── InlineNode.hpp          # InlineNode, Delimiter, BracketEntry
 │       ├── PreScanner.hpp          # PreScanner class
-│       ├── SpineHandler.hpp        # SpineHandler class
+│       ├── SpineHandler.hpp        # SpineHandler class + SpineMatchResult
+│       ├── block_rules.hpp         # ContinuationResult, OpenResult, block_rules namespace
 │       └── InlineParser.hpp        # InlineParser class
 │
 ├── src/
 │   ├── main.cpp
 │   ├── PreScanner.cpp
 │   ├── SpineHandler.cpp
+│   ├── block_rules.cpp             # continuation/open/close predicates (§3)
 │   └── InlineParser.cpp
 │
 ├── tests/
@@ -51,6 +53,7 @@ set(CMAKE_CXX_STANDARD 20)
 add_library(md_parser
     src/PreScanner.cpp
     src/SpineHandler.cpp
+    src/block_rules.cpp
     src/InlineParser.cpp
 )
 target_include_directories(md_parser PUBLIC include)
@@ -66,9 +69,11 @@ add_subdirectory(tests)
 ## Header dependency order
 
 `Types.hpp` has no internal deps. `ScannedLine.hpp` includes only `Types.hpp`.
-`BlockNode.hpp` and `InlineNode.hpp` include `Types.hpp`. Component headers
-(`PreScanner`, `SpineHandler`, `InlineParser`) include the node headers they
-operate on. No circular dependencies.
+`BlockNode.hpp` and `InlineNode.hpp` include `Types.hpp`. `block_rules.hpp`
+includes `BlockNode.hpp` and `ScannedLine.hpp`. Component headers (`PreScanner`,
+`SpineHandler`, `InlineParser`) include the node headers they operate on.
+`SpineHandler.hpp` includes `block_rules.hpp` indirectly via its `.cpp`.
+No circular dependencies.
 
 The types defined in these headers are described in [§2 Data types and node structures](02_data_types.md).
 

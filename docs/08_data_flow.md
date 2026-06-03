@@ -14,26 +14,52 @@ ScannedLine  { content, indent, virtual_indent, next_non_space, is_blank }
   │           (no classification — raw bytes only)
   │
   ▼ SpineHandler::processLine()
+  │   reset: partial_tab_remaining_, current_col_, current_byte_,
+  │           swallow_current_line_
   │
   ├─ step 1: step1WalkSpine()
-  │    Walk spine top-down. Test continuation predicates via consumeColumns().
-  │    Update current_col_ and partial_tab_remaining_ as prefixes are consumed.
-  │    Produce SpineMatchResult { deepest_matched, first_unmatched }.
+  │    Walk spine[1..] top-down.
+  │    For each block call block_rules::continuationMatches(node, line):
+  │      matched  → consumeColumns(cols_to_consume); deepest_matched = i
+  │      !matched → first_unmatched = i
+  │                 swallow_line = cr.swallow_line  (fenced-code closing fence)
+  │                 break
+  │    Produce SpineMatchResult { deepest_matched, first_unmatched, swallow_line }.
   │    NO blocks closed here.
   │
-  ├─ step 2: step2NewBlocks()
-  │    new block found?       → closeUnmatched() + openBlock()
-  │                               openBlock() pushes onto spine_
-  │    lazy continuation?     → keep unmatched open, no close, no open
-  │    neither?               → closeUnmatched()
+  ├─ step 2: step2NewBlocks()  [tryOpenNewBlock — container loop]
+  │    cur = scanner_.scanWithOffset(line.content[current_byte_..], current_col_)
+  │    loop:
+  │      block_rules::tryOpen(cur, tip_is_paragraph, inside_list_blank)
+  │        → nullopt                  break (no opener)
+  │        → OpenResult (container)   if first iter: closeUnmatched(first_unmatched)
+  │                                   open List if needed (for Item)
+  │                                   openBlock(type, data)
+  │                                   set node->string_content = extracted_content
+  │                                   consumeColumns(cols_consumed)
+  │                                   cur = scanner_.scanWithOffset(remaining, current_col_)
+  │                                   continue loop
+  │        → OpenResult (leaf)        same open steps
+  │                                   if swallow_line: swallow_current_line_ = true
+  │                                   break
+  │    if no opener found and not lazy continuation: closeUnmatched(first_unmatched)
   │
-  └─ step 3: step3AppendText()
-       setext underline?      → tryPromoteSetextHeading(), return
-       normal?                → appendText(line.content, current_byte_) → tip()->string_content
-                                  current_byte_ set by consumeColumns(), not line.next_non_space
-                                  if partial_tab_remaining_ > 0:
-                                    emit spaces, skip tab byte, clear flag
-                                  append '\n' as line separator
+  ├─ step 3: step3AppendText()
+  │    swallow_current_line_ || match.swallow_line?  → return (line consumed silently)
+  │    is_blank?                                     → return
+  │    tryPromoteSetextHeading(line)?
+  │      isSetextUnderline → promote tip Paragraph to Heading, closeBlock(), return
+  │    tip is container (Document/BlockQuote/List/Item)?
+  │      → openBlock(Paragraph)       implicit Paragraph for non-blank, non-opener lines
+  │    appendText(line.content, current_byte_) → tip()->string_content += content + '\n'
+  │      partial_tab_remaining_ > 0: prepend spaces, skip tab byte, clear flag
+  │
+  └─ checkHtmlBlockEnd(line)          [post-step-3]
+       tip is HtmlBlock types 1–5?
+         block_rules::htmlBlockEndMet(node, line.content)?
+           → closeBlock()
+
+  tip()->last_line_blank = line.is_blank
 
   [repeat for every line]
 
@@ -41,11 +67,14 @@ ScannedLine  { content, indent, virtual_indent, next_non_space, is_blank }
   │
   ├─ phase 1 completion
   │    closeBlock() × N  (drain spine tip-first, set is_open=false, record end_line)
+  │    each closeBlock() calls:
+  │      maybeScanLinkRefDefs()  for Paragraph
+  │      block_rules::onClose()  for type-specific finalization
   │    ref_map_ is now fully populated
   │
   └─ phase 2: parseInlineContent()
        depth-first tree walk
-       for each leaf block (Paragraph, Heading, CodeBlock, HtmlBlock):
+       for each leaf block (Paragraph, Heading):
          InlineParser::parse(block, ref_map_)
            scan string_content character by character
            build InlineNode children vector
@@ -57,7 +86,8 @@ ScannedLine  { content, indent, virtual_indent, next_non_space, is_blank }
 
 Key components in this pipeline:
 - [`PreScanner`](04_prescanner.md) — produces `ScannedLine`
-- [`SpineHandler`](05_spine_handler.md) — drives the per-line loop and phase boundary
+- [`block_rules`](10_block_rules.md) — stateless predicate/descriptor module for continuation, open, and close rules
+- [`SpineHandler`](05_spine_handler.md) — orchestrates the per-line loop and the phase boundary
 - [`InlineParser`](06_inline_parser.md) — phase 2 leaf-block processing
 - [Tab algorithm](07_tab_algorithm.md) — governs `consumeColumns()` and `appendText()`
 
@@ -68,7 +98,8 @@ Key components in this pipeline:
 ```
 openBlock()
   ├─ allocate BlockNode (make_unique)
-  ├─ push onto spine_               ← SPINE OWNS via unique_ptr
+  ├─ push onto spine_                  ← SPINE OWNS via unique_ptr
+  ├─ assign extracted_content if set   (ATX heading text)
   └─ tree attachment DEFERRED to closeBlock()
 
 processLine() [per line]
@@ -78,9 +109,11 @@ processLine() [per line]
 closeBlock()
   ├─ move unique_ptr out of spine_.back(), pop spine_
   ├─ per-type finalization (before end_line):
-  │    Paragraph  → maybeScanLinkRefDefs()  ← extracts into ref_map_, trims content
-  │                 (here, not step 3, so blank-line closure is also covered — §9.2)
-  │    CodeBlock (indented) → stripTrailingBlankLines()
+  │    Paragraph  → maybeScanLinkRefDefs()   extracts into ref_map_, trims content
+  │                 (here, not step 3 — covers blank-line closure too — §9.2)
+  │    any type   → block_rules::onClose()
+  │                   IndentedCodeBlock: stripTrailingBlankLines()
+  │                   SetextHeading: strip leading/trailing blank lines
   ├─ record end_line, set is_open = false
   └─ if parent exists: parent->children.push_back(std::move(node))  ← TREE ATTACH
      else (Document root): document_ = std::move(node)
@@ -113,6 +146,8 @@ The primitives `openBlock`, `closeBlock`, and `appendText` are implemented in [�
   `processLine()` call.
 - `InlineParser::ref_map_` — raw const pointer. Non-owning reference to
   `SpineHandler::ref_map_`. Valid for the duration of `finalize()`.
+- `block_rules` functions — all accept `const BlockNode&` or `BlockNode&`.
+  They do not own nodes and hold no references beyond the call.
 
 > **Note on `BlockNode` destruction:** `vector<unique_ptr<BlockNode>> children`
 > causes `~BlockNode()` to be called recursively — each destructor destroys its
