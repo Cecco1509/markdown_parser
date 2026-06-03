@@ -38,6 +38,7 @@ int main(int argc, char *argv[]) {
 
   std::string line;
   while (std::getline(file, line)) {
+    line += '\n';
     spine.processLine(line);
   }
   spine.finalize();
