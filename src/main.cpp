@@ -4,19 +4,40 @@
 #include "markdown_parser/HtmlRenderer.hpp"
 #include "markdown_parser/JsonRenderer.hpp"
 
+#include <fstream>
 #include <iostream>
 #include <string>
 
 int main(int argc, char* argv[]) {
-    // Optional flag: --json  (default is HTML)
-    bool json_mode = (argc >= 2 && std::string(argv[1]) == "--json");
+    // Usage: program [--json] <input_file>
+    bool json_mode = false;
+    std::string input_file;
+
+    for (int i = 1; i < argc; ++i) {
+        if (std::string(argv[i]) == "--json") {
+            json_mode = true;
+        } else {
+            input_file = argv[i];
+        }
+    }
+
+    if (input_file.empty()) {
+        std::cerr << "Usage: " << argv[0] << " [--json] <input_file>\n";
+        return 1;
+    }
+
+    std::ifstream file(input_file);
+    if (!file) {
+        std::cerr << "Error: cannot open file '" << input_file << "'\n";
+        return 1;
+    }
 
     PreScanner   scanner;
     InlineParser inline_parser;
     SpineHandler spine(scanner, inline_parser);
 
     std::string line;
-    while (std::getline(std::cin, line)) {
+    while (std::getline(file, line)) {
         line += '\n';
         spine.processLine(line);
     }
