@@ -38,6 +38,10 @@ private:
 
     std::unique_ptr<InlineNode> makeNode(InlineType type);
 
+    // Owned node list built during parse(); kept as a member so processEmphasis
+    // and handleBracketCloser can splice and reorder it without extra parameters.
+    std::vector<std::unique_ptr<InlineNode>> nodes_;
+
 public:
     // Shared with SpineHandler for phase-1 ref_map_ key insertion.
     // Collapses interior whitespace runs to a single space, trims leading/trailing
