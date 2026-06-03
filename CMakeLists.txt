@@ -17,6 +17,8 @@ add_library(md_parser
     src/SpineHandler.cpp
     src/InlineParser.cpp
     src/block_rules.cpp
+    src/HtmlRenderer.cpp
+    src/JsonRenderer.cpp
 )
 target_include_directories(md_parser PUBLIC include)
 

@@ -3,15 +3,18 @@
 #include "markdown_parser/PreScanner.hpp"
 #include "markdown_parser/SpineHandler.hpp"
 #include "markdown_parser/InlineParser.hpp"
+#include "markdown_parser/HtmlRenderer.hpp"
+#include "markdown_parser/JsonRenderer.hpp"
 
 #include <string>
 #include <sstream>
 
 namespace markdown_parser {
 
-// Top-level entry point: parse Markdown source and return rendered HTML.
-// HTML serialization is not yet implemented; returns empty string as placeholder.
-inline std::string parse(const std::string& source) {
+enum class OutputFormat { Html, Json };
+
+inline std::string parse(const std::string& source,
+                         OutputFormat fmt = OutputFormat::Html) {
     PreScanner   scanner;
     InlineParser inline_parser;
     SpineHandler spine(scanner, inline_parser);
@@ -24,8 +27,15 @@ inline std::string parse(const std::string& source) {
     }
     spine.finalize();
 
-    // TODO: serialize spine.releaseDocument() to HTML
-    return "";
+    auto doc = spine.releaseDocument();
+
+    if (fmt == OutputFormat::Json) {
+        JsonRenderer jr;
+        return jr.render(*doc);
+    }
+
+    HtmlRenderer hr;
+    return hr.render(*doc);
 }
 
 } // namespace markdown_parser
