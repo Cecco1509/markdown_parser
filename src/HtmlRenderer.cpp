@@ -127,15 +127,26 @@ void HtmlRenderer::visit(const BlockNode &node) {
   }
 
   case NodeType::Item:
-    out_ += node.children.size() > 1 ? "<li>\n" : "<li>";
-    if (tight_) {
-      // Tight: render block children without surrounding <p>.
+    if (!tight_) {
+      out_ += "<li>\n";
       for (const auto &child : node.children)
         visit(*child);
     } else {
-      // Loose: full block rendering (paragraphs produce <p>).
-      for (const auto &child : node.children)
-        visit(*child);
+      bool first_is_code = !node.children.empty() &&
+                           node.children[0]->type == NodeType::CodeBlock;
+      out_ += first_is_code ? "<li>\n" : "<li>";
+      for (size_t i = 0; i < node.children.size(); ++i) {
+        const auto &child = *node.children[i];
+        if (i == 0 && child.type == NodeType::Paragraph) {
+          // Render first paragraph's inline content right after <li>
+          for (const auto &il : child.inline_children)
+            visit(*il);
+          if (node.children.size() > 1)
+            out_ += '\n';
+        } else {
+          visit(child);
+        }
+      }
     }
     out_ += "</li>\n";
     break;
