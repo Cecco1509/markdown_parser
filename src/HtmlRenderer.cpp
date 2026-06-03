@@ -6,211 +6,228 @@
 #include <cassert>
 #include <variant>
 
-// ── helpers ───────────────────────────────────────────────────────────────────
+// ── helpers
+// ───────────────────────────────────────────────────────────────────
 
-std::string HtmlRenderer::escapeHtml(const std::string& s) {
-    std::string out;
-    out.reserve(s.size());
-    for (char c : s) {
-        switch (c) {
-            case '&':  out += "&amp;";  break;
-            case '<':  out += "&lt;";   break;
-            case '>':  out += "&gt;";   break;
-            case '"':  out += "&quot;"; break;
-            default:   out += c;        break;
-        }
+std::string HtmlRenderer::escapeHtml(const std::string &s) {
+  std::string out;
+  out.reserve(s.size());
+  for (char c : s) {
+    switch (c) {
+    case '&':
+      out += "&amp;";
+      break;
+    case '<':
+      out += "&lt;";
+      break;
+    case '>':
+      out += "&gt;";
+      break;
+    case '"':
+      out += "&quot;";
+      break;
+    default:
+      out += c;
+      break;
     }
-    return out;
+  }
+  return out;
 }
 
-std::string HtmlRenderer::escapeUrl(const std::string& s) {
-    // Percent-encode only characters that are invalid inside HTML attribute
-    // values: '&' and '"'. Everything else is left as-is per CommonMark.
-    std::string out;
-    out.reserve(s.size());
-    for (unsigned char c : s) {
-        if (c == '&')       out += "&amp;";
-        else if (c == '"')  out += "%22";
-        else                out += static_cast<char>(c);
-    }
-    return out;
+std::string HtmlRenderer::escapeUrl(const std::string &s) {
+  // Percent-encode only characters that are invalid inside HTML attribute
+  // values: '&' and '"'. Everything else is left as-is per CommonMark.
+  std::string out;
+  out.reserve(s.size());
+  for (unsigned char c : s) {
+    if (c == '&')
+      out += "&amp;";
+    else if (c == '"')
+      out += "%22";
+    else
+      out += static_cast<char>(c);
+  }
+  return out;
 }
 
-// ── public API ────────────────────────────────────────────────────────────────
+// ── public API
+// ────────────────────────────────────────────────────────────────
 
-std::string HtmlRenderer::render(const BlockNode& root) {
-    out_.clear();
-    tight_ = false;
-    visit(root);
-    return out_;
+std::string HtmlRenderer::render(const BlockNode &root) {
+  out_.clear();
+  tight_ = false;
+  visit(root);
+  return out_;
 }
 
-// ── BlockNode ─────────────────────────────────────────────────────────────────
+// ── BlockNode
+// ─────────────────────────────────────────────────────────────────
 
-void HtmlRenderer::visit(const BlockNode& node) {
-    switch (node.type) {
+void HtmlRenderer::visit(const BlockNode &node) {
+  switch (node.type) {
 
-    case NodeType::Document:
-        for (const auto& child : node.children)
-            visit(*child);
-        break;
+  case NodeType::Document:
+    for (const auto &child : node.children)
+      visit(*child);
+    break;
 
-    case NodeType::Paragraph:
-        if (tight_) {
-            // In tight lists paragraphs emit only their inline content.
-            for (const auto& il : node.inline_children)
-                visit(*il);
-        } else {
-            out_ += "<p>";
-            for (const auto& il : node.inline_children)
-                visit(*il);
-            out_ += "</p>\n";
-        }
-        break;
+  case NodeType::Paragraph:
+    if (tight_) {
+      // In tight lists paragraphs emit only their inline content.
+      for (const auto &il : node.inline_children)
+        visit(*il);
+    } else {
+      out_ += "<p>";
+      for (const auto &il : node.inline_children)
+        visit(*il);
+      out_ += "</p>\n";
+    }
+    break;
 
-    case NodeType::Heading: {
-        const auto& hd = std::get<HeadingData>(node.data);
-        out_ += "<h" + std::to_string(hd.level) + ">";
-        for (const auto& il : node.inline_children)
-            visit(*il);
-        out_ += "</h" + std::to_string(hd.level) + ">\n";
-        break;
+  case NodeType::Heading: {
+    const auto &hd = std::get<HeadingData>(node.data);
+    out_ += "<h" + std::to_string(hd.level) + ">";
+    for (const auto &il : node.inline_children)
+      visit(*il);
+    out_ += "</h" + std::to_string(hd.level) + ">\n";
+    break;
+  }
+
+  case NodeType::ThematicBreak:
+    out_ += "<hr />\n";
+    break;
+
+  case NodeType::BlockQuote:
+    out_ += "<blockquote>\n";
+    for (const auto &child : node.children)
+      visit(*child);
+    out_ += "</blockquote>\n";
+    break;
+
+  case NodeType::List: {
+    const auto &ld = std::get<ListData>(node.data);
+    bool prev = tight_;
+    tight_ = ld.tight;
+
+    if (ld.list_type == ListType::Ordered) {
+      if (ld.start != 1)
+        out_ += "<ol start=\"" + std::to_string(ld.start) + "\">\n";
+      else
+        out_ += "<ol>\n";
+    } else {
+      out_ += "<ul>\n";
     }
 
-    case NodeType::ThematicBreak:
-        out_ += "<hr />\n";
-        break;
+    for (const auto &child : node.children)
+      visit(*child);
 
-    case NodeType::BlockQuote:
-        out_ += "<blockquote>\n";
-        for (const auto& child : node.children)
-            visit(*child);
-        out_ += "</blockquote>\n";
-        break;
+    out_ += (ld.list_type == ListType::Ordered) ? "</ol>\n" : "</ul>\n";
+    tight_ = prev;
+    break;
+  }
 
-    case NodeType::List: {
-        const auto& ld   = std::get<ListData>(node.data);
-        bool        prev = tight_;
-        tight_           = ld.tight;
-
-        if (ld.list_type == ListType::Ordered) {
-            if (ld.start != 1)
-                out_ += "<ol start=\"" + std::to_string(ld.start) + "\">\n";
-            else
-                out_ += "<ol>\n";
-        } else {
-            out_ += "<ul>\n";
-        }
-
-        for (const auto& child : node.children)
-            visit(*child);
-
-        out_ += (ld.list_type == ListType::Ordered) ? "</ol>\n" : "</ul>\n";
-        tight_ = prev;
-        break;
+  case NodeType::Item:
+    out_ += node.children.size() > 1 ? "<li>\n" : "<li>";
+    if (tight_) {
+      // Tight: render block children without surrounding <p>.
+      for (const auto &child : node.children)
+        visit(*child);
+    } else {
+      // Loose: full block rendering (paragraphs produce <p>).
+      for (const auto &child : node.children)
+        visit(*child);
     }
+    out_ += "</li>\n";
+    break;
 
-    case NodeType::Item:
-        out_ += "<li>";
-        if (tight_) {
-            // Tight: render block children without surrounding <p>.
-            for (const auto& child : node.children)
-                visit(*child);
-        } else {
-            // Loose: full block rendering (paragraphs produce <p>).
-            for (const auto& child : node.children)
-                visit(*child);
-        }
-        out_ += "</li>\n";
-        break;
-
-    case NodeType::CodeBlock: {
-        const auto& cd = std::get<CodeBlockData>(node.data);
-        // Extract first word of the info string as the language tag.
-        std::string lang;
-        if (!cd.info_string.empty()) {
-            auto end = cd.info_string.find_first_of(" \t\n");
-            lang = cd.info_string.substr(0, end);
-        }
-        if (lang.empty())
-            out_ += "<pre><code>";
-        else
-            out_ += "<pre><code class=\"language-" + escapeHtml(lang) + "\">";
-        out_ += escapeHtml(node.string_content);
-        out_ += "</code></pre>\n";
-        break;
+  case NodeType::CodeBlock: {
+    const auto &cd = std::get<CodeBlockData>(node.data);
+    // Extract first word of the info string as the language tag.
+    std::string lang;
+    if (!cd.info_string.empty()) {
+      auto end = cd.info_string.find_first_of(" \t\n");
+      lang = cd.info_string.substr(0, end);
     }
+    if (lang.empty())
+      out_ += "<pre><code>";
+    else
+      out_ += "<pre><code class=\"language-" + escapeHtml(lang) + "\">";
+    out_ += escapeHtml(node.string_content);
+    out_ += "</code></pre>\n";
+    break;
+  }
 
-    case NodeType::HtmlBlock:
-        out_ += node.string_content;
-        break;
-    }
+  case NodeType::HtmlBlock:
+    out_ += node.string_content;
+    break;
+  }
 }
 
-// ── InlineNode ────────────────────────────────────────────────────────────────
+// ── InlineNode
+// ────────────────────────────────────────────────────────────────
 
-void HtmlRenderer::visit(const InlineNode& node) {
-    switch (node.type) {
+void HtmlRenderer::visit(const InlineNode &node) {
+  switch (node.type) {
 
-    case InlineType::Text:
-        out_ += escapeHtml(node.literal);
-        break;
+  case InlineType::Text:
+    out_ += escapeHtml(node.literal);
+    break;
 
-    case InlineType::SoftBreak:
-        out_ += '\n';
-        break;
+  case InlineType::SoftBreak:
+    out_ += '\n';
+    break;
 
-    case InlineType::LineBreak:
-        out_ += "<br />\n";
-        break;
+  case InlineType::LineBreak:
+    out_ += "<br />\n";
+    break;
 
-    case InlineType::Code:
-        out_ += "<code>" + escapeHtml(node.literal) + "</code>";
-        break;
+  case InlineType::Code:
+    out_ += "<code>" + escapeHtml(node.literal) + "</code>";
+    break;
 
-    case InlineType::HtmlInline:
-        out_ += node.literal;
-        break;
+  case InlineType::HtmlInline:
+    out_ += node.literal;
+    break;
 
-    case InlineType::Emph:
-        out_ += "<em>";
-        for (const auto& child : node.children)
-            visit(*child);
-        out_ += "</em>";
-        break;
+  case InlineType::Emph:
+    out_ += "<em>";
+    for (const auto &child : node.children)
+      visit(*child);
+    out_ += "</em>";
+    break;
 
-    case InlineType::Strong:
-        out_ += "<strong>";
-        for (const auto& child : node.children)
-            visit(*child);
-        out_ += "</strong>";
-        break;
+  case InlineType::Strong:
+    out_ += "<strong>";
+    for (const auto &child : node.children)
+      visit(*child);
+    out_ += "</strong>";
+    break;
 
-    case InlineType::Link: {
-        const auto& ld = std::get<LinkData>(node.data);
-        out_ += "<a href=\"" + escapeUrl(ld.destination) + "\"";
-        if (ld.title)
-            out_ += " title=\"" + escapeHtml(*ld.title) + "\"";
-        out_ += ">";
-        for (const auto& child : node.children)
-            visit(*child);
-        out_ += "</a>";
-        break;
-    }
+  case InlineType::Link: {
+    const auto &ld = std::get<LinkData>(node.data);
+    out_ += "<a href=\"" + escapeUrl(ld.destination) + "\"";
+    if (ld.title)
+      out_ += " title=\"" + escapeHtml(*ld.title) + "\"";
+    out_ += ">";
+    for (const auto &child : node.children)
+      visit(*child);
+    out_ += "</a>";
+    break;
+  }
 
-    case InlineType::Image: {
-        const auto& ld = std::get<LinkData>(node.data);
-        // Alt text is the plain text of the children (no HTML tags).
-        std::string alt;
-        for (const auto& child : node.children)
-            if (child->type == InlineType::Text)
-                alt += child->literal;
-        out_ += "<img src=\"" + escapeUrl(ld.destination) + "\"";
-        out_ += " alt=\"" + escapeHtml(alt) + "\"";
-        if (ld.title)
-            out_ += " title=\"" + escapeHtml(*ld.title) + "\"";
-        out_ += " />";
-        break;
-    }
-    }
+  case InlineType::Image: {
+    const auto &ld = std::get<LinkData>(node.data);
+    // Alt text is the plain text of the children (no HTML tags).
+    std::string alt;
+    for (const auto &child : node.children)
+      if (child->type == InlineType::Text)
+        alt += child->literal;
+    out_ += "<img src=\"" + escapeUrl(ld.destination) + "\"";
+    out_ += " alt=\"" + escapeHtml(alt) + "\"";
+    if (ld.title)
+      out_ += " title=\"" + escapeHtml(*ld.title) + "\"";
+    out_ += " />";
+    break;
+  }
+  }
 }
