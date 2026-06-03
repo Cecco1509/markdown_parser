@@ -7,13 +7,11 @@
 #include <optional>
 
 SpineHandler::SpineHandler(PreScanner &scanner, InlineParser &inline_parser)
-    : scanner_(scanner), inline_parser_(inline_parser)
-{
+    : scanner_(scanner), inline_parser_(inline_parser) {
   openBlock(NodeType::Document, std::monostate{});
 }
 
-void SpineHandler::processLine(std::string_view raw)
-{
+void SpineHandler::processLine(std::string_view raw) {
   partial_tab_remaining_ = 0;
   current_col_ = 0;
   current_byte_ = 0;
@@ -36,48 +34,41 @@ void SpineHandler::processLine(std::string_view raw)
     tip()->last_line_blank = line.is_blank;
 }
 
-void SpineHandler::finalize()
-{
+void SpineHandler::finalize() {
   while (!spine_.empty())
     closeBlock();
   parseInlineContent(document_.get());
 }
 
-std::unique_ptr<BlockNode> SpineHandler::releaseDocument()
-{
+std::unique_ptr<BlockNode> SpineHandler::releaseDocument() {
   return std::move(document_);
 }
 
 // ── Step 1
 // ────────────────────────────────────────────────────────────────────
 
-SpineMatchResult SpineHandler::step1WalkSpine(const ScannedLine &line)
-{
+SpineMatchResult SpineHandler::step1WalkSpine(const ScannedLine &line) {
   SpineMatchResult result;
   result.deepest_matched = 0;
   result.first_unmatched = spine_.size();
 
-  for (std::size_t i = 1; i < spine_.size(); ++i)
-  {
+  for (std::size_t i = 1; i < spine_.size(); ++i) {
     auto cr = block_rules::continuationMatches(*spine_[i], line);
-    if (cr.matched)
-    {
+    if (cr.matched) {
       if (cr.cols_to_consume > 0)
         consumeColumns(line.content, current_byte_, cr.cols_to_consume);
       result.deepest_matched = i;
       // Leaf blocks cannot contain nested blocks; stop here so new openers
       // in step2 can close this leaf via first_unmatched.
       const NodeType t = spine_[i]->type;
-      const bool is_leaf = t != NodeType::Document && t != NodeType::BlockQuote &&
-                           t != NodeType::List && t != NodeType::Item;
-      if (is_leaf)
-      {
+      const bool is_leaf = t != NodeType::Document &&
+                           t != NodeType::BlockQuote && t != NodeType::List &&
+                           t != NodeType::Item;
+      if (is_leaf) {
         result.first_unmatched = i;
         break;
       }
-    }
-    else
-    {
+    } else {
       result.first_unmatched = i;
       if (cr.swallow_line)
         result.swallow_line = true;
@@ -91,31 +82,27 @@ SpineMatchResult SpineHandler::step1WalkSpine(const ScannedLine &line)
 // ────────────────────────────────────────────────────────────────────
 
 bool SpineHandler::tryOpenNewBlock(const ScannedLine &line,
-                                   const SpineMatchResult &match)
-{
+                                   const SpineMatchResult &match) {
   bool any_opened = false;
   ScannedLine cur =
       scanner_.scanWithOffset(line.content.substr(current_byte_), current_col_);
 
   int cycle = 0;
-  while (true)
-  {
-    std::cerr << "[tryOpenNewBlock] cycle=" << cycle++
-              << " current_byte_=" << current_byte_
-              << " current_col_=" << current_col_ << " remaining=\""
-              << line.content.substr(current_byte_) << "\"\n";
-    std::cerr << "  Press ENTER to continue...";
+  while (true) {
+    // std::cerr << "[tryOpenNewBlock] cycle=" << cycle++
+    //           << " current_byte_=" << current_byte_
+    //           << " current_col_=" << current_col_ << " remaining=\""
+    //           << line.content.substr(current_byte_) << "\"\n";
+    // std::cerr << "  Press ENTER to continue...";
     //    std::cin.get();
 
     const bool tip_para = (tip()->type == NodeType::Paragraph);
 
     // Detect list-item blank-line continuation to suppress indented code.
     bool inside_list_blank = false;
-    for (auto it = spine_.rbegin(); it != spine_.rend(); ++it)
-    {
+    for (auto it = spine_.rbegin(); it != spine_.rend(); ++it) {
       const NodeType t = (*it)->type;
-      if (t == NodeType::Item)
-      {
+      if (t == NodeType::Item) {
         inside_list_blank = (*it)->last_line_blank;
         break;
       }
@@ -125,23 +112,22 @@ bool SpineHandler::tryOpenNewBlock(const ScannedLine &line,
 
     auto result = block_rules::tryOpen(cur, tip_para, inside_list_blank);
     std::cerr << "  tryOpen result: " << (result ? "found" : "null")
-              << (result ? " cols=" + std::to_string(result->cols_consumed) : "") << "\n";
+              << (result ? " cols=" + std::to_string(result->cols_consumed)
+                         : "")
+              << "\n";
     if (!result)
       break;
 
-    if (!any_opened)
-    {
+    if (!any_opened) {
       closeUnmatched(match.first_unmatched);
       any_opened = true;
     }
 
     // For Item openers: open or reuse a containing List.
-    if (result->type == NodeType::Item && result->list_data.has_value())
-    {
+    if (result->type == NodeType::Item && result->list_data.has_value()) {
       const auto &new_ld = *result->list_data;
       bool need_new_list = (tip()->type != NodeType::List);
-      if (!need_new_list)
-      {
+      if (!need_new_list) {
         const auto &cur_ld = std::get<ListData>(tip()->data);
         need_new_list = cur_ld.list_type != new_ld.list_type ||
                         cur_ld.delimiter != new_ld.delimiter ||
@@ -157,10 +143,10 @@ bool SpineHandler::tryOpenNewBlock(const ScannedLine &line,
       new_node->string_content = result->extracted_content;
     if (result->cols_consumed > 0)
       consumeColumns(line.content, current_byte_, result->cols_consumed);
-    std::cerr << "  [after consume] byte=" << current_byte_ << " col=" << current_col_
+    std::cerr << "  [after consume] byte=" << current_byte_
+              << " col=" << current_col_
               << " cols_consumed=" << result->cols_consumed << "\n";
-    if (result->swallow_line)
-    {
+    if (result->swallow_line) {
       swallow_current_line_ = true;
       break;
     }
@@ -180,20 +166,14 @@ bool SpineHandler::tryOpenNewBlock(const ScannedLine &line,
 }
 
 void SpineHandler::step2NewBlocks(const ScannedLine &line,
-                                  const SpineMatchResult &match)
-{
+                                  const SpineMatchResult &match) {
   const bool new_block_found = tryOpenNewBlock(line, match);
 
-  if (new_block_found)
-  {
+  if (new_block_found) {
     // closeUnmatched already called inside tryOpenNewBlock
-  }
-  else if (incorporatesLazyContinuation(line, match))
-  {
+  } else if (incorporatesLazyContinuation(line, match)) {
     // lazy continuation: leave unmatched blocks open
-  }
-  else
-  {
+  } else {
     closeUnmatched(match.first_unmatched);
   }
 }
@@ -202,8 +182,7 @@ void SpineHandler::step2NewBlocks(const ScannedLine &line,
 // ────────────────────────────────────────────────────────────────────
 
 void SpineHandler::step3AppendText(const ScannedLine &line,
-                                   const SpineMatchResult &match)
-{
+                                   const SpineMatchResult &match) {
   if (match.swallow_line || swallow_current_line_)
     return;
   if (line.is_blank)
@@ -225,8 +204,7 @@ void SpineHandler::step3AppendText(const ScannedLine &line,
 // ── Tree mutation primitives
 // ──────────────────────────────────────────────────
 
-BlockNode *SpineHandler::openBlock(NodeType type, BlockData data)
-{
+BlockNode *SpineHandler::openBlock(NodeType type, BlockData data) {
   auto node_ptr = std::make_unique<BlockNode>();
   BlockNode *node = node_ptr.get();
   node->type = type;
@@ -237,18 +215,17 @@ BlockNode *SpineHandler::openBlock(NodeType type, BlockData data)
   return node;
 }
 
-void SpineHandler::closeBlock()
-{
+void SpineHandler::closeBlock() {
   auto node = std::move(spine_.back());
   spine_.pop_back();
 
-  if (node->type == NodeType::Paragraph)
-  {
+  if (node->type == NodeType::Paragraph) {
     maybeScanLinkRefDefs(node.get());
     // Paragraph carried only link reference definitions: discard it.
     const auto &sc = node->string_content;
-    const bool blank = std::all_of(sc.begin(), sc.end(), [](char c)
-                                   { return c == ' ' || c == '\t' || c == '\n'; });
+    const bool blank = std::all_of(sc.begin(), sc.end(), [](char c) {
+      return c == ' ' || c == '\t' || c == '\n';
+    });
     if (blank)
       return;
   }
@@ -258,27 +235,21 @@ void SpineHandler::closeBlock()
   node->end_line = line_number_;
   node->is_open = false;
 
-  if (!spine_.empty())
-  {
+  if (!spine_.empty()) {
     spine_.back()->children.push_back(std::move(node));
-  }
-  else
-  {
+  } else {
     document_ = std::move(node);
   }
 }
 
-void SpineHandler::closeUnmatched(std::size_t from_index)
-{
+void SpineHandler::closeUnmatched(std::size_t from_index) {
   while (spine_.size() > from_index)
     closeBlock();
 }
 
-void SpineHandler::appendText(std::string_view line, std::size_t from_byte)
-{
+void SpineHandler::appendText(std::string_view line, std::size_t from_byte) {
   BlockNode *t = tip();
-  if (partial_tab_remaining_ > 0)
-  {
+  if (partial_tab_remaining_ > 0) {
     t->string_content.append(partial_tab_remaining_, ' ');
     partial_tab_remaining_ = 0;
     ++from_byte;
@@ -293,8 +264,7 @@ BlockNode *SpineHandler::tip() const noexcept { return spine_.back().get(); }
 // ───────────────────────────────────────────────────────────────────
 
 bool SpineHandler::incorporatesLazyContinuation(
-    const ScannedLine &line, const SpineMatchResult &match) const noexcept
-{
+    const ScannedLine &line, const SpineMatchResult &match) const noexcept {
   if (line.is_blank)
     return false;
   if (match.first_unmatched >= spine_.size())
@@ -307,8 +277,7 @@ bool SpineHandler::incorporatesLazyContinuation(
   return true;
 }
 
-bool SpineHandler::tryPromoteSetextHeading(const ScannedLine &line)
-{
+bool SpineHandler::tryPromoteSetextHeading(const ScannedLine &line) {
   if (!block_rules::isSetextUnderline(line))
     return false;
   BlockNode *t = tip();
@@ -321,8 +290,7 @@ bool SpineHandler::tryPromoteSetextHeading(const ScannedLine &line)
   return true;
 }
 
-void SpineHandler::checkHtmlBlockEnd(const ScannedLine &line)
-{
+void SpineHandler::checkHtmlBlockEnd(const ScannedLine &line) {
   if (spine_.empty())
     return;
   BlockNode *t = tip();
@@ -336,12 +304,10 @@ void SpineHandler::checkHtmlBlockEnd(const ScannedLine &line)
 
 std::size_t SpineHandler::consumeColumns(std::string_view line,
                                          std::size_t byte_offset,
-                                         std::size_t n_cols)
-{
+                                         std::size_t n_cols) {
   std::size_t cols_needed = n_cols;
 
-  if (partial_tab_remaining_ > 0)
-  {
+  if (partial_tab_remaining_ > 0) {
     const std::size_t take = std::min(partial_tab_remaining_, cols_needed);
     partial_tab_remaining_ -= take;
     cols_needed -= take;
@@ -350,33 +316,24 @@ std::size_t SpineHandler::consumeColumns(std::string_view line,
       ++byte_offset; // tab fully consumed; advance past it
   }
 
-  while (cols_needed > 0 && byte_offset < line.size())
-  {
+  while (cols_needed > 0 && byte_offset < line.size()) {
     const unsigned char byte = static_cast<unsigned char>(line[byte_offset]);
-    if (byte == ' ')
-    {
+    if (byte == ' ') {
       ++byte_offset;
       --cols_needed;
       ++current_col_;
-    }
-    else if (byte == '\t')
-    {
+    } else if (byte == '\t') {
       const std::size_t tab_w = (current_col_ / 4 + 1) * 4 - current_col_;
-      if (tab_w <= cols_needed)
-      {
+      if (tab_w <= cols_needed) {
         ++byte_offset;
         cols_needed -= tab_w;
         current_col_ += tab_w;
-      }
-      else
-      {
+      } else {
         partial_tab_remaining_ = tab_w - cols_needed;
         current_col_ += cols_needed;
         cols_needed = 0;
       }
-    }
-    else
-    {
+    } else {
       ++byte_offset;
       --cols_needed;
       ++current_col_;
@@ -386,8 +343,7 @@ std::size_t SpineHandler::consumeColumns(std::string_view line,
   return byte_offset;
 }
 
-void SpineHandler::parseInlineContent(BlockNode *node)
-{
+void SpineHandler::parseInlineContent(BlockNode *node) {
   const bool needs_inline =
       node->type == NodeType::Paragraph || node->type == NodeType::Heading;
 
@@ -395,12 +351,9 @@ void SpineHandler::parseInlineContent(BlockNode *node)
       node->type == NodeType::Document || node->type == NodeType::BlockQuote ||
       node->type == NodeType::List || node->type == NodeType::Item;
 
-  if (needs_inline)
-  {
+  if (needs_inline) {
     inline_parser_.parse(node, ref_map_);
-  }
-  else if (is_container)
-  {
+  } else if (is_container) {
     for (const auto &child : node->children)
       parseInlineContent(child.get());
   }
@@ -410,15 +363,13 @@ void SpineHandler::parseInlineContent(BlockNode *node)
 // Returns false (pos unchanged) if no valid definition starts at pos.
 // Inserts into ref_map_ on success (first-definition-wins: skips duplicates).
 bool SpineHandler::tryScanOneLinkRefDef(std::string_view content,
-                                        std::size_t &pos)
-{
+                                        std::size_t &pos) {
   const std::size_t len = content.size();
   std::size_t p = pos;
 
   // 0–3 spaces of leading indentation (4+ would have been a code block already)
   std::size_t indent = 0;
-  while (indent < 3 && p < len && content[p] == ' ')
-  {
+  while (indent < 3 && p < len && content[p] == ' ') {
     ++p;
     ++indent;
   }
@@ -450,8 +401,7 @@ bool SpineHandler::tryScanOneLinkRefDef(std::string_view content,
   // Two consecutive newlines (blank line) → no destination → fail.
   while (p < len && (content[p] == ' ' || content[p] == '\t'))
     ++p;
-  if (p < len && content[p] == '\n')
-  {
+  if (p < len && content[p] == '\n') {
     ++p;
     if (p < len && content[p] == '\n')
       return false; // blank line
@@ -463,66 +413,50 @@ bool SpineHandler::tryScanOneLinkRefDef(std::string_view content,
 
   // Scan destination.
   std::string destination;
-  if (content[p] == '<')
-  {
+  if (content[p] == '<') {
     ++p;
     bool closed = false;
-    while (p < len)
-    {
+    while (p < len) {
       const char c = content[p];
       if (c == '\n' || c == '<')
         break; // not allowed unescaped
-      if (c == '>')
-      {
+      if (c == '>') {
         closed = true;
         ++p;
         break;
       }
-      if (c == '\\' && p + 1 < len)
-      {
+      if (c == '\\' && p + 1 < len) {
         destination += content[p + 1];
         p += 2;
-      }
-      else
-      {
+      } else {
         destination += c;
         ++p;
       }
     }
     if (!closed)
       return false;
-  }
-  else
-  {
+  } else {
     int depth = 0;
-    while (p < len)
-    {
+    while (p < len) {
       const char c = content[p];
       if (c == ' ' || c == '\t' || c == '\n')
         break;
       if (static_cast<unsigned char>(c) < 0x20 || c == '\x7f')
         break;
-      if (c == '(')
-      {
+      if (c == '(') {
         ++depth;
         destination += c;
         ++p;
-      }
-      else if (c == ')')
-      {
+      } else if (c == ')') {
         if (depth == 0)
           break;
         --depth;
         destination += c;
         ++p;
-      }
-      else if (c == '\\' && p + 1 < len)
-      {
+      } else if (c == '\\' && p + 1 < len) {
         destination += content[p + 1];
         p += 2;
-      }
-      else
-      {
+      } else {
         destination += c;
         ++p;
       }
@@ -544,8 +478,7 @@ bool SpineHandler::tryScanOneLinkRefDef(std::string_view content,
 
     while (tp < len && (content[tp] == ' ' || content[tp] == '\t'))
       ++tp;
-    if (tp < len && content[tp] == '\n')
-    {
+    if (tp < len && content[tp] == '\n') {
       crossed_newline = true;
       ++tp;
       while (tp < len && (content[tp] == ' ' || content[tp] == '\t'))
@@ -553,21 +486,17 @@ bool SpineHandler::tryScanOneLinkRefDef(std::string_view content,
     }
 
     if (tp < len &&
-        (content[tp] == '"' || content[tp] == '\'' || content[tp] == '('))
-    {
+        (content[tp] == '"' || content[tp] == '\'' || content[tp] == '(')) {
       const char open_d = content[tp];
       const char close_d = (open_d == '(') ? ')' : open_d;
       ++tp;
       std::string buf;
       bool title_ok = false;
       bool prev_nl = false;
-      while (tp < len)
-      {
+      while (tp < len) {
         const char c = content[tp];
-        if (c == '\n')
-        {
-          if (prev_nl)
-          {
+        if (c == '\n') {
+          if (prev_nl) {
             title_ok = false;
             break;
           } // blank line inside title
@@ -577,62 +506,47 @@ bool SpineHandler::tryScanOneLinkRefDef(std::string_view content,
           continue;
         }
         prev_nl = false;
-        if (c == close_d)
-        {
+        if (c == close_d) {
           title_ok = true;
           ++tp;
           break;
         }
-        if (c == '\\' && tp + 1 < len)
-        {
+        if (c == '\\' && tp + 1 < len) {
           buf += content[tp + 1];
           tp += 2;
-        }
-        else
-        {
+        } else {
           buf += c;
           ++tp;
         }
       }
 
-      if (title_ok)
-      {
+      if (title_ok) {
         // Check for garbage after the closing delimiter (issue 4).
         // "skip trailing spaces/tabs only — stop at '\n'" (issue 2).
         std::size_t ap = tp;
         while (ap < len && (content[ap] == ' ' || content[ap] == '\t'))
           ++ap;
 
-        if (ap >= len || content[ap] == '\n')
-        {
+        if (ap >= len || content[ap] == '\n') {
           // Clean: title accepted; point p at the '\n' (or EOI).
           title = std::move(buf);
           p = ap;
-        }
-        else if (crossed_newline)
-        {
+        } else if (crossed_newline) {
           // Garbage after a same-line title, but the title was on the next
           // line — rewind to pos_after_dest and accept the definition
           // without a title (issues 1 & 4). The title line stays as
           // paragraph text.
           p = pos_after_dest;
-        }
-        else
-        {
+        } else {
           // Garbage on the same line as the destination → whole definition
           // fails (issue 4).
           return false;
         }
-      }
-      else
-      {
+      } else {
         // Title parse failed (no closing delimiter, or blank line inside).
-        if (crossed_newline)
-        {
+        if (crossed_newline) {
           p = pos_after_dest; // rewind (issue 1)
-        }
-        else
-        {
+        } else {
           return false;
         }
       }
@@ -660,12 +574,10 @@ bool SpineHandler::tryScanOneLinkRefDef(std::string_view content,
   return true;
 }
 
-void SpineHandler::maybeScanLinkRefDefs(BlockNode *node)
-{
+void SpineHandler::maybeScanLinkRefDefs(BlockNode *node) {
   std::string_view content = node->string_content;
   std::size_t pos = 0;
-  while (pos < content.size())
-  {
+  while (pos < content.size()) {
     if (!tryScanOneLinkRefDef(content, pos))
       break;
   }
