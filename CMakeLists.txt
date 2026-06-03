@@ -16,6 +16,7 @@ add_library(md_parser
     src/PreScanner.cpp
     src/SpineHandler.cpp
     src/InlineParser.cpp
+    src/block_rules.cpp
 )
 target_include_directories(md_parser PUBLIC include)
 

@@ -15,6 +15,9 @@ class InlineParser;
 struct SpineMatchResult {
     std::size_t deepest_matched;
     std::size_t first_unmatched;
+    // Set by step1 when a fenced-code closing fence is detected; tells step3
+    // to swallow the line instead of appending it.
+    bool        swallow_line = false;
 };
 
 class SpineHandler {
@@ -35,6 +38,9 @@ private:
     std::size_t current_byte_     = 0;
     std::size_t partial_tab_remaining_ = 0;
     std::size_t current_col_          = 0;
+    // Set by step2 when an opener consumes the whole line (ATX heading,
+    // ThematicBreak, fenced-code opener); cleared at the start of each line.
+    bool        swallow_current_line_ = false;
 
     PreScanner&   scanner_;
     InlineParser& inline_parser_;
@@ -52,8 +58,8 @@ private:
     bool incorporatesLazyContinuation(const ScannedLine& line,
                                       const SpineMatchResult& match) const noexcept;
     bool tryOpenNewBlock(const ScannedLine& line, const SpineMatchResult& match);
-    bool continuationMatches(BlockNode* node, const ScannedLine& line);
     bool tryPromoteSetextHeading(const ScannedLine& line);
+    void checkHtmlBlockEnd(const ScannedLine& line);
 
     std::size_t consumeColumns(std::string_view line,
                                std::size_t      byte_offset,
