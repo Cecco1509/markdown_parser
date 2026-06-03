@@ -68,31 +68,29 @@ void InlineParser::parse(
 
     // Scan the string character by character, building inline nodes.
     // Each parseInline() call advances pos_ by at least one byte.
-    InlineNode* head = nullptr;
-    InlineNode* tail = nullptr;
+    // Nodes are accumulated into a temporary vector; ownership is transferred
+    // to block->inline_children at the end.
+    std::vector<std::unique_ptr<InlineNode>> nodes;
     while (pos_ < input_.size()) {
-        InlineNode* node = parseInline();
+        std::unique_ptr<InlineNode> node = parseInline();
         if (!node) continue;
-        if (!head) head = node;
-        if (tail)  tail->next = node;
-        node->prev = tail;
-        tail = node;
+        nodes.push_back(std::move(node));
     }
 
     // Process emphasis: match opener/closer pairs on the delimiter stack.
     // Emits Emph and Strong nodes wrapping their children.
     processEmphasis(std::nullopt);
 
-    block->inline_children = head;
+    block->inline_children = std::move(nodes);
 }
 
 // ── dispatch ──────────────────────────────────────────────────────────────
 
-// Dispatch on the current character. Returns the constructed InlineNode, or
-// nullptr if the character is absorbed without producing a node (e.g. a
+// Dispatch on the current character. Returns the constructed InlineNode (owned),
+// or nullptr if the character is absorbed without producing a node (e.g. a
 // delimiter that was pushed onto the delimiter stack).
 
-InlineNode* InlineParser::parseInline();
+std::unique_ptr<InlineNode> InlineParser::parseInline();
 
 // ── leaf scanners ─────────────────────────────────────────────────────────
 
@@ -102,16 +100,16 @@ InlineNode* InlineParser::parseInline();
 //   2. If the result begins AND ends with a space, and is not entirely spaces,
 //      strip exactly one leading and one trailing space.
 //      (e.g. " foo " → "foo", "  " → "  " — all-spaces strings are not stripped)
-// Returns a Code node, or nullptr if no closing run is found.
-InlineNode* InlineParser::parseBacktickString();
+// Returns a Code node (owned), or nullptr if no closing run is found.
+std::unique_ptr<InlineNode> InlineParser::parseBacktickString();
 
-// Match <URI> or <email> autolink forms. Returns a Link node on success,
+// Match <URI> or <email> autolink forms. Returns a Link node (owned) on success,
 // nullptr if the < does not start a valid autolink.
-InlineNode* InlineParser::parseAutolink();
+std::unique_ptr<InlineNode> InlineParser::parseAutolink();
 
 // Match open tag, closing tag, HTML comment, processing instruction,
-// declaration, or CDATA section. Returns an HtmlInline node, or nullptr.
-InlineNode* InlineParser::parseHtmlInline();
+// declaration, or CDATA section. Returns an HtmlInline node (owned), or nullptr.
+std::unique_ptr<InlineNode> InlineParser::parseHtmlInline();
 
 // ── link and image ────────────────────────────────────────────────────────
 
@@ -127,7 +125,7 @@ void InlineParser::handleBracketOpener(bool is_image);
 //   4. Shortcut ref:    ] with the bracket text used as the label
 // On failure (no matching opener or no valid link), emit ']' as a Text node
 // and leave the bracket stack intact.
-InlineNode* InlineParser::handleBracketCloser();
+std::unique_ptr<InlineNode> InlineParser::handleBracketCloser();
 
 // Scan a link destination in one of two forms:
 //   - Angle-bracket form: < ... > (no spaces, no unescaped </>)
@@ -165,7 +163,7 @@ void InlineParser::processEmphasis(std::optional<std::size_t> stack_bottom);
 static std::string InlineParser::normaliseLabel(std::string_view label);
 
 // Allocate a new InlineNode of the given type with default-initialised fields.
-InlineNode* InlineParser::makeNode(InlineType type);
+std::unique_ptr<InlineNode> InlineParser::makeNode(InlineType type);
 ```
 
 `normaliseLabel` must apply Unicode case folding — the implementation options are discussed in [§9.5](09_open_decisions.md#95-unicode-case-folding-for-link-reference-labels).

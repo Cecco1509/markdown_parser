@@ -180,7 +180,8 @@ struct Delimiter {
     int         num;            // number of delimiter characters remaining
     bool        can_open;       // this run is left-flanking
     bool        can_close;      // this run is right-flanking
-    InlineNode* node = nullptr; // the Text node holding the delimiter characters
+    InlineNode* node = nullptr; // non-owning observer into the inline_children vector;
+                                // the Text node holding the delimiter characters
 };
 
 // Internal to InlineParser. One entry per '[' or '![' opener on the bracket stack.
