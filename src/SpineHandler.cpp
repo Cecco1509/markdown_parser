@@ -310,8 +310,12 @@ void SpineHandler::step3AppendText(const ScannedLine &line,
   }
   if (match.swallow_line || swallow_current_line_)
     return;
-  if (line.is_blank)
+  // Blank lines are content inside code blocks (indented or fenced).
+  if (line.is_blank) {
+    if (tip()->type == NodeType::CodeBlock)
+      appendText(line.content, current_byte_);
     return;
+  }
   if (tryPromoteSetextHeading(line))
     return;
 
