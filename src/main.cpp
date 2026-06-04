@@ -34,7 +34,7 @@ int main(int argc, char *argv[]) {
 
   PreScanner scanner;
   InlineParser inline_parser;
-  SpineHandler spine(scanner, inline_parser);
+  SpineHandler spine(scanner, inline_parser, /*debug=*/true);
 
   std::string line;
   while (std::getline(file, line)) {

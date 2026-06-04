@@ -24,7 +24,7 @@ struct SpineMatchResult {
 
 class SpineHandler {
 public:
-    explicit SpineHandler(PreScanner& scanner, InlineParser& inline_parser);
+    explicit SpineHandler(PreScanner& scanner, InlineParser& inline_parser, bool debug = false);
 
     void processLine(std::string_view raw);
     void finalize();
@@ -35,6 +35,7 @@ private:
     std::unique_ptr<BlockNode>              document_;
     std::unordered_map<std::string, LinkDef> ref_map_;
 
+    bool        debug_            = false;
     int         line_number_      = 0;
     int         last_line_length_ = 0;
     std::size_t current_byte_     = 0;
