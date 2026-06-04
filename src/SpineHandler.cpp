@@ -293,7 +293,7 @@ void SpineHandler::step3AppendText(const ScannedLine &line,
               << " current_byte=" << current_byte_
               << " tip=" << nodeTypeToString(tip()->type) << "\n";
   }
-  if (match.swallow_line && swallow_current_line_)
+  if (match.swallow_line || swallow_current_line_)
     return;
   if (line.is_blank)
     return;
