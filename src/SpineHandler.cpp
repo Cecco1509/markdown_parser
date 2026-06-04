@@ -248,6 +248,14 @@ void SpineHandler::step2NewBlocks(const ScannedLine &line,
     return;
   }
 
+  // If the tip is a paragraph and this line is a setext underline, skip block
+  // opening entirely — step3 will promote the paragraph via
+  // tryPromoteSetextHeading. Without this guard, tryOpenNewBlock would close
+  // the paragraph and insert a ThematicBreak before promotion can run.
+  if (tip()->type == NodeType::Paragraph &&
+      block_rules::isSetextUnderline(line))
+    return;
+
   const bool new_block_found = tryOpenNewBlock(line, match);
 
   if (new_block_found) {
@@ -442,8 +450,12 @@ bool SpineHandler::tryPromoteSetextHeading(const ScannedLine &line) {
   if (!block_rules::isSetextUnderline(line))
     return false;
   BlockNode *t = tip();
-  if (t->type != NodeType::Paragraph)
+  if (t->type != NodeType::Paragraph) {
+    // std::cerr << "[tryPromoteSetextHeading] -> false (tip is not
+    // paragraph)\n"
+    //           << " tip type=" << nodeTypeToString(t->type) << "\n";
     return false;
+  }
   const char c = line.content[line.next_non_space];
   t->type = NodeType::Heading;
   t->data = HeadingData{(c == '=') ? 1 : 2, /*setext=*/true};

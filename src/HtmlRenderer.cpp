@@ -94,7 +94,7 @@ void HtmlRenderer::visit(const BlockNode &node) {
   }
 
   case NodeType::ThematicBreak:
-    out_ += "<hr />\n";
+    out_ += !out_.empty() && out_.back() != '\n' ? "\n<hr />\n" : "<hr />\n";
     break;
 
   case NodeType::BlockQuote:

@@ -1,6 +1,7 @@
 #include "markdown_parser/block_rules.hpp"
 #include <cctype>
 #include <cstring>
+#include <iostream>
 
 namespace block_rules {
 
@@ -180,23 +181,36 @@ bool htmlBlockEndMet(const BlockNode &node, std::string_view line_content) {
 // ─────────────────────────────────────────────────────
 
 bool isSetextUnderline(const ScannedLine &line) {
-  if (line.virtual_indent > 3 || line.is_blank)
+  // std::cerr << "[isSetextUnderline] content=\"" << line.content
+  //           << "\" virtual_indent=" << line.virtual_indent
+  //           << " is_blank=" << line.is_blank << "\n";
+  if (line.virtual_indent > 3 || line.is_blank) {
+    // std::cerr << "[isSetextUnderline] -> false (indent/blank)\n";
     return false;
+  }
   const std::size_t i = line.next_non_space;
-  if (i >= line.content.size())
+  if (i >= line.content.size()) {
+    // std::cerr << "[isSetextUnderline] -> false (empty after indent)\n";
     return false;
+  }
   const char c = line.content[i];
-  if (c != '=' && c != '-')
+  if (c != '=' && c != '-') {
+    // std::cerr << "[isSetextUnderline] -> false (char='" << c << "' not = or
+    // -)\n";
     return false;
+  }
   // All remaining chars must be the same marker char, then optional spaces.
   bool past_marker = false;
   for (std::size_t j = i; j < line.content.size(); ++j) {
     if (!past_marker && line.content[j] == c)
       continue;
     past_marker = true;
-    if (line.content[j] != ' ' && line.content[j] != '\t')
+    if (line.content[j] != ' ' && line.content[j] != '\t') {
+      // std::cerr << "[isSetextUnderline] -> false (mixed chars)\n";
       return false;
+    }
   }
+  // std::cerr << "[isSetextUnderline] -> true (marker='" << c << "')\n";
   return true;
 }
 
