@@ -6,7 +6,8 @@
 #include <iostream>
 #include <optional>
 
-SpineHandler::SpineHandler(PreScanner &scanner, InlineParser &inline_parser, bool debug)
+SpineHandler::SpineHandler(PreScanner &scanner, InlineParser &inline_parser,
+                           bool debug)
     : scanner_(scanner), inline_parser_(inline_parser), debug_(debug) {
   openBlock(NodeType::Document, std::monostate{});
 }
@@ -18,7 +19,8 @@ void SpineHandler::processLine(std::string_view raw) {
   swallow_current_line_ = false;
   ++line_number_;
   if (debug_) {
-  std::cerr << "[processLine] line=" << line_number_ << " raw=\"" << raw << "\"\n";
+    std::cerr << "[processLine] line=" << line_number_ << " raw=\"" << raw
+              << "\"\n";
   }
 
   ScannedLine line = scanner_.scan(raw);
@@ -39,7 +41,7 @@ void SpineHandler::processLine(std::string_view raw) {
 
 void SpineHandler::finalize() {
   if (debug_) {
-  std::cerr << "[finalize] spine_size=" << spine_.size() << "\n";
+    std::cerr << "[finalize] spine_size=" << spine_.size() << "\n";
   }
   while (!spine_.empty())
     closeBlock();
@@ -55,8 +57,10 @@ std::unique_ptr<BlockNode> SpineHandler::releaseDocument() {
 
 SpineMatchResult SpineHandler::step1WalkSpine(const ScannedLine &line) {
   if (debug_) {
-  std::cerr << "[step1WalkSpine] line=\"" << line.content << "\" is_blank=" << line.is_blank
-            << " spine_size=" << spine_.size() << " current_col=" << current_col_ << "\n";
+    std::cerr << "[step1WalkSpine] line=\"" << line.content
+              << "\" is_blank=" << line.is_blank
+              << " spine_size=" << spine_.size()
+              << " current_col=" << current_col_ << "\n";
   }
   SpineMatchResult result;
   result.deepest_matched = 0;
@@ -86,9 +90,10 @@ SpineMatchResult SpineHandler::step1WalkSpine(const ScannedLine &line) {
     }
   }
   if (debug_) {
-  std::cerr << "[step1WalkSpine] -> deepest_matched=" << result.deepest_matched
-            << " first_unmatched=" << result.first_unmatched
-            << " swallow_line=" << result.swallow_line << "\n";
+    std::cerr << "[step1WalkSpine] -> deepest_matched="
+              << result.deepest_matched
+              << " first_unmatched=" << result.first_unmatched
+              << " swallow_line=" << result.swallow_line << "\n";
   }
   return result;
 }
@@ -99,10 +104,11 @@ SpineMatchResult SpineHandler::step1WalkSpine(const ScannedLine &line) {
 bool SpineHandler::tryOpenNewBlock(const ScannedLine &line,
                                    const SpineMatchResult &match) {
   if (debug_) {
-  std::cerr << "[tryOpenNewBlock] line=\"" << line.content << "\""
-            << " current_byte=" << current_byte_ << " current_col=" << current_col_
-            << " first_unmatched=" << match.first_unmatched
-            << " tip=" << nodeTypeToString(tip()->type) << "\n";
+    std::cerr << "[tryOpenNewBlock] line=\"" << line.content << "\""
+              << " current_byte=" << current_byte_
+              << " current_col=" << current_col_
+              << " first_unmatched=" << match.first_unmatched
+              << " tip=" << nodeTypeToString(tip()->type) << "\n";
   }
   bool any_opened = false;
   ScannedLine cur =
@@ -199,9 +205,9 @@ bool SpineHandler::tryOpenNewBlock(const ScannedLine &line,
     if (result->cols_consumed > 0)
       consumeColumns(line.content, current_byte_, result->cols_consumed);
     if (debug_) {
-    std::cerr << "  [after consume] byte=" << current_byte_
-              << " col=" << current_col_
-              << " cols_consumed=" << result->cols_consumed << "\n";
+      std::cerr << "  [after consume] byte=" << current_byte_
+                << " col=" << current_col_
+                << " cols_consumed=" << result->cols_consumed << "\n";
     }
     if (result->swallow_line) {
       swallow_current_line_ = true;
@@ -220,7 +226,7 @@ bool SpineHandler::tryOpenNewBlock(const ScannedLine &line,
   }
 
   if (debug_) {
-  std::cerr << "[tryOpenNewBlock] -> any_opened=" << any_opened << "\n";
+    std::cerr << "[tryOpenNewBlock] -> any_opened=" << any_opened << "\n";
   }
   return any_opened;
 }
@@ -228,11 +234,11 @@ bool SpineHandler::tryOpenNewBlock(const ScannedLine &line,
 void SpineHandler::step2NewBlocks(const ScannedLine &line,
                                   const SpineMatchResult &match) {
   if (debug_) {
-  std::cerr << "[step2NewBlocks] line=\"" << line.content << "\""
-            << " swallow_line=" << match.swallow_line
-            << " first_unmatched=" << match.first_unmatched
-            << " spine_size=" << spine_.size()
-            << " tip=" << nodeTypeToString(tip()->type) << "\n";
+    std::cerr << "[step2NewBlocks] line=\"" << line.content << "\""
+              << " swallow_line=" << match.swallow_line
+              << " first_unmatched=" << match.first_unmatched
+              << " spine_size=" << spine_.size()
+              << " tip=" << nodeTypeToString(tip()->type) << "\n";
   }
   // A swallowed line (e.g. a fenced-code closing fence) has already been
   // consumed in step 1.  Just close unmatched blocks and skip step 2 entirely
@@ -250,18 +256,18 @@ void SpineHandler::step2NewBlocks(const ScannedLine &line,
     // lazy continuation: leave unmatched blocks open
 
     if (debug_) {
-    std::cerr << "[step2NewBlocks] lazy continuation: leaving unmatched from index "
-              << match.first_unmatched << " onward"
-              << " tip=" << nodeTypeToString(tip()->type)
-              << " unmatched_type=" << nodeTypeToString(spine_[match.first_unmatched]->type) << "\n";
+      std::cerr
+          << "[step2NewBlocks] lazy continuation: leaving unmatched from index "
+          << match.first_unmatched << " onward"
+          << " tip=" << nodeTypeToString(tip()->type) << " unmatched_type="
+          << nodeTypeToString(spine_[match.first_unmatched]->type) << "\n";
     }
 
   } else {
     closeUnmatched(match.first_unmatched);
     // A List whose item failed to continue has no way to receive bare text.
     // Close any such dangling List so its content lands in the right parent.
-    while (!line.is_blank && !spine_.empty() &&
-           tip()->type == NodeType::List)
+    while (!line.is_blank && !spine_.empty() && tip()->type == NodeType::List)
       closeBlock();
   }
 }
@@ -272,14 +278,14 @@ void SpineHandler::step2NewBlocks(const ScannedLine &line,
 void SpineHandler::step3AppendText(const ScannedLine &line,
                                    const SpineMatchResult &match) {
   if (debug_) {
-  std::cerr << "[step3AppendText] line=\"" << line.content << "\""
-            << " swallow_line=" << match.swallow_line
-            << " swallow_current_line=" << swallow_current_line_
-            << " is_blank=" << line.is_blank
-            << " current_byte=" << current_byte_
-            << " tip=" << nodeTypeToString(tip()->type) << "\n";
+    std::cerr << "[step3AppendText] line=\"" << line.content << "\""
+              << " swallow_line=" << match.swallow_line
+              << " swallow_current_line=" << swallow_current_line_
+              << " is_blank=" << line.is_blank
+              << " current_byte=" << current_byte_
+              << " tip=" << nodeTypeToString(tip()->type) << "\n";
   }
-  if (match.swallow_line || swallow_current_line_)
+  if (match.swallow_line && swallow_current_line_)
     return;
   if (line.is_blank)
     return;
@@ -297,8 +303,7 @@ void SpineHandler::step3AppendText(const ScannedLine &line,
   // For paragraphs, strip up to 3 leading spaces per CommonMark §4.4.
   // Use next_non_space when it advances past any unconsumed leading spaces.
   std::size_t text_start = current_byte_;
-  if (tip()->type == NodeType::Paragraph &&
-      line.next_non_space > text_start &&
+  if (tip()->type == NodeType::Paragraph && line.next_non_space > text_start &&
       line.next_non_space <= text_start + 3)
     text_start = line.next_non_space;
   appendText(line.content, text_start);
@@ -309,8 +314,9 @@ void SpineHandler::step3AppendText(const ScannedLine &line,
 
 BlockNode *SpineHandler::openBlock(NodeType type, BlockData data) {
   if (debug_) {
-  std::cerr << "[openBlock] type=" << nodeTypeToString(type)
-            << " line=" << line_number_ << " spine_size_before=" << spine_.size() << "\n";
+    std::cerr << "[openBlock] type=" << nodeTypeToString(type)
+              << " line=" << line_number_
+              << " spine_size_before=" << spine_.size() << "\n";
   }
   auto node_ptr = std::make_unique<BlockNode>();
   BlockNode *node = node_ptr.get();
@@ -324,8 +330,9 @@ BlockNode *SpineHandler::openBlock(NodeType type, BlockData data) {
 
 void SpineHandler::closeBlock() {
   if (debug_) {
-  std::cerr << "[closeBlock] closing type=" << nodeTypeToString(spine_.back()->type)
-            << " spine_size_before=" << spine_.size() << "\n";
+    std::cerr << "[closeBlock] closing type="
+              << nodeTypeToString(spine_.back()->type)
+              << " spine_size_before=" << spine_.size() << "\n";
   }
   auto node = std::move(spine_.back());
   spine_.pop_back();
@@ -365,8 +372,8 @@ void SpineHandler::closeBlock() {
 
 void SpineHandler::closeUnmatched(std::size_t from_index) {
   if (debug_) {
-  std::cerr << "[closeUnmatched] from_index=" << from_index
-            << " spine_size=" << spine_.size() << "\n";
+    std::cerr << "[closeUnmatched] from_index=" << from_index
+              << " spine_size=" << spine_.size() << "\n";
   }
   while (spine_.size() > from_index)
     closeBlock();
@@ -374,10 +381,10 @@ void SpineHandler::closeUnmatched(std::size_t from_index) {
 
 void SpineHandler::appendText(std::string_view line, std::size_t from_byte) {
   if (debug_) {
-  std::cerr << "[appendText] from_byte=" << from_byte
-            << " partial_tab_remaining=" << partial_tab_remaining_
-            << " text=\"" << line.substr(from_byte) << "\""
-            << " tip=" << nodeTypeToString(tip()->type) << "\n";
+    std::cerr << "[appendText] from_byte=" << from_byte
+              << " partial_tab_remaining=" << partial_tab_remaining_
+              << " text=\"" << line.substr(from_byte) << "\""
+              << " tip=" << nodeTypeToString(tip()->type) << "\n";
   }
   BlockNode *t = tip();
   if (partial_tab_remaining_ > 0) {
@@ -398,11 +405,11 @@ bool SpineHandler::incorporatesLazyContinuation(
     const ScannedLine &line, const SpineMatchResult &match) const noexcept {
 
   if (debug_) {
-  std::cerr << "[incorporatesLazyContinuation] line=\"" << line.content
-            << "\" is_blank=" << line.is_blank
-            << " first_unmatched=" << match.first_unmatched
-            << " spine_size=" << spine_.size()
-            << " tip=" << nodeTypeToString(tip()->type) << "\n";
+    std::cerr << "[incorporatesLazyContinuation] line=\"" << line.content
+              << "\" is_blank=" << line.is_blank
+              << " first_unmatched=" << match.first_unmatched
+              << " spine_size=" << spine_.size()
+              << " tip=" << nodeTypeToString(tip()->type) << "\n";
   }
   if (line.is_blank)
     return false;
@@ -410,7 +417,8 @@ bool SpineHandler::incorporatesLazyContinuation(
     return false;
   if (tip()->type != NodeType::Paragraph) {
     if (debug_) {
-    std::cerr << "[incorporatesLazyContinuation] -> false (tip is not paragraph)\n";
+      std::cerr
+          << "[incorporatesLazyContinuation] -> false (tip is not paragraph)\n";
     }
     return false;
   }
@@ -428,8 +436,8 @@ bool SpineHandler::incorporatesLazyContinuation(
 
 bool SpineHandler::tryPromoteSetextHeading(const ScannedLine &line) {
   if (debug_) {
-  std::cerr << "[tryPromoteSetextHeading] line=\"" << line.content
-            << "\" tip=" << nodeTypeToString(tip()->type) << "\n";
+    std::cerr << "[tryPromoteSetextHeading] line=\"" << line.content
+              << "\" tip=" << nodeTypeToString(tip()->type) << "\n";
   }
   if (!block_rules::isSetextUnderline(line))
     return false;
@@ -445,8 +453,9 @@ bool SpineHandler::tryPromoteSetextHeading(const ScannedLine &line) {
 
 void SpineHandler::checkHtmlBlockEnd(const ScannedLine &line) {
   if (debug_) {
-  std::cerr << "[checkHtmlBlockEnd] line=\"" << line.content
-            << "\" tip=" << (spine_.empty() ? "empty" : nodeTypeToString(tip()->type)) << "\n";
+    std::cerr << "[checkHtmlBlockEnd] line=\"" << line.content << "\" tip="
+              << (spine_.empty() ? "empty" : nodeTypeToString(tip()->type))
+              << "\n";
   }
   if (spine_.empty())
     return;
@@ -463,9 +472,10 @@ std::size_t SpineHandler::consumeColumns(std::string_view line,
                                          std::size_t byte_offset,
                                          std::size_t n_cols) {
   if (debug_) {
-  std::cerr << "[consumeColumns] byte_offset=" << byte_offset << " n_cols=" << n_cols
-            << " current_col=" << current_col_ << " partial_tab_remaining=" << partial_tab_remaining_
-            << " remaining=\"" << line.substr(byte_offset) << "\"\n";
+    std::cerr << "[consumeColumns] byte_offset=" << byte_offset
+              << " n_cols=" << n_cols << " current_col=" << current_col_
+              << " partial_tab_remaining=" << partial_tab_remaining_
+              << " remaining=\"" << line.substr(byte_offset) << "\"\n";
   }
   std::size_t cols_needed = n_cols;
 
@@ -503,16 +513,18 @@ std::size_t SpineHandler::consumeColumns(std::string_view line,
   }
   current_byte_ = byte_offset;
   if (debug_) {
-  std::cerr << "[consumeColumns] -> byte_offset=" << byte_offset
-            << " current_col=" << current_col_ << " partial_tab_remaining=" << partial_tab_remaining_ << "\n";
+    std::cerr << "[consumeColumns] -> byte_offset=" << byte_offset
+              << " current_col=" << current_col_
+              << " partial_tab_remaining=" << partial_tab_remaining_ << "\n";
   }
   return byte_offset;
 }
 
 void SpineHandler::parseInlineContent(BlockNode *node) {
   if (debug_) {
-  std::cerr << "[parseInlineContent] node type=" << nodeTypeToString(node->type)
-            << " children=" << node->children.size() << "\n";
+    std::cerr << "[parseInlineContent] node type="
+              << nodeTypeToString(node->type)
+              << " children=" << node->children.size() << "\n";
   }
   const bool needs_inline =
       node->type == NodeType::Paragraph || node->type == NodeType::Heading;
@@ -535,8 +547,8 @@ void SpineHandler::parseInlineContent(BlockNode *node) {
 bool SpineHandler::tryScanOneLinkRefDef(std::string_view content,
                                         std::size_t &pos) {
   if (debug_) {
-  std::cerr << "[tryScanOneLinkRefDef] pos=" << pos
-            << " remaining=\"" << content.substr(pos) << "\"\n";
+    std::cerr << "[tryScanOneLinkRefDef] pos=" << pos << " remaining=\""
+              << content.substr(pos) << "\"\n";
   }
   const std::size_t len = content.size();
   std::size_t p = pos;
@@ -750,8 +762,9 @@ bool SpineHandler::tryScanOneLinkRefDef(std::string_view content,
 
 void SpineHandler::maybeScanLinkRefDefs(BlockNode *node) {
   if (debug_) {
-  std::cerr << "[maybeScanLinkRefDefs] content_size=" << node->string_content.size()
-            << " content=\"" << node->string_content << "\"\n";
+    std::cerr << "[maybeScanLinkRefDefs] content_size="
+              << node->string_content.size() << " content=\""
+              << node->string_content << "\"\n";
   }
   std::string_view content = node->string_content;
   std::size_t pos = 0;
