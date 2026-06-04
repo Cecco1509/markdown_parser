@@ -128,6 +128,10 @@ void HtmlRenderer::visit(const BlockNode &node) {
 
   case NodeType::Item:
     if (!tight_) {
+      if (node.children.empty()) {
+        out_ += "<li></li>\n";
+        break;
+      }
       out_ += "<li>\n";
       for (const auto &child : node.children)
         visit(*child);
