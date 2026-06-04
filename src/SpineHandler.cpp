@@ -327,12 +327,24 @@ void SpineHandler::step3AppendText(const ScannedLine &line,
       openBlock(NodeType::Paragraph, std::monostate{});
   }
 
-  // For paragraphs, strip up to 3 leading spaces per CommonMark §4.4.
-  // Use next_non_space when it advances past any unconsumed leading spaces.
   std::size_t text_start = current_byte_;
-  if (tip()->type == NodeType::Paragraph && line.next_non_space > text_start &&
-      line.next_non_space <= text_start + 3)
-    text_start = line.next_non_space;
+  if (tip()->type == NodeType::CodeBlock) {
+    // For fenced code blocks, strip up to fence_indent spaces from each line
+    // (CommonMark §4.5: content lines lose the same indentation as the fence).
+    const auto &cbd = std::get<CodeBlockData>(tip()->data);
+    if (cbd.fenced) {
+      int to_strip = cbd.fence_indent;
+      while (to_strip > 0 && text_start < line.content.size() &&
+             line.content[text_start] == ' ') {
+        ++text_start;
+        --to_strip;
+      }
+    }
+  } else if (tip()->type == NodeType::Paragraph) {
+    // Strip up to 3 leading spaces per CommonMark §4.4.
+    if (line.next_non_space > text_start && line.next_non_space <= text_start + 3)
+      text_start = line.next_non_space;
+  }
   appendText(line.content, text_start);
 }
 
