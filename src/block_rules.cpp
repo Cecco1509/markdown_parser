@@ -588,7 +588,29 @@ void onClose(BlockNode &node) {
   case NodeType::Heading: {
     const auto &hd = std::get<HeadingData>(node.data);
     if (hd.setext) {
-      std::string_view sv = node.string_content;
+      // Strip trailing whitespace from every line, then trim leading/trailing
+      // newlines from the whole content (CommonMark: trailing spaces on setext
+      // heading content lines are insignificant).
+      std::string &sc = node.string_content;
+      std::string result;
+      result.reserve(sc.size());
+      std::size_t pos = 0;
+      while (pos < sc.size()) {
+        std::size_t nl = sc.find('\n', pos);
+        std::string_view seg = (nl == std::string::npos)
+                                   ? std::string_view(sc).substr(pos)
+                                   : std::string_view(sc).substr(pos, nl - pos);
+        while (!seg.empty() && (seg.back() == ' ' || seg.back() == '\t'))
+          seg.remove_suffix(1);
+        result.append(seg);
+        if (nl != std::string::npos) {
+          result += '\n';
+          pos = nl + 1;
+        } else {
+          break;
+        }
+      }
+      std::string_view sv = result;
       while (!sv.empty() && (sv.front() == '\n' || sv.front() == '\r'))
         sv.remove_prefix(1);
       while (!sv.empty() && (sv.back() == '\n' || sv.back() == '\r'))

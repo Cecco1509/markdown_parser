@@ -248,13 +248,28 @@ void SpineHandler::step2NewBlocks(const ScannedLine &line,
     return;
   }
 
-  // If the tip is a paragraph and this line is a setext underline, skip block
-  // opening entirely — step3 will promote the paragraph via
-  // tryPromoteSetextHeading. Without this guard, tryOpenNewBlock would close
-  // the paragraph and insert a ThematicBreak before promotion can run.
+  // If the tip is a paragraph whose container already matched (i.e., the
+  // paragraph itself will survive closeUnmatched) and this line is a setext
+  // underline, skip block opening — step3 promotes via tryPromoteSetextHeading.
+  // The container-matched check prevents treating e.g. `---` after a list item
+  // as a setext underline when the item's indent didn't match.
   if (tip()->type == NodeType::Paragraph &&
-      block_rules::isSetextUnderline(line))
+      block_rules::isSetextUnderline(line) && spine_.size() >= 2 &&
+      (spine_.size() - 2) < match.first_unmatched)
     return;
+
+  // A fully-matched non-paragraph leaf (CodeBlock, HtmlBlock, …) owns the
+  // remaining content — step3 will append it. Opening new blocks here would
+  // wrongly insert them as siblings of the leaf (e.g. `---` inside an indented
+  // code block being parsed as a ThematicBreak).
+  if (match.first_unmatched == spine_.size()) {
+    const NodeType tt = tip()->type;
+    const bool is_container = tt == NodeType::Document ||
+                              tt == NodeType::BlockQuote ||
+                              tt == NodeType::List || tt == NodeType::Item;
+    if (!is_container && tt != NodeType::Paragraph)
+      return;
+  }
 
   const bool new_block_found = tryOpenNewBlock(line, match);
 
