@@ -90,9 +90,9 @@ ContinuationResult continuationMatches(const BlockNode& node, const ScannedLine&
     case NodeType::CodeBlock: {
         const auto& cbd = std::get<CodeBlockData>(node.data);
         if (cbd.fenced) {
-            // Closing fence: same char, length ≥ opener length, indent ≤ 3,
-            // nothing but optional trailing spaces.
-            if (line.virtual_indent <= 3) {
+            // Closing fence: same char, length ≥ opener length, remaining indent
+            // (after parent containers consumed current_col columns) ≤ 3.
+            if (line.virtual_indent <= current_col + 3) {
                 const std::size_t start = line.next_non_space;
                 std::size_t run = 0;
                 while (start + run < line.content.size()
@@ -111,9 +111,10 @@ ContinuationResult continuationMatches(const BlockNode& node, const ScannedLine&
             }
             return {true};
         }
-        // Indented code block: blank or virtual_indent ≥ 4.
-        if (line.is_blank)              return {true};
-        if (line.virtual_indent >= 4)   return {true, 4};
+        // Indented code block: blank or remaining indent (after parent containers
+        // consumed current_col columns) is still ≥ 4.
+        if (line.is_blank)                                    return {true};
+        if (line.virtual_indent >= current_col + 4)           return {true, 4};
         return {false};
     }
 
@@ -436,11 +437,6 @@ static std::optional<OpenResult> tryOpenIndentedCode(const ScannedLine& line,
                                                       bool tip_is_paragraph,
                                                       bool inside_list_blank) {
     if (tip_is_paragraph) return std::nullopt;
-    // After a blank line in a list item, suppress a code block only when it
-    // sits at the minimum threshold (exactly 4 cols).  Deeper indentation
-    // (virtual_indent > 4) is an unambiguous code-block signal and must not
-    // be suppressed (CommonMark §5.3, Tabs examples 4 & 5).
-    if (inside_list_blank && line.virtual_indent == 4) return std::nullopt;
     if (line.virtual_indent < 4) return std::nullopt;
     if (line.is_blank) return std::nullopt;
     return OpenResult{NodeType::CodeBlock,
