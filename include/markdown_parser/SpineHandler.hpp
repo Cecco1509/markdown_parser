@@ -61,7 +61,7 @@ private:
     bool incorporatesLazyContinuation(const ScannedLine& line,
                                       const SpineMatchResult& match) const noexcept;
     bool tryOpenNewBlock(const ScannedLine& line, const SpineMatchResult& match);
-    bool tryPromoteSetextHeading(const ScannedLine& line);
+    bool tryPromoteSetextHeading(const ScannedLine& line, const SpineMatchResult& match);
     void checkHtmlBlockEnd(const ScannedLine& line);
 
     std::size_t consumeColumns(std::string_view line,

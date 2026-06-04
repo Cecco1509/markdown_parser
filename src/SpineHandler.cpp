@@ -316,7 +316,7 @@ void SpineHandler::step3AppendText(const ScannedLine &line,
       appendText(line.content, current_byte_);
     return;
   }
-  if (tryPromoteSetextHeading(line))
+  if (tryPromoteSetextHeading(line, match))
     return;
 
   // If the tip is a container, open a Paragraph to receive the text.
@@ -461,9 +461,6 @@ bool SpineHandler::incorporatesLazyContinuation(
     }
     return false;
   }
-  // A setext underline is never a valid lazy continuation (spec §5.1).
-  if (block_rules::isSetextUnderline(line))
-    return false;
   // Lazy continuation only applies for block quotes (the > marker is optional
   // on continuation lines). For list items the indent is mandatory — if the
   // item's container failed, the paragraph must close with it.
@@ -473,7 +470,8 @@ bool SpineHandler::incorporatesLazyContinuation(
   return true;
 }
 
-bool SpineHandler::tryPromoteSetextHeading(const ScannedLine &line) {
+bool SpineHandler::tryPromoteSetextHeading(const ScannedLine &line,
+                                           const SpineMatchResult &match) {
   if (debug_) {
     std::cerr << "[tryPromoteSetextHeading] line=\"" << line.content
               << "\" tip=" << nodeTypeToString(tip()->type) << "\n";
@@ -481,12 +479,12 @@ bool SpineHandler::tryPromoteSetextHeading(const ScannedLine &line) {
   if (!block_rules::isSetextUnderline(line))
     return false;
   BlockNode *t = tip();
-  if (t->type != NodeType::Paragraph) {
-    // std::cerr << "[tryPromoteSetextHeading] -> false (tip is not
-    // paragraph)\n"
-    //           << " tip type=" << nodeTypeToString(t->type) << "\n";
+  if (t->type != NodeType::Paragraph)
     return false;
-  }
+  // Don't promote when the paragraph's container is unmatched — the line
+  // arrived via lazy continuation and must be appended as plain text instead.
+  if (spine_.size() >= 2 && (spine_.size() - 2) >= match.first_unmatched)
+    return false;
   const char c = line.content[line.next_non_space];
   t->type = NodeType::Heading;
   t->data = HeadingData{(c == '=') ? 1 : 2, /*setext=*/true};
