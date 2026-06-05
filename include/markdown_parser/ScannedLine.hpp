@@ -5,6 +5,7 @@
 
 struct ScannedLine {
     std::string_view content;
+    std::size_t      prefix_spaces  = 0; // remaining cols of a partially consumed tab
     std::size_t      indent;
     std::size_t      virtual_indent;
     std::size_t      next_non_space;

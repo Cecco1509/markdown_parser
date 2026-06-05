@@ -12,26 +12,42 @@ SpineHandler::SpineHandler(PreScanner &scanner, InlineParser &inline_parser,
   openBlock(NodeType::Document, std::monostate{});
 }
 
+void SpineHandler::printSpineStatus() const {
+  std::cerr << "[spine] size=" << spine_.size() << "  AST path: ";
+  for (std::size_t i = 0; i < spine_.size(); ++i) {
+    const BlockNode *n = spine_[i].get();
+    std::cerr << "[" << i << "] " << nodeTypeToString(n->type);
+    // Show a short content preview for leaf nodes that have accumulated text.
+    if (!n->string_content.empty()) {
+      std::string preview = n->string_content;
+      if (preview.size() > 20)
+        preview = preview.substr(0, 20) + "...";
+      // Replace newlines for readability.
+      for (char &c : preview)
+        if (c == '\n')
+          c = '\xb6'; // pilcrow
+      std::cerr << "(\"" << preview << "\")";
+    }
+    if (i + 1 < spine_.size())
+      std::cerr << " -> ";
+  }
+  std::cerr << "\n";
+}
+
 void SpineHandler::processLine(std::string_view raw) {
-  partial_tab_remaining_ = 0;
-  current_col_ = 0;
-  current_byte_ = 0;
-  swallow_current_line_ = false;
   ++line_number_;
   if (debug_) {
     std::cerr << "[processLine] line=" << line_number_ << " raw=\"" << raw
               << "\"\n";
+    printSpineStatus();
+    std::cerr << "  Press ENTER to continue...";
+    std::cin.get();
   }
 
-  ScannedLine line = scanner_.scan(raw);
-
-  // std::cout << "step 1" << std::endl;
-  SpineMatchResult match = step1WalkSpine(line);
-  // std::cout << "step 2" << std::endl;
-  step2NewBlocks(line, match);
-  // std::cout << "step 3" << std::endl;
-  step3AppendText(line, match);
-  // std::cout << "check html block end" << std::endl;
+  ScannedLine line        = scanner_.scan(raw);
+  auto [match, cur]       = step1WalkSpine(line);
+  auto [cur2, swallow]    = step2NewBlocks(cur, match);
+  step3AppendText(cur2, match, swallow);
   checkHtmlBlockEnd(line);
 
   // Track blank lines for loose-list detection.
@@ -55,22 +71,25 @@ std::unique_ptr<BlockNode> SpineHandler::releaseDocument() {
 // ── Step 1
 // ────────────────────────────────────────────────────────────────────
 
-SpineMatchResult SpineHandler::step1WalkSpine(const ScannedLine &line) {
+std::pair<SpineMatchResult, ScannedLine>
+SpineHandler::step1WalkSpine(const ScannedLine &line) {
   if (debug_) {
     std::cerr << "[step1WalkSpine] line=\"" << line.content
               << "\" is_blank=" << line.is_blank
               << " spine_size=" << spine_.size()
-              << " current_col=" << current_col_ << "\n";
+              << " base_col=" << line.base_col << "\n";
   }
   SpineMatchResult result;
   result.deepest_matched = 0;
   result.first_unmatched = spine_.size();
 
+  ScannedLine cur = line;
+
   for (std::size_t i = 1; i < spine_.size(); ++i) {
-    auto cr = block_rules::continuationMatches(*spine_[i], line, current_col_);
+    auto cr = block_rules::continuationMatches(*spine_[i], cur, cur.base_col);
     if (cr.matched) {
       if (cr.cols_to_consume > 0)
-        consumeColumns(line.content, current_byte_, cr.cols_to_consume);
+        cur = consumeColumns(cur, cr.cols_to_consume);
       result.deepest_matched = i;
       // Leaf blocks cannot contain nested blocks; stop here so new openers
       // in step2 can close this leaf via first_unmatched.
@@ -93,44 +112,40 @@ SpineMatchResult SpineHandler::step1WalkSpine(const ScannedLine &line) {
     std::cerr << "[step1WalkSpine] -> deepest_matched="
               << result.deepest_matched
               << " first_unmatched=" << result.first_unmatched
-              << " swallow_line=" << result.swallow_line << "\n";
+              << " swallow_line=" << result.swallow_line
+              << " cur.base_col=" << cur.base_col << "\n";
   }
-  return result;
+  return {result, cur};
 }
 
 // ── Step 2
 // ────────────────────────────────────────────────────────────────────
 
-bool SpineHandler::tryOpenNewBlock(const ScannedLine &line,
-                                   const SpineMatchResult &match) {
+SpineHandler::OpenBlockResult
+SpineHandler::tryOpenNewBlock(const ScannedLine &line,
+                              const SpineMatchResult &match) {
   if (debug_) {
     std::cerr << "[tryOpenNewBlock] line=\"" << line.content << "\""
-              << " current_byte=" << current_byte_
-              << " current_col=" << current_col_
+              << " base_col=" << line.base_col
               << " first_unmatched=" << match.first_unmatched
               << " tip=" << nodeTypeToString(tip()->type) << "\n";
   }
   bool any_opened = false;
-  ScannedLine cur =
-      scanner_.scanWithOffset(line.content.substr(current_byte_), current_col_);
+  bool swallow    = false;
+  ScannedLine cur = line;
 
-  int cycle = 0;
   while (true) {
-    // std::cerr << "[tryOpenNewBlock] cycle=" << cycle++
-    //           << " current_byte_=" << current_byte_
-    //           << " current_col_=" << current_col_ << " remaining=\""
-    //           << line.content.substr(current_byte_) << "\"\n";
-    // std::cerr << "  Press ENTER to continue...";
-    //    std::cin.get();
-
     // tip_para: only restrict list-item interruption when the paragraph will
-    // survive closeUnmatched (i.e. its container already matched). If the
-    // paragraph's container is at or beyond first_unmatched it will be closed
-    // anyway, so the "can't interrupt" rule must not apply.
+    // survive closeUnmatched (i.e. its container already matched).
     bool tip_para = false;
+    // suppress_indented_code: also suppress indented-code-block opening when
+    // the paragraph is exactly at the first_unmatched boundary — in that case
+    // the line should lazily continue the paragraph instead.
+    bool suppress_indented_code = false;
     if (tip()->type == NodeType::Paragraph && spine_.size() >= 2) {
       const std::size_t para_container_idx = spine_.size() - 2;
       tip_para = (para_container_idx < match.first_unmatched);
+      suppress_indented_code = (para_container_idx <= match.first_unmatched);
     }
 
     // Detect list-item blank-line continuation to suppress indented code.
@@ -146,16 +161,17 @@ bool SpineHandler::tryOpenNewBlock(const ScannedLine &line,
     }
 
     auto result = block_rules::tryOpen(cur, tip_para, inside_list_blank);
-    // std::cerr << "  tryOpen result: " << (result ? "found" : "null")
-    //           << (result ? " cols=" + std::to_string(result->cols_consumed)
-    //                      : "")
-    //           << "\n";
+    // Suppress indented-code-block opening when a paragraph sits exactly at
+    // the first_unmatched boundary — the line should lazily continue it.
+    if (result && result->type == NodeType::CodeBlock &&
+        !std::get<CodeBlockData>(result->data).fenced && suppress_indented_code)
+      result = std::nullopt;
     if (!result) {
       // When an indented code block is suppressed inside a list item after a
       // blank line, consume the 4-col code-block indent so the paragraph text
       // starts at the right position (CommonMark §5.3).
       if (inside_list_blank && cur.virtual_indent == 4)
-        consumeColumns(line.content, current_byte_, 4);
+        cur = consumeColumns(cur, 4);
       break;
     }
 
@@ -203,14 +219,13 @@ bool SpineHandler::tryOpenNewBlock(const ScannedLine &line,
     if (!result->extracted_content.empty())
       new_node->string_content = result->extracted_content;
     if (result->cols_consumed > 0)
-      consumeColumns(line.content, current_byte_, result->cols_consumed);
+      cur = consumeColumns(cur, result->cols_consumed);
     if (debug_) {
-      std::cerr << "  [after consume] byte=" << current_byte_
-                << " col=" << current_col_
+      std::cerr << "  [after consume] base_col=" << cur.base_col
                 << " cols_consumed=" << result->cols_consumed << "\n";
     }
     if (result->swallow_line) {
-      swallow_current_line_ = true;
+      swallow = true;
       break;
     }
 
@@ -220,21 +235,20 @@ bool SpineHandler::tryOpenNewBlock(const ScannedLine &line,
                               result->type == NodeType::Item;
     if (!is_container || result->cols_consumed == 0)
       break;
-
-    cur = scanner_.scanWithOffset(line.content.substr(current_byte_),
-                                  current_col_);
   }
 
   if (debug_) {
-    std::cerr << "[tryOpenNewBlock] -> any_opened=" << any_opened << "\n";
+    std::cerr << "[tryOpenNewBlock] -> any_opened=" << any_opened
+              << " swallow=" << swallow << "\n";
   }
-  return any_opened;
+  return {cur, any_opened, swallow};
 }
 
-void SpineHandler::step2NewBlocks(const ScannedLine &line,
-                                  const SpineMatchResult &match) {
+SpineHandler::Step2Result
+SpineHandler::step2NewBlocks(const ScannedLine &cur,
+                             const SpineMatchResult &match) {
   if (debug_) {
-    std::cerr << "[step2NewBlocks] line=\"" << line.content << "\""
+    std::cerr << "[step2NewBlocks] cur=\"" << cur.content << "\""
               << " swallow_line=" << match.swallow_line
               << " first_unmatched=" << match.first_unmatched
               << " spine_size=" << spine_.size()
@@ -245,7 +259,7 @@ void SpineHandler::step2NewBlocks(const ScannedLine &line,
   // so the closing fence cannot be re-parsed as a new block opener.
   if (match.swallow_line) {
     closeUnmatched(match.first_unmatched);
-    return;
+    return {cur, /*swallow=*/true};
   }
 
   // If the tip is a paragraph whose container already matched (i.e., the
@@ -254,9 +268,9 @@ void SpineHandler::step2NewBlocks(const ScannedLine &line,
   // The container-matched check prevents treating e.g. `---` after a list item
   // as a setext underline when the item's indent didn't match.
   if (tip()->type == NodeType::Paragraph &&
-      block_rules::isSetextUnderline(line) && spine_.size() >= 2 &&
+      block_rules::isSetextUnderline(cur) && spine_.size() >= 2 &&
       (spine_.size() - 2) < match.first_unmatched)
-    return;
+    return {cur, /*swallow=*/false};
 
   // A fully-matched non-paragraph leaf (CodeBlock, HtmlBlock, …) owns the
   // remaining content — step3 will append it. Opening new blocks here would
@@ -268,16 +282,15 @@ void SpineHandler::step2NewBlocks(const ScannedLine &line,
                               tt == NodeType::BlockQuote ||
                               tt == NodeType::List || tt == NodeType::Item;
     if (!is_container && tt != NodeType::Paragraph)
-      return;
+      return {cur, /*swallow=*/false};
   }
 
-  const bool new_block_found = tryOpenNewBlock(line, match);
+  auto [remaining, any_opened, swallow] = tryOpenNewBlock(cur, match);
 
-  if (new_block_found) {
+  if (any_opened) {
     // closeUnmatched already called inside tryOpenNewBlock
-  } else if (incorporatesLazyContinuation(line, match)) {
+  } else if (incorporatesLazyContinuation(cur, match)) {
     // lazy continuation: leave unmatched blocks open
-
     if (debug_) {
       std::cerr
           << "[step2NewBlocks] lazy continuation: leaving unmatched from index "
@@ -285,38 +298,53 @@ void SpineHandler::step2NewBlocks(const ScannedLine &line,
           << " tip=" << nodeTypeToString(tip()->type) << " unmatched_type="
           << nodeTypeToString(spine_[match.first_unmatched]->type) << "\n";
     }
-
   } else {
     closeUnmatched(match.first_unmatched);
     // A List whose item failed to continue has no way to receive bare text.
     // Close any such dangling List so its content lands in the right parent.
-    while (!line.is_blank && !spine_.empty() && tip()->type == NodeType::List)
+    while (!cur.is_blank && !spine_.empty() && tip()->type == NodeType::List)
       closeBlock();
   }
+  return {remaining, swallow};
 }
 
 // ── Step 3
 // ────────────────────────────────────────────────────────────────────
 
-void SpineHandler::step3AppendText(const ScannedLine &line,
-                                   const SpineMatchResult &match) {
+void SpineHandler::step3AppendText(const ScannedLine &cur,
+                                   const SpineMatchResult &match,
+                                   bool swallow) {
   if (debug_) {
-    std::cerr << "[step3AppendText] line=\"" << line.content << "\""
-              << " swallow_line=" << match.swallow_line
-              << " swallow_current_line=" << swallow_current_line_
-              << " is_blank=" << line.is_blank
-              << " current_byte=" << current_byte_
+    std::cerr << "[step3AppendText] cur=\"" << cur.content << "\""
+              << " swallow=" << swallow
+              << " is_blank=" << cur.is_blank
+              << " base_col=" << cur.base_col
               << " tip=" << nodeTypeToString(tip()->type) << "\n";
   }
-  if (match.swallow_line || swallow_current_line_)
+  if (swallow)
     return;
   // Blank lines are content inside code blocks (indented or fenced).
-  if (line.is_blank) {
+  if (cur.is_blank) {
     if (tip()->type == NodeType::CodeBlock)
-      appendText(line.content, current_byte_);
+      appendText(cur, 0);
     return;
   }
-  if (tryPromoteSetextHeading(line, match))
+  // If all remaining content is whitespace (e.g. empty list item marker),
+  // treat this line as having no text.
+  {
+    bool remainder_blank = true;
+    for (std::size_t i = cur.prefix_spaces > 0 ? 0 : 0;
+         i < cur.content.size(); ++i) {
+      if (cur.content[i] != ' ' && cur.content[i] != '\t') {
+        remainder_blank = false;
+        break;
+      }
+    }
+    if (remainder_blank && cur.prefix_spaces == 0)
+      return;
+  }
+
+  if (tryPromoteSetextHeading(cur, match))
     return;
 
   // If the tip is a container, open a Paragraph to receive the text.
@@ -327,25 +355,30 @@ void SpineHandler::step3AppendText(const ScannedLine &line,
       openBlock(NodeType::Paragraph, std::monostate{});
   }
 
-  std::size_t text_start = current_byte_;
+  std::size_t text_start = 0;
   if (tip()->type == NodeType::CodeBlock) {
     // For fenced code blocks, strip up to fence_indent spaces from each line
     // (CommonMark §4.5: content lines lose the same indentation as the fence).
     const auto &cbd = std::get<CodeBlockData>(tip()->data);
     if (cbd.fenced) {
       int to_strip = cbd.fence_indent;
-      while (to_strip > 0 && text_start < line.content.size() &&
-             line.content[text_start] == ' ') {
+      while (to_strip > 0 && text_start < cur.content.size() &&
+             cur.content[text_start] == ' ') {
         ++text_start;
         --to_strip;
       }
     }
   } else if (tip()->type == NodeType::Paragraph) {
     // Strip up to 3 leading spaces per CommonMark §4.4.
-    if (line.next_non_space > text_start && line.next_non_space <= text_start + 3)
-      text_start = line.next_non_space;
+    // next_non_space is now relative to cur.content so this is always correct.
+    if (debug_) {
+      std::cerr << "  [paragraph text start] next_non_space="
+                << cur.next_non_space << "\n";
+    }
+    if (cur.next_non_space <= 3)
+      text_start = cur.next_non_space;
   }
-  appendText(line.content, text_start);
+  appendText(cur, text_start);
 }
 
 // ── Tree mutation primitives
@@ -356,6 +389,22 @@ BlockNode *SpineHandler::openBlock(NodeType type, BlockData data) {
     std::cerr << "[openBlock] type=" << nodeTypeToString(type)
               << " line=" << line_number_
               << " spine_size_before=" << spine_.size() << "\n";
+  }
+  // Detect internal blank lines inside list items (CommonMark §5.3).
+  // If we're opening a new block child into an Item that already has children
+  // and the Item had a blank since its last child, mark the list as loose.
+  if (!spine_.empty() && tip()->type == NodeType::Item) {
+    BlockNode *item = tip();
+    if (!item->children.empty() && item->last_line_blank) {
+      for (int k = static_cast<int>(spine_.size()) - 2; k >= 0; --k) {
+        if (spine_[k]->type == NodeType::List) {
+          std::get<ListData>(spine_[k]->data).tight = false;
+          break;
+        }
+      }
+    }
+    // Reset so subsequent children don't re-trigger loose detection.
+    item->last_line_blank = false;
   }
   auto node_ptr = std::make_unique<BlockNode>();
   BlockNode *node = node_ptr.get();
@@ -397,6 +446,16 @@ void SpineHandler::closeBlock() {
       std::get<ListData>(spine_.back()->data).tight = false;
   }
 
+  // When a List closes, propagate its last item's trailing-blank to the
+  // parent Item so that a blank between the List and a sibling block in the
+  // outer item is detected as loose (CommonMark §5.3).
+  if (node->type == NodeType::List && !node->children.empty()) {
+    const auto &last_child = node->children.back();
+    if (last_child->last_line_blank && !spine_.empty() &&
+        spine_.back()->type == NodeType::Item)
+      spine_.back()->last_line_blank = true;
+  }
+
   block_rules::onClose(*node);
 
   node->end_line = line_number_;
@@ -418,20 +477,23 @@ void SpineHandler::closeUnmatched(std::size_t from_index) {
     closeBlock();
 }
 
-void SpineHandler::appendText(std::string_view line, std::size_t from_byte) {
+void SpineHandler::appendText(const ScannedLine &cur, std::size_t from_byte) {
   if (debug_) {
     std::cerr << "[appendText] from_byte=" << from_byte
-              << " partial_tab_remaining=" << partial_tab_remaining_
-              << " text=\"" << line.substr(from_byte) << "\""
+              << " prefix_spaces=" << cur.prefix_spaces
+              << " text=\"" << cur.content.substr(from_byte) << "\""
               << " tip=" << nodeTypeToString(tip()->type) << "\n";
   }
   BlockNode *t = tip();
-  if (partial_tab_remaining_ > 0) {
-    t->string_content.append(partial_tab_remaining_, ' ');
-    partial_tab_remaining_ = 0;
-    ++from_byte;
-  }
-  t->string_content += line.substr(from_byte);
+  if (debug_)
+    std::cerr << "  tip type=" << nodeTypeToString(t->type) << " tip content=\""
+              << t->string_content << "\"\n"
+              << " tip start_line=" << t->start_line
+              << " tip is_open=" << t->is_open
+              << " tip start_col=" << t->start_col << "\n";
+  if (cur.prefix_spaces > 0)
+    t->string_content.append(cur.prefix_spaces, ' ');
+  t->string_content += cur.content.substr(from_byte);
   t->string_content += '\n';
 }
 
@@ -461,12 +523,10 @@ bool SpineHandler::incorporatesLazyContinuation(
     }
     return false;
   }
-  // Lazy continuation only applies for block quotes (the > marker is optional
-  // on continuation lines). For list items the indent is mandatory — if the
-  // item's container failed, the paragraph must close with it.
-  const NodeType unmatched_type = spine_[match.first_unmatched]->type;
-  if (unmatched_type == NodeType::Item || unmatched_type == NodeType::List)
-    return false;
+  // Lazy continuation applies for block quotes and list items. For list items
+  // the spec allows paragraph continuation even when the item's indent isn't
+  // met, as long as the line doesn't open a new block (checked by the caller:
+  // we only reach here when tryOpenNewBlock returned false).
   return true;
 }
 
@@ -509,56 +569,64 @@ void SpineHandler::checkHtmlBlockEnd(const ScannedLine &line) {
     closeBlock();
 }
 
-std::size_t SpineHandler::consumeColumns(std::string_view line,
-                                         std::size_t byte_offset,
+ScannedLine SpineHandler::consumeColumns(const ScannedLine &cur,
                                          std::size_t n_cols) {
-  if (debug_) {
-    std::cerr << "[consumeColumns] byte_offset=" << byte_offset
-              << " n_cols=" << n_cols << " current_col=" << current_col_
-              << " partial_tab_remaining=" << partial_tab_remaining_
-              << " remaining=\"" << line.substr(byte_offset) << "\"\n";
-  }
-  std::size_t cols_needed = n_cols;
+  std::size_t byte_offset  = 0;
+  std::size_t col          = cur.base_col;
+  std::size_t cols_needed  = n_cols;
+  std::size_t new_prefix   = 0;
 
-  if (partial_tab_remaining_ > 0) {
-    const std::size_t take = std::min(partial_tab_remaining_, cols_needed);
-    partial_tab_remaining_ -= take;
+  // First drain any prefix_spaces left over from a previous partial tab.
+  if (cur.prefix_spaces > 0) {
+    const std::size_t take = std::min(cur.prefix_spaces, cols_needed);
     cols_needed -= take;
-    current_col_ += take;
-    if (partial_tab_remaining_ == 0)
-      ++byte_offset; // tab fully consumed; advance past it
+    col         += take;
+    new_prefix   = cur.prefix_spaces - take;
+    // The tab byte itself was already accounted for in cur.content; if the
+    // partial tab is now fully consumed advance past it.
+    if (new_prefix == 0 && !cur.content.empty() &&
+        static_cast<unsigned char>(cur.content[0]) == '\t')
+      ++byte_offset;
   }
 
-  while (cols_needed > 0 && byte_offset < line.size()) {
-    const unsigned char byte = static_cast<unsigned char>(line[byte_offset]);
+  while (cols_needed > 0 && byte_offset < cur.content.size()) {
+    const unsigned char byte =
+        static_cast<unsigned char>(cur.content[byte_offset]);
     if (byte == ' ') {
       ++byte_offset;
       --cols_needed;
-      ++current_col_;
+      ++col;
     } else if (byte == '\t') {
-      const std::size_t tab_w = (current_col_ / 4 + 1) * 4 - current_col_;
+      const std::size_t tab_w = (col / 4 + 1) * 4 - col;
       if (tab_w <= cols_needed) {
         ++byte_offset;
         cols_needed -= tab_w;
-        current_col_ += tab_w;
+        col         += tab_w;
       } else {
-        partial_tab_remaining_ = tab_w - cols_needed;
-        current_col_ += cols_needed;
-        cols_needed = 0;
+        // Partial tab: advance past the byte but record the remainder.
+        ++byte_offset;
+        new_prefix   = tab_w - cols_needed;
+        col         += cols_needed;
+        cols_needed  = 0;
       }
     } else {
       ++byte_offset;
       --cols_needed;
-      ++current_col_;
+      ++col;
     }
   }
-  current_byte_ = byte_offset;
+
   if (debug_) {
-    std::cerr << "[consumeColumns] -> byte_offset=" << byte_offset
-              << " current_col=" << current_col_
-              << " partial_tab_remaining=" << partial_tab_remaining_ << "\n";
+    std::cerr << "[consumeColumns] n_cols=" << n_cols
+              << " -> byte_offset=" << byte_offset
+              << " new_base_col=" << col
+              << " new_prefix=" << new_prefix << "\n";
   }
-  return byte_offset;
+
+  ScannedLine next = scanner_.scanWithOffset(
+      cur.content.substr(byte_offset), col);
+  next.prefix_spaces = new_prefix;
+  return next;
 }
 
 void SpineHandler::parseInlineContent(BlockNode *node) {

@@ -87,6 +87,10 @@ ContinuationResult continuationMatches(const BlockNode &node,
     const auto &item = std::get<ItemData>(node.data);
     if (line.is_blank)
       return {true};
+    // An empty item (no block children yet) followed by a blank line cannot
+    // absorb subsequent indented content — the blank closes the item.
+    if (node.last_line_blank && node.children.empty())
+      return {false};
     if (line.virtual_indent >= static_cast<std::size_t>(item.padding)) {
       // cols_to_consume is relative to current_col (already consumed by
       // parent containers), so subtract what's already been consumed.
