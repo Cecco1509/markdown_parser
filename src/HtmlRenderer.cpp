@@ -97,12 +97,16 @@ void HtmlRenderer::visit(const BlockNode &node) {
     out_ += !out_.empty() && out_.back() != '\n' ? "\n<hr />\n" : "<hr />\n";
     break;
 
-  case NodeType::BlockQuote:
+  case NodeType::BlockQuote: {
     out_ += "<blockquote>\n";
+    bool prev = tight_;
+    tight_ = false;
     for (const auto &child : node.children)
       visit(*child);
+    tight_ = prev;
     out_ += "</blockquote>\n";
     break;
+  }
 
   case NodeType::List: {
     const auto &ld = std::get<ListData>(node.data);
@@ -136,9 +140,9 @@ void HtmlRenderer::visit(const BlockNode &node) {
       for (const auto &child : node.children)
         visit(*child);
     } else {
-      bool first_is_code = !node.children.empty() &&
-                           node.children[0]->type == NodeType::CodeBlock;
-      out_ += first_is_code ? "<li>\n" : "<li>";
+      bool first_is_block = !node.children.empty() &&
+                           node.children[0]->type != NodeType::Paragraph;
+      out_ += first_is_block ? "<li>\n" : "<li>";
       for (size_t i = 0; i < node.children.size(); ++i) {
         const auto &child = *node.children[i];
         if (i == 0 && child.type == NodeType::Paragraph) {
