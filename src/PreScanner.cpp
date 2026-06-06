@@ -1,14 +1,32 @@
 #include "markdown_parser/PreScanner.hpp"
+#include <iostream>
 
 ScannedLine PreScanner::scan(std::string_view raw) const {
-    return scanWithOffset(raw, 0);
+    ScannedLine sl = scanWithOffset(raw, 0);
+    if (debug_)
+        std::cerr << "[PreScanner::scan] content=\"" << sl.content
+                  << "\" prefix_spaces=" << sl.prefix_spaces
+                  << " indent=" << sl.indent
+                  << " virtual_indent=" << sl.virtual_indent
+                  << " next_non_space=" << sl.next_non_space
+                  << " is_blank=" << sl.is_blank
+                  << " base_col=" << sl.base_col << "\n";
+    return sl;
 }
 
 ScannedLine PreScanner::scanWithOffset(std::string_view raw, std::size_t base_col) const {
     std::string_view content = stripLineEnding(raw);
     auto [indent, virtual_indent, next_non_space] = computeVirtualIndent(content, base_col);
-    return ScannedLine{content, /*prefix_spaces=*/0, indent, virtual_indent, next_non_space, isBlank(content), base_col};
-
+    ScannedLine sl{content, /*prefix_spaces=*/0, indent, virtual_indent, next_non_space, isBlank(content), base_col};
+    if (debug_)
+        std::cerr << "[PreScanner::scanWithOffset] content=\"" << sl.content
+                  << "\" prefix_spaces=" << sl.prefix_spaces
+                  << " indent=" << sl.indent
+                  << " virtual_indent=" << sl.virtual_indent
+                  << " next_non_space=" << sl.next_non_space
+                  << " is_blank=" << sl.is_blank
+                  << " base_col=" << sl.base_col << "\n";
+    return sl;
 }
 
 std::tuple<std::size_t, std::size_t, std::size_t>
