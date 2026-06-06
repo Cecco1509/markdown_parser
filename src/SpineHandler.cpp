@@ -16,12 +16,16 @@ void SpineHandler::printSpineStatus() const {
   std::cerr << "SPINE  [" << spine_.size() << "]  ";
   for (std::size_t i = 0; i < spine_.size(); ++i) {
     const BlockNode *n = spine_[i].get();
-    if (i) std::cerr << " > ";
+    if (i)
+      std::cerr << " > ";
     std::cerr << nodeTypeToString(n->type);
     if (!n->string_content.empty()) {
       std::string preview = n->string_content;
-      if (preview.size() > 20) preview = preview.substr(0, 20) + "...";
-      for (char &c : preview) if (c == '\n') c = '\xb6';
+      if (preview.size() > 20)
+        preview = preview.substr(0, 20) + "...";
+      for (char &c : preview)
+        if (c == '\n')
+          c = '\xb6';
       std::cerr << "(\"" << preview << "\")";
     }
   }
@@ -33,7 +37,8 @@ void SpineHandler::processLine(std::string_view raw) {
   if (debug_) {
     std::cerr << "\n──── LINE " << line_number_ << " \"" << raw << "\"\n";
     printSpineStatus();
-    std::cerr << "  [enter]"; std::cin.get();
+    std::cerr << "  [enter]";
+    std::cin.get();
   }
 
   ScannedLine line = scanner_.scan(raw);
@@ -66,8 +71,8 @@ std::pair<SpineMatchResult, ScannedLine>
 SpineHandler::step1WalkSpine(const ScannedLine &line) {
   if (debug_)
     std::cerr << "STEP1  \"" << line.content << "\""
-              << "  blank=" << line.is_blank
-              << " base=" << line.base_col << "\n";
+              << "  blank=" << line.is_blank << " base=" << line.base_col
+              << "\n";
   SpineMatchResult result;
   result.deepest_matched = 0;
   result.first_unmatched = spine_.size();
@@ -98,10 +103,10 @@ SpineHandler::step1WalkSpine(const ScannedLine &line) {
     }
   }
   if (debug_)
-    std::cerr << "STEP1  -> deep=" << result.deepest_matched
+    std::cerr << "step1  -> deep=" << result.deepest_matched
               << " unmatch=" << result.first_unmatched
-              << " swallow=" << result.swallow_line
-              << " base=" << cur.base_col << "\n";
+              << " swallow=" << result.swallow_line << " base=" << cur.base_col
+              << "\n";
   return {result, cur};
 }
 
@@ -223,7 +228,8 @@ SpineHandler::tryOpenNewBlock(const ScannedLine &line,
   }
 
   if (debug_)
-    std::cerr << "OPEN?  -> opened=" << any_opened << " swallow=" << swallow << "\n";
+    std::cerr << "OPEN?  -> opened=" << any_opened << " swallow=" << swallow
+              << "\n";
   return {cur, any_opened, swallow};
 }
 
@@ -294,8 +300,7 @@ void SpineHandler::step3AppendText(const ScannedLine &cur,
                                    bool swallow) {
   if (debug_)
     std::cerr << "STEP3  \"" << cur.content << "\""
-              << "  blank=" << cur.is_blank
-              << " swallow=" << swallow
+              << "  blank=" << cur.is_blank << " swallow=" << swallow
               << " base=" << cur.base_col
               << " tip=" << nodeTypeToString(tip()->type) << "\n";
   if (swallow)
@@ -363,8 +368,8 @@ void SpineHandler::step3AppendText(const ScannedLine &cur,
 BlockNode *SpineHandler::openBlock(NodeType type, BlockData data) {
   if (debug_)
     std::cerr << "OPEN   " << nodeTypeToString(type)
-              << "  line=" << line_number_
-              << " spine=" << spine_.size() << "\n";
+              << "  line=" << line_number_ << " spine=" << spine_.size()
+              << "\n";
   // Detect internal blank lines inside list items (CommonMark §5.3).
   // If we're opening a new block child into an Item that already has children
   // and the Item had a blank since its last child, mark the list as loose.
@@ -443,7 +448,8 @@ void SpineHandler::closeBlock() {
 
 void SpineHandler::closeUnmatched(std::size_t from_index) {
   if (debug_)
-    std::cerr << "UNMATCH from=" << from_index << " spine=" << spine_.size() << "\n";
+    std::cerr << "UNMATCH from=" << from_index << " spine=" << spine_.size()
+              << "\n";
   while (spine_.size() > from_index)
     closeBlock();
 }
@@ -512,7 +518,9 @@ bool SpineHandler::tryPromoteSetextHeading(const ScannedLine &line,
 void SpineHandler::checkHtmlBlockEnd(const ScannedLine &line) {
   if (debug_)
     std::cerr << "HTMLEND? \"" << line.content << "\""
-              << "  tip=" << (spine_.empty() ? "empty" : nodeTypeToString(tip()->type)) << "\n";
+              << "  tip="
+              << (spine_.empty() ? "empty" : nodeTypeToString(tip()->type))
+              << "\n";
   if (spine_.empty())
     return;
   BlockNode *t = tip();
@@ -569,10 +577,8 @@ ScannedLine SpineHandler::consumeColumns(const ScannedLine &cur,
   }
 
   if (debug_)
-    std::cerr << "CONSUME n=" << n_cols
-              << " -> off=" << byte_offset
-              << " base=" << col
-              << " pfx=" << new_prefix << "\n";
+    std::cerr << "CONSUME n=" << n_cols << " -> off=" << byte_offset
+              << " base=" << col << " pfx=" << new_prefix << "\n";
 
   ScannedLine next =
       scanner_.scanWithOffset(cur.content.substr(byte_offset), col);
@@ -606,7 +612,8 @@ void SpineHandler::parseInlineContent(BlockNode *node) {
 bool SpineHandler::tryScanOneLinkRefDef(std::string_view content,
                                         std::size_t &pos) {
   if (debug_)
-    std::cerr << "REFDEF? pos=" << pos << " \"" << content.substr(pos) << "\"\n";
+    std::cerr << "REFDEF? pos=" << pos << " \"" << content.substr(pos)
+              << "\"\n";
   const std::size_t len = content.size();
   std::size_t p = pos;
 
