@@ -44,9 +44,9 @@ void SpineHandler::processLine(std::string_view raw) {
     std::cin.get();
   }
 
-  ScannedLine line        = scanner_.scan(raw);
-  auto [match, cur]       = step1WalkSpine(line);
-  auto [cur2, swallow]    = step2NewBlocks(cur, match);
+  ScannedLine line = scanner_.scan(raw);
+  auto [match, cur] = step1WalkSpine(line);
+  auto [cur2, swallow] = step2NewBlocks(cur, match);
   step3AppendText(cur2, match, swallow);
   checkHtmlBlockEnd(line);
 
@@ -131,7 +131,7 @@ SpineHandler::tryOpenNewBlock(const ScannedLine &line,
               << " tip=" << nodeTypeToString(tip()->type) << "\n";
   }
   bool any_opened = false;
-  bool swallow    = false;
+  bool swallow = false;
   ScannedLine cur = line;
 
   while (true) {
@@ -316,8 +316,7 @@ void SpineHandler::step3AppendText(const ScannedLine &cur,
                                    bool swallow) {
   if (debug_) {
     std::cerr << "[step3AppendText] cur=\"" << cur.content << "\""
-              << " swallow=" << swallow
-              << " is_blank=" << cur.is_blank
+              << " swallow=" << swallow << " is_blank=" << cur.is_blank
               << " base_col=" << cur.base_col
               << " tip=" << nodeTypeToString(tip()->type) << "\n";
   }
@@ -333,8 +332,8 @@ void SpineHandler::step3AppendText(const ScannedLine &cur,
   // treat this line as having no text.
   {
     bool remainder_blank = true;
-    for (std::size_t i = cur.prefix_spaces > 0 ? 0 : 0;
-         i < cur.content.size(); ++i) {
+    for (std::size_t i = cur.prefix_spaces > 0 ? 0 : 0; i < cur.content.size();
+         ++i) {
       if (cur.content[i] != ' ' && cur.content[i] != '\t') {
         remainder_blank = false;
         break;
@@ -480,8 +479,8 @@ void SpineHandler::closeUnmatched(std::size_t from_index) {
 void SpineHandler::appendText(const ScannedLine &cur, std::size_t from_byte) {
   if (debug_) {
     std::cerr << "[appendText] from_byte=" << from_byte
-              << " prefix_spaces=" << cur.prefix_spaces
-              << " text=\"" << cur.content.substr(from_byte) << "\""
+              << " prefix_spaces=" << cur.prefix_spaces << " text=\""
+              << cur.content.substr(from_byte) << "\""
               << " tip=" << nodeTypeToString(tip()->type) << "\n";
   }
   BlockNode *t = tip();
@@ -571,17 +570,17 @@ void SpineHandler::checkHtmlBlockEnd(const ScannedLine &line) {
 
 ScannedLine SpineHandler::consumeColumns(const ScannedLine &cur,
                                          std::size_t n_cols) {
-  std::size_t byte_offset  = 0;
-  std::size_t col          = cur.base_col;
-  std::size_t cols_needed  = n_cols;
-  std::size_t new_prefix   = 0;
+  std::size_t byte_offset = 0;
+  std::size_t col = cur.base_col;
+  std::size_t cols_needed = n_cols;
+  std::size_t new_prefix = 0;
 
   // First drain any prefix_spaces left over from a previous partial tab.
   if (cur.prefix_spaces > 0) {
     const std::size_t take = std::min(cur.prefix_spaces, cols_needed);
     cols_needed -= take;
-    col         += take;
-    new_prefix   = cur.prefix_spaces - take;
+    col += take;
+    new_prefix = cur.prefix_spaces - take;
     // The tab byte itself was already accounted for in cur.content; if the
     // partial tab is now fully consumed advance past it.
     if (new_prefix == 0 && !cur.content.empty() &&
@@ -601,13 +600,13 @@ ScannedLine SpineHandler::consumeColumns(const ScannedLine &cur,
       if (tab_w <= cols_needed) {
         ++byte_offset;
         cols_needed -= tab_w;
-        col         += tab_w;
+        col += tab_w;
       } else {
         // Partial tab: advance past the byte but record the remainder.
         ++byte_offset;
-        new_prefix   = tab_w - cols_needed;
-        col         += cols_needed;
-        cols_needed  = 0;
+        new_prefix = tab_w - cols_needed;
+        col += cols_needed;
+        cols_needed = 0;
       }
     } else {
       ++byte_offset;
@@ -618,13 +617,12 @@ ScannedLine SpineHandler::consumeColumns(const ScannedLine &cur,
 
   if (debug_) {
     std::cerr << "[consumeColumns] n_cols=" << n_cols
-              << " -> byte_offset=" << byte_offset
-              << " new_base_col=" << col
+              << " -> byte_offset=" << byte_offset << " new_base_col=" << col
               << " new_prefix=" << new_prefix << "\n";
   }
 
-  ScannedLine next = scanner_.scanWithOffset(
-      cur.content.substr(byte_offset), col);
+  ScannedLine next =
+      scanner_.scanWithOffset(cur.content.substr(byte_offset), col);
   next.prefix_spaces = new_prefix;
   return next;
 }
