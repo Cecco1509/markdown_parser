@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  PreScanner scanner;
+  PreScanner scanner(true);
   InlineParser inline_parser;
   SpineHandler spine(scanner, inline_parser, /*debug=*/true);
 

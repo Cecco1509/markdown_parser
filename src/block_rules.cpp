@@ -71,9 +71,14 @@ ContinuationResult continuationMatches(const BlockNode &node,
         line.content[line.next_non_space] == '>') {
       std::size_t cols = line.virtual_indent + 1; // indent cols + '>'
       const std::size_t after = line.next_non_space + 1;
-      if (after < line.content.size() &&
-          (line.content[after] == ' ' || line.content[after] == '\t'))
-        ++cols;
+      if (after < line.content.size()) {
+        if (line.content[after] == ' ') {
+          ++cols;
+        } else if (line.content[after] == '\t') {
+          const std::size_t post_gt_col = line.base_col + line.virtual_indent + 1;
+          cols += (post_gt_col / 4 + 1) * 4 - post_gt_col;
+        }
+      }
       return {true, cols};
     }
     return {false};
@@ -230,9 +235,14 @@ static std::optional<OpenResult> tryOpenBlockQuote(const ScannedLine &line) {
     return std::nullopt;
   std::size_t cols = line.virtual_indent + 1;
   const std::size_t after = line.next_non_space + 1;
-  if (after < line.content.size() &&
-      (line.content[after] == ' ' || line.content[after] == '\t'))
-    ++cols;
+  if (after < line.content.size()) {
+    if (line.content[after] == ' ') {
+      ++cols;
+    } else if (line.content[after] == '\t') {
+      const std::size_t post_gt_col = line.base_col + line.virtual_indent + 1;
+      cols += (post_gt_col / 4 + 1) * 4 - post_gt_col;
+    }
+  }
   return OpenResult{
       NodeType::BlockQuote, std::monostate{}, {}, {}, false, cols};
 }
@@ -543,6 +553,13 @@ static std::optional<OpenResult> tryOpenListItem(const ScannedLine &line,
 static std::optional<OpenResult> tryOpenIndentedCode(const ScannedLine &line,
                                                      bool tip_is_paragraph,
                                                      bool inside_list_blank) {
+  // Print line info for debugging
+  std::cerr << "[tryOpenIndentedCode] content=\"" << line.content
+            << "\" virtual_indent=" << line.virtual_indent
+            << " is_blank=" << line.is_blank
+            << " tip_is_paragraph=" << tip_is_paragraph
+            << " inside_list_blank=" << inside_list_blank << "\n";
+
   if (tip_is_paragraph)
     return std::nullopt;
   if (line.virtual_indent < 4)
