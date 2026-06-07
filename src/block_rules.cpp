@@ -82,8 +82,7 @@ ContinuationResult continuationMatches(const BlockNode &node,
         if (line.content()[after] == ' ') {
           ++cols;
         } else if (line.content()[after] == '\t') {
-          const std::size_t post_gt_col = line.base_col() + line.indent() + 1;
-          cols += (post_gt_col / commonmark::kTabStop + 1) * commonmark::kTabStop - post_gt_col;
+          ++cols; // take only 1 virtual space from the tab; remainder becomes prefix_spaces
         }
       }
       return {true, cols};
@@ -103,7 +102,7 @@ ContinuationResult continuationMatches(const BlockNode &node,
     // absorb subsequent indented content — the blank closes the item.
     if (node.last_line_blank && node.children.empty())
       return {false};
-    if (line.indent() >= static_cast<std::size_t>(item.padding)) {
+    if (current_col + line.indent() >= static_cast<std::size_t>(item.padding)) {
       // cols_to_consume is relative to current_col (already consumed by
       // parent containers), so subtract what's already been consumed.
       const std::size_t rel =
@@ -246,8 +245,7 @@ static std::optional<OpenResult> tryOpenBlockQuote(const ScannedLine &line) {
     if (line.content()[after] == ' ') {
       ++cols;
     } else if (line.content()[after] == '\t') {
-      const std::size_t post_gt_col = line.base_col() + line.indent() + 1;
-      cols += (post_gt_col / commonmark::kTabStop + 1) * commonmark::kTabStop - post_gt_col;
+      ++cols; // take only 1 virtual space from the tab; remainder becomes prefix_spaces
     }
   }
   return OpenResult{
