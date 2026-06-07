@@ -1,5 +1,6 @@
 #pragma once
 
+#include "commonmark_constants.hpp"
 #include "string_utils.hpp"
 #include <cstddef>
 #include <string_view>
@@ -45,7 +46,7 @@ public:
         --cols_needed;
         ++col;
       } else if (byte == '\t') {
-        const std::size_t tab_w = (col / 4 + 1) * 4 - col;
+        const std::size_t tab_w = (col / commonmark::kTabStop + 1) * commonmark::kTabStop - col;
         if (tab_w <= cols_needed) {
           ++byte_offset;
           cols_needed -= tab_w;
@@ -105,7 +106,7 @@ private:
     while (i < content.size()) {
       const unsigned char c = static_cast<unsigned char>(content[i]);
       if (c == ' ')       { ++col; ++i; }
-      else if (c == '\t') { col = (col / 4 + 1) * 4; ++i; }
+      else if (c == '\t') { col = (col / commonmark::kTabStop + 1) * commonmark::kTabStop; ++i; }
       else                { break; }
     }
     return {col - base_col, i};

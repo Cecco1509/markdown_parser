@@ -63,8 +63,18 @@ struct ItemData {
   int padding;
 };
 
+enum class HtmlBlockType : int {
+  ScriptStylePre  = 1, // <script>, <style>, <pre>
+  Comment         = 2, // <!-- ... -->
+  ProcessingInstr = 3, // <? ... ?>
+  Declaration     = 4, // <!LETTER ... >
+  CData           = 5, // <![CDATA[ ... ]]>
+  KnownTag        = 6, // block-level tag
+  Complete        = 7, // complete open/close tag on one line
+};
+
 struct HtmlBlockData {
-  int html_type;
+  HtmlBlockType html_type;
 };
 
 struct LinkDef {

@@ -1,6 +1,7 @@
 #include "markdown_parser/SpineHandler.hpp"
 #include "markdown_parser/InlineParser.hpp"
 #include "markdown_parser/block_rules.hpp"
+#include "markdown_parser/commonmark_constants.hpp"
 #include <algorithm>
 #include <iostream>
 #include <optional>
@@ -159,7 +160,7 @@ SpineHandler::tryOpenNewBlock(const ScannedLine &line,
       // When an indented code block is suppressed inside a list item after a
       // blank line, consume the 4-col code-block indent so the paragraph text
       // starts at the right position (CommonMark §5.3).
-      if (inside_list_blank && cur.indent() == 4)
+      if (inside_list_blank && cur.indent() == commonmark::kCodeBlockIndent)
         cur = cur.consume(4);
       break;
     }
@@ -514,8 +515,8 @@ void SpineHandler::checkHtmlBlockEnd(const ScannedLine &line) {
   BlockNode *t = tip();
   if (t->type != NodeType::HtmlBlock)
     return;
-  const int html_type = std::get<HtmlBlockData>(t->data).html_type;
-  if (html_type >= 1 && html_type <= 5 &&
+  const HtmlBlockType html_type = std::get<HtmlBlockData>(t->data).html_type;
+  if (html_type != HtmlBlockType::KnownTag && html_type != HtmlBlockType::Complete &&
       block_rules::htmlBlockEndMet(*t, line.content()))
     closeBlock();
 }

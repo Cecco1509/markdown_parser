@@ -1,9 +1,16 @@
 #include "markdown_parser/block_rules.hpp"
+#include "markdown_parser/commonmark_constants.hpp"
 #include <cctype>
 #include <cstring>
 #include <iostream>
 
 namespace block_rules {
+
+namespace {
+constexpr std::size_t kMaxHeadingLevel = 6;
+constexpr std::size_t kMaxListDigits   = 9;
+constexpr std::size_t kFenceMinRun     = 3;
+}
 
 // ── Internal helpers ─────────────────────────────────────────────────────────
 
@@ -67,7 +74,7 @@ ContinuationResult continuationMatches(const BlockNode &node,
 
   case NodeType::BlockQuote: {
     // > at 0–3 spaces virtual indent
-    if (line.indent() <= 3 && line.next_non_space() < line.content().size() &&
+    if (line.indent() <= commonmark::kMaxBlockIndent && line.next_non_space() < line.content().size() &&
         line.content()[line.next_non_space()] == '>') {
       std::size_t cols = line.indent() + 1; // indent cols + '>'
       const std::size_t after = line.next_non_space() + 1;
@@ -76,7 +83,7 @@ ContinuationResult continuationMatches(const BlockNode &node,
           ++cols;
         } else if (line.content()[after] == '\t') {
           const std::size_t post_gt_col = line.base_col() + line.indent() + 1;
-          cols += (post_gt_col / 4 + 1) * 4 - post_gt_col;
+          cols += (post_gt_col / commonmark::kTabStop + 1) * commonmark::kTabStop - post_gt_col;
         }
       }
       return {true, cols};
@@ -135,7 +142,7 @@ ContinuationResult continuationMatches(const BlockNode &node,
     // consumed current_col columns) is still ≥ 4.
     if (line.is_blank())
       return {true};
-    if (line.indent() >= current_col + 4)
+    if (line.indent() >= current_col + commonmark::kCodeBlockIndent)
       return {true, 4};
     return {false};
   }
@@ -146,9 +153,9 @@ ContinuationResult continuationMatches(const BlockNode &node,
 
   case NodeType::HtmlBlock: {
     const auto &hbd = std::get<HtmlBlockData>(node.data);
-    if (hbd.html_type == 7)
+    if (hbd.html_type == HtmlBlockType::Complete)
       return {false};
-    if (hbd.html_type == 6)
+    if (hbd.html_type == HtmlBlockType::KnownTag)
       return {!line.is_blank()};
     // Types 1–5: always continue; end condition checked post-append.
     return {true};
@@ -168,18 +175,18 @@ ContinuationResult continuationMatches(const BlockNode &node,
 bool htmlBlockEndMet(const BlockNode &node, std::string_view line_content) {
   const auto &hbd = std::get<HtmlBlockData>(node.data);
   switch (hbd.html_type) {
-  case 1:
+  case HtmlBlockType::ScriptStylePre:
     return icontains(line_content, "</script>") ||
            icontains(line_content, "</pre>") ||
            icontains(line_content, "</style>") ||
            icontains(line_content, "</textarea>");
-  case 2:
+  case HtmlBlockType::Comment:
     return line_content.find("-->") != std::string_view::npos;
-  case 3:
+  case HtmlBlockType::ProcessingInstr:
     return line_content.find("?>") != std::string_view::npos;
-  case 4:
+  case HtmlBlockType::Declaration:
     return line_content.find('>') != std::string_view::npos;
-  case 5:
+  case HtmlBlockType::CData:
     return line_content.find("]]>") != std::string_view::npos;
   default:
     return false;
@@ -193,7 +200,7 @@ bool isSetextUnderline(const ScannedLine &line) {
   // std::cerr << "[isSetextUnderline] content=\"" << line.content()
   //           << "\" virtual_indent=" << line.indent()
   //           << " is_blank=" << line.is_blank() << "\n";
-  if (line.indent() > 3 || line.is_blank()) {
+  if (line.indent() > commonmark::kMaxBlockIndent || line.is_blank()) {
     // std::cerr << "[isSetextUnderline] -> false (indent/blank)\n";
     return false;
   }
@@ -227,7 +234,7 @@ bool isSetextUnderline(const ScannedLine &line) {
 
 // 1. BlockQuote
 static std::optional<OpenResult> tryOpenBlockQuote(const ScannedLine &line) {
-  if (line.indent() > 3)
+  if (line.indent() > commonmark::kMaxBlockIndent)
     return std::nullopt;
   if (line.next_non_space() >= line.content().size())
     return std::nullopt;
@@ -240,7 +247,7 @@ static std::optional<OpenResult> tryOpenBlockQuote(const ScannedLine &line) {
       ++cols;
     } else if (line.content()[after] == '\t') {
       const std::size_t post_gt_col = line.base_col() + line.indent() + 1;
-      cols += (post_gt_col / 4 + 1) * 4 - post_gt_col;
+      cols += (post_gt_col / commonmark::kTabStop + 1) * commonmark::kTabStop - post_gt_col;
     }
   }
   return OpenResult{
@@ -249,12 +256,12 @@ static std::optional<OpenResult> tryOpenBlockQuote(const ScannedLine &line) {
 
 // 2. ATX heading
 static std::optional<OpenResult> tryOpenAtxHeading(const ScannedLine &line) {
-  if (line.indent() > 3)
+  if (line.indent() > commonmark::kMaxBlockIndent)
     return std::nullopt;
   const std::string_view s = line.content();
   std::size_t i = line.next_non_space();
   int level = 0;
-  while (i < s.size() && s[i] == '#' && level < 7) {
+  while (i < s.size() && s[i] == '#' && level <= kMaxHeadingLevel) {
     ++i;
     ++level;
   }
@@ -283,7 +290,7 @@ static std::optional<OpenResult> tryOpenAtxHeading(const ScannedLine &line) {
 
 // 3. Fenced code block
 static std::optional<OpenResult> tryOpenFencedCode(const ScannedLine &line) {
-  if (line.indent() > 3)
+  if (line.indent() > commonmark::kMaxBlockIndent)
     return std::nullopt;
   const std::string_view s = line.content();
   const std::size_t i = line.next_non_space();
@@ -295,7 +302,7 @@ static std::optional<OpenResult> tryOpenFencedCode(const ScannedLine &line) {
   std::size_t run = 0;
   while (i + run < s.size() && s[i + run] == fc)
     ++run;
-  if (run < 3)
+  if (run < kFenceMinRun)
     return std::nullopt;
   std::string_view info = s.substr(i + run);
   info = trimLeft(trimRight(info));
@@ -344,7 +351,7 @@ static bool isTagNameEnd(char c) {
 
 static std::optional<OpenResult> tryOpenHtmlBlock(const ScannedLine &line,
                                                   bool tip_is_paragraph) {
-  if (line.indent() > 3)
+  if (line.indent() > commonmark::kMaxBlockIndent)
     return std::nullopt;
   const std::string_view s = line.content();
   const std::size_t i = line.next_non_space();
@@ -352,23 +359,23 @@ static std::optional<OpenResult> tryOpenHtmlBlock(const ScannedLine &line,
     return std::nullopt;
 
   const std::string_view rest = s.substr(i);
-  auto make = [](int t) {
+  auto make = [](HtmlBlockType t) {
     return OpenResult{NodeType::HtmlBlock, HtmlBlockData{t}};
   };
 
   // Type 2: <!--
   if (rest.size() >= 4 && rest[1] == '!' && rest[2] == '-' && rest[3] == '-')
-    return make(2);
+    return make(HtmlBlockType::Comment);
   // Type 3: <?
   if (rest.size() >= 2 && rest[1] == '?')
-    return make(3);
+    return make(HtmlBlockType::ProcessingInstr);
   // Type 5: <![CDATA[
   if (rest.size() >= 9 && rest.substr(0, 9) == "<![CDATA[")
-    return make(5);
+    return make(HtmlBlockType::CData);
   // Type 4: <! followed by ASCII uppercase letter
   if (rest.size() >= 3 && rest[1] == '!' &&
       std::isupper(static_cast<unsigned char>(rest[2])))
-    return make(4);
+    return make(HtmlBlockType::Declaration);
 
   // Extract tag name for type-1 and type-6 checks.
   if (rest.size() < 2)
@@ -388,11 +395,11 @@ static std::optional<OpenResult> tryOpenHtmlBlock(const ScannedLine &line,
 
   // Type 1: <pre, <script, <style, <textarea  (no closing tag as opener)
   if (!closing && matchesTagList(tag, kType1Tags))
-    return make(1);
+    return make(HtmlBlockType::ScriptStylePre);
 
   // Type 6: block-level tags (open or close)
   if (matchesTagList(tag, kType6Tags))
-    return make(6);
+    return make(HtmlBlockType::KnownTag);
 
   // Type 7: complete open/close tag, cannot interrupt a paragraph.
   // Full regex matching is deferred; basic heuristic only.
@@ -415,7 +422,7 @@ static std::optional<OpenResult> tryOpenHtmlBlock(const ScannedLine &line,
           ++j;
         }
         if (trail_ok)
-          return make(7);
+          return make(HtmlBlockType::Complete);
       }
     }
   }
@@ -425,7 +432,7 @@ static std::optional<OpenResult> tryOpenHtmlBlock(const ScannedLine &line,
 
 // 5. Thematic break
 static std::optional<OpenResult> tryOpenThematicBreak(const ScannedLine &line) {
-  if (line.indent() > 3)
+  if (line.indent() > commonmark::kMaxBlockIndent)
     return std::nullopt;
   const std::string_view s = line.content();
   const std::size_t i = line.next_non_space();
@@ -457,7 +464,7 @@ static std::optional<OpenResult> tryOpenThematicBreak(const ScannedLine &line) {
 // 6. List item / List
 static std::optional<OpenResult> tryOpenListItem(const ScannedLine &line,
                                                  bool tip_is_paragraph) {
-  if (line.indent() > 3)
+  if (line.indent() > commonmark::kMaxBlockIndent)
     return std::nullopt;
   const std::string_view s = line.content();
   const std::size_t i = line.next_non_space();
@@ -480,7 +487,7 @@ static std::optional<OpenResult> tryOpenListItem(const ScannedLine &line,
     std::size_t j = i;
     int num = 0, digits = 0;
     while (j < s.size() && std::isdigit(static_cast<unsigned char>(s[j])) &&
-           digits < 9) {
+           digits < kMaxListDigits) {
       num = num * 10 + (s[j] - '0');
       ++j;
       ++digits;
@@ -513,7 +520,7 @@ static std::optional<OpenResult> tryOpenListItem(const ScannedLine &line,
     while (content_start < s.size() &&
            (s[content_start] == ' ' || s[content_start] == '\t')) {
       if (s[content_start] == '\t') {
-        const int tab_w = (col / 4 + 1) * 4 - col;
+        const int tab_w = (col / commonmark::kTabStop + 1) * commonmark::kTabStop - col;
         spaces += tab_w;
         col += tab_w;
       } else {
@@ -562,7 +569,7 @@ static std::optional<OpenResult> tryOpenIndentedCode(const ScannedLine &line,
 
   if (tip_is_paragraph)
     return std::nullopt;
-  if (line.indent() < 4)
+  if (line.indent() < commonmark::kCodeBlockIndent)
     return std::nullopt;
   if (line.is_blank())
     return std::nullopt;
