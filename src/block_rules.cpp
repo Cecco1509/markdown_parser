@@ -102,12 +102,8 @@ ContinuationResult continuationMatches(const BlockNode &node,
     // absorb subsequent indented content — the blank closes the item.
     if (node.last_line_blank && node.children.empty())
       return {false};
-    if (current_col + line.indent() >= static_cast<std::size_t>(item.padding)) {
-      // cols_to_consume is relative to current_col (already consumed by
-      // parent containers), so subtract what's already been consumed.
-      const std::size_t rel =
-          static_cast<std::size_t>(item.padding) - current_col;
-      return {true, rel};
+    if (line.indent() >= static_cast<std::size_t>(item.padding)) {
+      return {true, static_cast<std::size_t>(item.padding)};
     }
     return {false};
   }
@@ -534,16 +530,13 @@ static std::optional<OpenResult> tryOpenListItem(const ScannedLine &line,
   if (tip_is_paragraph && empty_item)
     return std::nullopt;
 
-  // padding (absolute) = absolute_marker_col + marker_width + spaces, capped
-  // at marker+1 for empty items or excessive leading spaces (> 4).
-  // Stored in ItemData for continuation matching (compared against the
-  // original line's virtual_indent which is also absolute from col 0).
-  // cols_consumed is relative to the current scan start (base_col), i.e. the
-  // number of columns to advance from the current position.
-  const int abs_marker_col =
-      static_cast<int>(line.base_col() + line.indent());
+  // padding (relative) = marker_offset_within_container + marker_width +
+  // capped_spaces. Relative to where the item opens, not the line start.
+  // This makes continuation matching independent of how many cols parent
+  // containers consumed on the continuation line vs. the opening line.
   const int capped_spaces = (empty_item || spaces > 4) ? 1 : spaces;
-  const int padding = abs_marker_col + marker_width + capped_spaces;
+  const int padding =
+      static_cast<int>(line.indent()) + marker_width + capped_spaces;
   const std::size_t cols_consumed = static_cast<std::size_t>(
       static_cast<int>(line.indent()) + marker_width + capped_spaces);
 

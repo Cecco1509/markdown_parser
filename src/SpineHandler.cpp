@@ -41,16 +41,18 @@ void SpineHandler::processLine(std::string_view raw) {
   }
 
   ScannedLine line = ScannedLine::from(raw, line_number_ == 1);
-  const bool           orig_blank   = line.is_blank();
   const std::string_view orig_content = line.content();
 
   SpineMatchResult match = step1WalkSpine(line);
+  // Capture blankness after step1 (container markers consumed) but before
+  // step2 (which may consume list item markers leaving content empty).
+  const bool post_step1_blank = line.is_blank();
   bool swallow = step2NewBlocks(line, match);
   step3AppendText(line, match, swallow);
   checkHtmlBlockEnd(orig_content);
 
   if (!spine_.empty())
-    tip()->last_line_blank = orig_blank;
+    tip()->last_line_blank = post_step1_blank;
 }
 
 void SpineHandler::finalize() {
