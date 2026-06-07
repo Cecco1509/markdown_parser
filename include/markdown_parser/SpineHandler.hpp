@@ -14,8 +14,6 @@ class InlineParser;
 struct SpineMatchResult {
   std::size_t deepest_matched;
   std::size_t first_unmatched;
-  // Set by step1 when a fenced-code closing fence is detected; tells step3
-  // to swallow the line instead of appending it.
   bool swallow_line = false;
 };
 
@@ -37,12 +35,13 @@ private:
 
   InlineParser &inline_parser_;
 
-  struct Step2Result    { ScannedLine remaining; bool swallow; };
-  struct OpenBlockResult { ScannedLine remaining; bool any_opened; bool swallow; };
+  struct OpenBlockResult { bool any_opened; bool swallow; };
 
-  std::pair<SpineMatchResult, ScannedLine> step1WalkSpine(const ScannedLine &line);
-  Step2Result     step2NewBlocks(const ScannedLine &cur, const SpineMatchResult &match);
-  void            step3AppendText(const ScannedLine &cur, const SpineMatchResult &match, bool swallow);
+  // step1 mutates line (consumes container markers), returns match info.
+  SpineMatchResult step1WalkSpine(ScannedLine &line);
+  // step2 mutates cur (consumes new-block markers), returns whether to swallow.
+  bool             step2NewBlocks(ScannedLine &cur, const SpineMatchResult &match);
+  void             step3AppendText(const ScannedLine &cur, const SpineMatchResult &match, bool swallow);
 
   BlockNode *openBlock(NodeType type, BlockData data);
   void       closeBlock();
@@ -52,9 +51,10 @@ private:
 
   bool incorporatesLazyContinuation(const ScannedLine &cur,
                                     const SpineMatchResult &match) const noexcept;
-  OpenBlockResult tryOpenNewBlock(const ScannedLine &cur, const SpineMatchResult &match);
+  // tryOpenNewBlock mutates cur (consumes opener markers).
+  OpenBlockResult tryOpenNewBlock(ScannedLine &cur, const SpineMatchResult &match);
   bool tryPromoteSetextHeading(const ScannedLine &cur, const SpineMatchResult &match);
-  void checkHtmlBlockEnd(const ScannedLine &line);
+  void checkHtmlBlockEnd(std::string_view orig_content);
 
   void maybeScanLinkRefDefs(BlockNode *node);
   bool tryScanOneLinkRefDef(std::string_view content, std::size_t &pos);

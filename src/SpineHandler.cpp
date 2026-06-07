@@ -40,15 +40,17 @@ void SpineHandler::processLine(std::string_view raw) {
     std::cin.get();
   }
 
-  ScannedLine line = ScannedLine::from(raw);
-  auto [match, cur] = step1WalkSpine(line);
-  auto [cur2, swallow] = step2NewBlocks(cur, match);
-  step3AppendText(cur2, match, swallow);
-  checkHtmlBlockEnd(line);
+  ScannedLine line = ScannedLine::from(raw, line_number_ == 1);
+  const bool           orig_blank   = line.is_blank();
+  const std::string_view orig_content = line.content();
 
-  // Track blank lines for loose-list detection.
+  SpineMatchResult match = step1WalkSpine(line);
+  bool swallow = step2NewBlocks(line, match);
+  step3AppendText(line, match, swallow);
+  checkHtmlBlockEnd(orig_content);
+
   if (!spine_.empty())
-    tip()->last_line_blank = line.is_blank();
+    tip()->last_line_blank = orig_blank;
 }
 
 void SpineHandler::finalize() {
@@ -66,8 +68,8 @@ std::unique_ptr<BlockNode> SpineHandler::releaseDocument() {
 // ── Step 1
 // ────────────────────────────────────────────────────────────────────
 
-std::pair<SpineMatchResult, ScannedLine>
-SpineHandler::step1WalkSpine(const ScannedLine &line) {
+SpineMatchResult
+SpineHandler::step1WalkSpine(ScannedLine &line) {
   if (debug_)
     std::cerr << "STEP1  \"" << line.content() << "\""
               << "  blank=" << line.is_blank() << " base=" << line.base_col()
@@ -76,16 +78,12 @@ SpineHandler::step1WalkSpine(const ScannedLine &line) {
   result.deepest_matched = 0;
   result.first_unmatched = spine_.size();
 
-  ScannedLine cur = line;
-
   for (std::size_t i = 1; i < spine_.size(); ++i) {
-    auto cr = block_rules::continuationMatches(*spine_[i], cur, cur.base_col());
+    auto cr = block_rules::continuationMatches(*spine_[i], line, line.base_col());
     if (cr.matched) {
       if (cr.cols_to_consume > 0)
-        cur = cur.consume(cr.cols_to_consume);
+        line.consume(cr.cols_to_consume);
       result.deepest_matched = i;
-      // Leaf blocks cannot contain nested blocks; stop here so new openers
-      // in step2 can close this leaf via first_unmatched.
       const NodeType t = spine_[i]->type;
       const bool is_leaf = t != NodeType::Document &&
                            t != NodeType::BlockQuote && t != NodeType::List &&
@@ -104,25 +102,24 @@ SpineHandler::step1WalkSpine(const ScannedLine &line) {
   if (debug_)
     std::cerr << "step1  -> deep=" << result.deepest_matched
               << " unmatch=" << result.first_unmatched
-              << " swallow=" << result.swallow_line << " base=" << cur.base_col()
+              << " swallow=" << result.swallow_line << " base=" << line.base_col()
               << "\n";
-  return {result, cur};
+  return result;
 }
 
 // ── Step 2
 // ────────────────────────────────────────────────────────────────────
 
 SpineHandler::OpenBlockResult
-SpineHandler::tryOpenNewBlock(const ScannedLine &line,
+SpineHandler::tryOpenNewBlock(ScannedLine &cur,
                               const SpineMatchResult &match) {
   if (debug_)
-    std::cerr << "OPEN?  \"" << line.content() << "\""
-              << "  base=" << line.base_col()
+    std::cerr << "OPEN?  \"" << cur.content() << "\""
+              << "  base=" << cur.base_col()
               << " unmatch=" << match.first_unmatched
               << " tip=" << nodeTypeToString(tip()->type) << "\n";
   bool any_opened = false;
   bool swallow = false;
-  ScannedLine cur = line;
 
   while (true) {
     // tip_para: only restrict list-item interruption when the paragraph will
@@ -161,7 +158,7 @@ SpineHandler::tryOpenNewBlock(const ScannedLine &line,
       // blank line, consume the 4-col code-block indent so the paragraph text
       // starts at the right position (CommonMark §5.3).
       if (inside_list_blank && cur.indent() == commonmark::kCodeBlockIndent)
-        cur = cur.consume(4);
+        cur.consume(commonmark::kCodeBlockIndent);
       break;
     }
 
@@ -209,7 +206,7 @@ SpineHandler::tryOpenNewBlock(const ScannedLine &line,
     if (!result->extracted_content.empty())
       new_node->string_content = result->extracted_content;
     if (result->cols_consumed > 0)
-      cur = cur.consume(result->cols_consumed);
+      cur.consume(result->cols_consumed);
     if (debug_)
       std::cerr << "  OPEN   consumed=" << result->cols_consumed
                 << " -> base=" << cur.base_col() << "\n";
@@ -229,11 +226,11 @@ SpineHandler::tryOpenNewBlock(const ScannedLine &line,
   if (debug_)
     std::cerr << "OPEN?  -> opened=" << any_opened << " swallow=" << swallow
               << "\n";
-  return {cur, any_opened, swallow};
+  return {any_opened, swallow};
 }
 
-SpineHandler::Step2Result
-SpineHandler::step2NewBlocks(const ScannedLine &cur,
+bool
+SpineHandler::step2NewBlocks(ScannedLine &cur,
                              const SpineMatchResult &match) {
   if (debug_)
     std::cerr << "STEP2  \"" << cur.content() << "\""
@@ -245,50 +242,38 @@ SpineHandler::step2NewBlocks(const ScannedLine &cur,
   // so the closing fence cannot be re-parsed as a new block opener.
   if (match.swallow_line) {
     closeUnmatched(match.first_unmatched);
-    return {cur, /*swallow=*/true};
+    return true;
   }
 
-  // If the tip is a paragraph whose container already matched (i.e., the
-  // paragraph itself will survive closeUnmatched) and this line is a setext
-  // underline, skip block opening — step3 promotes via tryPromoteSetextHeading.
-  // The container-matched check prevents treating e.g. `---` after a list item
-  // as a setext underline when the item's indent didn't match.
   if (tip()->type == NodeType::Paragraph &&
       block_rules::isSetextUnderline(cur) && spine_.size() >= 2 &&
       (spine_.size() - 2) < match.first_unmatched)
-    return {cur, /*swallow=*/false};
+    return false;
 
-  // A fully-matched non-paragraph leaf (CodeBlock, HtmlBlock, …) owns the
-  // remaining content — step3 will append it. Opening new blocks here would
-  // wrongly insert them as siblings of the leaf (e.g. `---` inside an indented
-  // code block being parsed as a ThematicBreak).
   if (match.first_unmatched == spine_.size()) {
     const NodeType tt = tip()->type;
     const bool is_container = tt == NodeType::Document ||
                               tt == NodeType::BlockQuote ||
                               tt == NodeType::List || tt == NodeType::Item;
     if (!is_container && tt != NodeType::Paragraph)
-      return {cur, /*swallow=*/false};
+      return false;
   }
 
-  auto [remaining, any_opened, swallow] = tryOpenNewBlock(cur, match);
+  auto [any_opened, swallow] = tryOpenNewBlock(cur, match);
 
   if (any_opened) {
     // closeUnmatched already called inside tryOpenNewBlock
   } else if (incorporatesLazyContinuation(cur, match)) {
-    // lazy continuation: leave unmatched blocks open
     if (debug_)
       std::cerr << "STEP2  lazy-cont: keep from=" << match.first_unmatched
                 << " (" << nodeTypeToString(spine_[match.first_unmatched]->type)
                 << ")\n";
   } else {
     closeUnmatched(match.first_unmatched);
-    // A List whose item failed to continue has no way to receive bare text.
-    // Close any such dangling List so its content lands in the right parent.
     while (!cur.is_blank() && !spine_.empty() && tip()->type == NodeType::List)
       closeBlock();
   }
-  return {remaining, swallow};
+  return swallow;
 }
 
 // ── Step 3
@@ -504,9 +489,9 @@ bool SpineHandler::tryPromoteSetextHeading(const ScannedLine &line,
   return true;
 }
 
-void SpineHandler::checkHtmlBlockEnd(const ScannedLine &line) {
+void SpineHandler::checkHtmlBlockEnd(std::string_view orig_content) {
   if (debug_)
-    std::cerr << "HTMLEND? \"" << line.content() << "\""
+    std::cerr << "HTMLEND? \"" << orig_content << "\""
               << "  tip="
               << (spine_.empty() ? "empty" : nodeTypeToString(tip()->type))
               << "\n";
@@ -517,7 +502,7 @@ void SpineHandler::checkHtmlBlockEnd(const ScannedLine &line) {
     return;
   const HtmlBlockType html_type = std::get<HtmlBlockData>(t->data).html_type;
   if (html_type != HtmlBlockType::KnownTag && html_type != HtmlBlockType::Complete &&
-      block_rules::htmlBlockEndMet(*t, line.content()))
+      block_rules::htmlBlockEndMet(*t, orig_content))
     closeBlock();
 }
 

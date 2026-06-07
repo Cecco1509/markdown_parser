@@ -13,6 +13,7 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
 add_library(md_parser
+    src/ScannedLine.cpp
     src/SpineHandler.cpp
     src/InlineParser.cpp
     src/block_rules.cpp
