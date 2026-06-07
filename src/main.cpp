@@ -1,7 +1,6 @@
 #include "markdown_parser/HtmlRenderer.hpp"
 #include "markdown_parser/InlineParser.hpp"
 #include "markdown_parser/JsonRenderer.hpp"
-#include "markdown_parser/PreScanner.hpp"
 #include "markdown_parser/SpineHandler.hpp"
 
 #include <fstream>
@@ -32,9 +31,8 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  PreScanner scanner(true);
   InlineParser inline_parser;
-  SpineHandler spine(scanner, inline_parser, /*debug=*/true);
+  SpineHandler spine(inline_parser, /*debug=*/true);
 
   std::string line;
   while (std::getline(file, line)) {

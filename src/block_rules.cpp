@@ -67,15 +67,15 @@ ContinuationResult continuationMatches(const BlockNode &node,
 
   case NodeType::BlockQuote: {
     // > at 0–3 spaces virtual indent
-    if (line.virtual_indent <= 3 && line.next_non_space < line.content.size() &&
-        line.content[line.next_non_space] == '>') {
-      std::size_t cols = line.virtual_indent + 1; // indent cols + '>'
-      const std::size_t after = line.next_non_space + 1;
-      if (after < line.content.size()) {
-        if (line.content[after] == ' ') {
+    if (line.indent() <= 3 && line.next_non_space() < line.content().size() &&
+        line.content()[line.next_non_space()] == '>') {
+      std::size_t cols = line.indent() + 1; // indent cols + '>'
+      const std::size_t after = line.next_non_space() + 1;
+      if (after < line.content().size()) {
+        if (line.content()[after] == ' ') {
           ++cols;
-        } else if (line.content[after] == '\t') {
-          const std::size_t post_gt_col = line.base_col + line.virtual_indent + 1;
+        } else if (line.content()[after] == '\t') {
+          const std::size_t post_gt_col = line.base_col() + line.indent() + 1;
           cols += (post_gt_col / 4 + 1) * 4 - post_gt_col;
         }
       }
@@ -90,13 +90,13 @@ ContinuationResult continuationMatches(const BlockNode &node,
 
   case NodeType::Item: {
     const auto &item = std::get<ItemData>(node.data);
-    if (line.is_blank)
+    if (line.is_blank())
       return {true};
     // An empty item (no block children yet) followed by a blank line cannot
     // absorb subsequent indented content — the blank closes the item.
     if (node.last_line_blank && node.children.empty())
       return {false};
-    if (line.virtual_indent >= static_cast<std::size_t>(item.padding)) {
+    if (line.indent() >= static_cast<std::size_t>(item.padding)) {
       // cols_to_consume is relative to current_col (already consumed by
       // parent containers), so subtract what's already been consumed.
       const std::size_t rel =
@@ -111,16 +111,16 @@ ContinuationResult continuationMatches(const BlockNode &node,
     if (cbd.fenced) {
       // Closing fence: same char, length ≥ opener length, remaining indent
       // (after parent containers consumed current_col columns) ≤ 3.
-      if (line.virtual_indent <= current_col + 3) {
-        const std::size_t start = line.next_non_space;
+      if (line.indent() <= current_col + 3) {
+        const std::size_t start = line.next_non_space();
         std::size_t run = 0;
-        while (start + run < line.content.size() &&
-               line.content[start + run] == cbd.fence_char)
+        while (start + run < line.content().size() &&
+               line.content()[start + run] == cbd.fence_char)
           ++run;
         if (run >= static_cast<std::size_t>(cbd.fence_len)) {
           bool trailing_ok = true;
-          for (std::size_t j = start + run; j < line.content.size(); ++j) {
-            if (line.content[j] != ' ' && line.content[j] != '\t') {
+          for (std::size_t j = start + run; j < line.content().size(); ++j) {
+            if (line.content()[j] != ' ' && line.content()[j] != '\t') {
               trailing_ok = false;
               break;
             }
@@ -133,9 +133,9 @@ ContinuationResult continuationMatches(const BlockNode &node,
     }
     // Indented code block: blank or remaining indent (after parent containers
     // consumed current_col columns) is still ≥ 4.
-    if (line.is_blank)
+    if (line.is_blank())
       return {true};
-    if (line.virtual_indent >= current_col + 4)
+    if (line.indent() >= current_col + 4)
       return {true, 4};
     return {false};
   }
@@ -149,13 +149,13 @@ ContinuationResult continuationMatches(const BlockNode &node,
     if (hbd.html_type == 7)
       return {false};
     if (hbd.html_type == 6)
-      return {!line.is_blank};
+      return {!line.is_blank()};
     // Types 1–5: always continue; end condition checked post-append.
     return {true};
   }
 
   case NodeType::Paragraph:
-    return {!line.is_blank};
+    return {!line.is_blank()};
 
   case NodeType::ThematicBreak:
     return {false};
@@ -190,19 +190,19 @@ bool htmlBlockEndMet(const BlockNode &node, std::string_view line_content) {
 // ─────────────────────────────────────────────────────
 
 bool isSetextUnderline(const ScannedLine &line) {
-  // std::cerr << "[isSetextUnderline] content=\"" << line.content
-  //           << "\" virtual_indent=" << line.virtual_indent
-  //           << " is_blank=" << line.is_blank << "\n";
-  if (line.virtual_indent > 3 || line.is_blank) {
+  // std::cerr << "[isSetextUnderline] content=\"" << line.content()
+  //           << "\" virtual_indent=" << line.indent()
+  //           << " is_blank=" << line.is_blank() << "\n";
+  if (line.indent() > 3 || line.is_blank()) {
     // std::cerr << "[isSetextUnderline] -> false (indent/blank)\n";
     return false;
   }
-  const std::size_t i = line.next_non_space;
-  if (i >= line.content.size()) {
+  const std::size_t i = line.next_non_space();
+  if (i >= line.content().size()) {
     // std::cerr << "[isSetextUnderline] -> false (empty after indent)\n";
     return false;
   }
-  const char c = line.content[i];
+  const char c = line.content()[i];
   if (c != '=' && c != '-') {
     // std::cerr << "[isSetextUnderline] -> false (char='" << c << "' not = or
     // -)\n";
@@ -210,11 +210,11 @@ bool isSetextUnderline(const ScannedLine &line) {
   }
   // All remaining chars must be the same marker char, then optional spaces.
   bool past_marker = false;
-  for (std::size_t j = i; j < line.content.size(); ++j) {
-    if (!past_marker && line.content[j] == c)
+  for (std::size_t j = i; j < line.content().size(); ++j) {
+    if (!past_marker && line.content()[j] == c)
       continue;
     past_marker = true;
-    if (line.content[j] != ' ' && line.content[j] != '\t') {
+    if (line.content()[j] != ' ' && line.content()[j] != '\t') {
       // std::cerr << "[isSetextUnderline] -> false (mixed chars)\n";
       return false;
     }
@@ -227,19 +227,19 @@ bool isSetextUnderline(const ScannedLine &line) {
 
 // 1. BlockQuote
 static std::optional<OpenResult> tryOpenBlockQuote(const ScannedLine &line) {
-  if (line.virtual_indent > 3)
+  if (line.indent() > 3)
     return std::nullopt;
-  if (line.next_non_space >= line.content.size())
+  if (line.next_non_space() >= line.content().size())
     return std::nullopt;
-  if (line.content[line.next_non_space] != '>')
+  if (line.content()[line.next_non_space()] != '>')
     return std::nullopt;
-  std::size_t cols = line.virtual_indent + 1;
-  const std::size_t after = line.next_non_space + 1;
-  if (after < line.content.size()) {
-    if (line.content[after] == ' ') {
+  std::size_t cols = line.indent() + 1;
+  const std::size_t after = line.next_non_space() + 1;
+  if (after < line.content().size()) {
+    if (line.content()[after] == ' ') {
       ++cols;
-    } else if (line.content[after] == '\t') {
-      const std::size_t post_gt_col = line.base_col + line.virtual_indent + 1;
+    } else if (line.content()[after] == '\t') {
+      const std::size_t post_gt_col = line.base_col() + line.indent() + 1;
       cols += (post_gt_col / 4 + 1) * 4 - post_gt_col;
     }
   }
@@ -249,10 +249,10 @@ static std::optional<OpenResult> tryOpenBlockQuote(const ScannedLine &line) {
 
 // 2. ATX heading
 static std::optional<OpenResult> tryOpenAtxHeading(const ScannedLine &line) {
-  if (line.virtual_indent > 3)
+  if (line.indent() > 3)
     return std::nullopt;
-  const std::string_view s = line.content;
-  std::size_t i = line.next_non_space;
+  const std::string_view s = line.content();
+  std::size_t i = line.next_non_space();
   int level = 0;
   while (i < s.size() && s[i] == '#' && level < 7) {
     ++i;
@@ -283,10 +283,10 @@ static std::optional<OpenResult> tryOpenAtxHeading(const ScannedLine &line) {
 
 // 3. Fenced code block
 static std::optional<OpenResult> tryOpenFencedCode(const ScannedLine &line) {
-  if (line.virtual_indent > 3)
+  if (line.indent() > 3)
     return std::nullopt;
-  const std::string_view s = line.content;
-  const std::size_t i = line.next_non_space;
+  const std::string_view s = line.content();
+  const std::size_t i = line.next_non_space();
   if (i >= s.size())
     return std::nullopt;
   const char fc = s[i];
@@ -303,7 +303,7 @@ static std::optional<OpenResult> tryOpenFencedCode(const ScannedLine &line) {
   if (fc == '`' && info.find('`') != std::string_view::npos)
     return std::nullopt;
   CodeBlockData cbd{true, fc, static_cast<int>(run),
-                    static_cast<int>(line.virtual_indent), std::string(info)};
+                    static_cast<int>(line.indent()), std::string(info)};
   return OpenResult{NodeType::CodeBlock, cbd, {}, {}, /*swallow_line=*/true, 0};
 }
 
@@ -344,10 +344,10 @@ static bool isTagNameEnd(char c) {
 
 static std::optional<OpenResult> tryOpenHtmlBlock(const ScannedLine &line,
                                                   bool tip_is_paragraph) {
-  if (line.virtual_indent > 3)
+  if (line.indent() > 3)
     return std::nullopt;
-  const std::string_view s = line.content;
-  const std::size_t i = line.next_non_space;
+  const std::string_view s = line.content();
+  const std::size_t i = line.next_non_space();
   if (i >= s.size() || s[i] != '<')
     return std::nullopt;
 
@@ -425,10 +425,10 @@ static std::optional<OpenResult> tryOpenHtmlBlock(const ScannedLine &line,
 
 // 5. Thematic break
 static std::optional<OpenResult> tryOpenThematicBreak(const ScannedLine &line) {
-  if (line.virtual_indent > 3)
+  if (line.indent() > 3)
     return std::nullopt;
-  const std::string_view s = line.content;
-  const std::size_t i = line.next_non_space;
+  const std::string_view s = line.content();
+  const std::size_t i = line.next_non_space();
   if (i >= s.size())
     return std::nullopt;
   const char c = s[i];
@@ -457,10 +457,10 @@ static std::optional<OpenResult> tryOpenThematicBreak(const ScannedLine &line) {
 // 6. List item / List
 static std::optional<OpenResult> tryOpenListItem(const ScannedLine &line,
                                                  bool tip_is_paragraph) {
-  if (line.virtual_indent > 3)
+  if (line.indent() > 3)
     return std::nullopt;
-  const std::string_view s = line.content;
-  const std::size_t i = line.next_non_space;
+  const std::string_view s = line.content();
+  const std::size_t i = line.next_non_space();
   if (i >= s.size())
     return std::nullopt;
 
@@ -509,7 +509,7 @@ static std::optional<OpenResult> tryOpenListItem(const ScannedLine &line,
   int spaces = 0;
   std::size_t content_start = marker_end;
   {
-    int col = static_cast<int>(line.virtual_indent) + marker_width;
+    int col = static_cast<int>(line.indent()) + marker_width;
     while (content_start < s.size() &&
            (s[content_start] == ' ' || s[content_start] == '\t')) {
       if (s[content_start] == '\t') {
@@ -536,13 +536,13 @@ static std::optional<OpenResult> tryOpenListItem(const ScannedLine &line,
   // cols_consumed is relative to the current scan start (base_col), i.e. the
   // number of columns to advance from the current position.
   const int abs_marker_col =
-      static_cast<int>(line.base_col + line.virtual_indent);
+      static_cast<int>(line.base_col() + line.indent());
   const int capped_spaces = (empty_item || spaces > 4) ? 1 : spaces;
   const int padding = abs_marker_col + marker_width + capped_spaces;
   const std::size_t cols_consumed = static_cast<std::size_t>(
-      static_cast<int>(line.virtual_indent) + marker_width + capped_spaces);
+      static_cast<int>(line.indent()) + marker_width + capped_spaces);
 
-  ItemData item_data{static_cast<int>(line.virtual_indent), padding};
+  ItemData item_data{static_cast<int>(line.indent()), padding};
   ListData list_data{ltype, bullet, start, delim, /*tight=*/true, padding};
 
   return OpenResult{NodeType::Item, item_data,    list_data, {},
@@ -554,17 +554,17 @@ static std::optional<OpenResult> tryOpenIndentedCode(const ScannedLine &line,
                                                      bool tip_is_paragraph,
                                                      bool inside_list_blank) {
   // Print line info for debugging
-  std::cerr << "[tryOpenIndentedCode] content=\"" << line.content
-            << "\" virtual_indent=" << line.virtual_indent
-            << " is_blank=" << line.is_blank
+  std::cerr << "[tryOpenIndentedCode] content=\"" << line.content()
+            << "\" virtual_indent=" << line.indent()
+            << " is_blank=" << line.is_blank()
             << " tip_is_paragraph=" << tip_is_paragraph
             << " inside_list_blank=" << inside_list_blank << "\n";
 
   if (tip_is_paragraph)
     return std::nullopt;
-  if (line.virtual_indent < 4)
+  if (line.indent() < 4)
     return std::nullopt;
-  if (line.is_blank)
+  if (line.is_blank())
     return std::nullopt;
   return OpenResult{
       NodeType::CodeBlock, CodeBlockData{false, 0, 0, 0, {}}, {}, {}, false, 4};
@@ -576,7 +576,7 @@ static std::optional<OpenResult> tryOpenIndentedCode(const ScannedLine &line,
 std::optional<OpenResult> tryOpen(const ScannedLine &line,
                                   bool tip_is_paragraph,
                                   bool inside_list_blank) {
-  if (line.is_blank)
+  if (line.is_blank())
     return std::nullopt;
 
   if (auto r = tryOpenBlockQuote(line))

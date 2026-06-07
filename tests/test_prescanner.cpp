@@ -1,15 +1,13 @@
 #include <gtest/gtest.h>
-#include "markdown_parser/PreScanner.hpp"
+#include "markdown_parser/ScannedLine.hpp"
 
 TEST(PreScanner, BlankLine) {
-    PreScanner ps;
-    auto sl = ps.scan("   \n");
-    EXPECT_TRUE(sl.is_blank);
+    auto sl = ScannedLine::from("   \n");
+    EXPECT_TRUE(sl.is_blank());
 }
 
 TEST(PreScanner, SimpleIndent) {
-    PreScanner ps;
-    auto sl = ps.scan("    hello\n");
-    EXPECT_EQ(sl.virtual_indent, 4u);
-    EXPECT_FALSE(sl.is_blank);
+    auto sl = ScannedLine::from("    hello\n");
+    EXPECT_EQ(sl.indent(), 4u);
+    EXPECT_FALSE(sl.is_blank());
 }

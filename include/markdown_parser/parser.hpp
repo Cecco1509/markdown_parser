@@ -3,7 +3,6 @@
 #include "markdown_parser/HtmlRenderer.hpp"
 #include "markdown_parser/InlineParser.hpp"
 #include "markdown_parser/JsonRenderer.hpp"
-#include "markdown_parser/PreScanner.hpp"
 #include "markdown_parser/SpineHandler.hpp"
 
 #include <sstream>
@@ -15,9 +14,8 @@ enum class OutputFormat { Html, Json };
 
 inline std::string parse(const std::string &source,
                          OutputFormat fmt = OutputFormat::Html) {
-  PreScanner scanner;
   InlineParser inline_parser;
-  SpineHandler spine(scanner, inline_parser);
+  SpineHandler spine(inline_parser);
 
   std::istringstream stream(source);
   std::string line;
