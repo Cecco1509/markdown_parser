@@ -70,8 +70,7 @@ std::unique_ptr<BlockNode> SpineHandler::releaseDocument() {
 // ── Step 1
 // ────────────────────────────────────────────────────────────────────
 
-SpineMatchResult
-SpineHandler::step1WalkSpine(ScannedLine &line) {
+SpineMatchResult SpineHandler::step1WalkSpine(ScannedLine &line) {
   if (debug_)
     std::cerr << "STEP1  \"" << line.content() << "\""
               << "  blank=" << line.is_blank() << " base=" << line.base_col()
@@ -81,7 +80,8 @@ SpineHandler::step1WalkSpine(ScannedLine &line) {
   result.first_unmatched = spine_.size();
 
   for (std::size_t i = 1; i < spine_.size(); ++i) {
-    auto cr = block_rules::continuationMatches(*spine_[i], line, line.base_col(), debug_);
+    auto cr = block_rules::continuationMatches(*spine_[i], line,
+                                               line.base_col(), debug_);
     if (cr.matched) {
       if (cr.cols_to_consume > 0)
         line.consume(cr.cols_to_consume);
@@ -104,8 +104,8 @@ SpineHandler::step1WalkSpine(ScannedLine &line) {
   if (debug_)
     std::cerr << "step1  -> deep=" << result.deepest_matched
               << " unmatch=" << result.first_unmatched
-              << " swallow=" << result.swallow_line << " base=" << line.base_col()
-              << "\n";
+              << " swallow=" << result.swallow_line
+              << " base=" << line.base_col() << "\n";
   return result;
 }
 
@@ -113,8 +113,7 @@ SpineHandler::step1WalkSpine(ScannedLine &line) {
 // ────────────────────────────────────────────────────────────────────
 
 SpineHandler::OpenBlockResult
-SpineHandler::tryOpenNewBlock(ScannedLine &cur,
-                              const SpineMatchResult &match) {
+SpineHandler::tryOpenNewBlock(ScannedLine &cur, const SpineMatchResult &match) {
   if (debug_)
     std::cerr << "OPEN?  \"" << cur.content() << "\""
               << "  base=" << cur.base_col()
@@ -231,9 +230,8 @@ SpineHandler::tryOpenNewBlock(ScannedLine &cur,
   return {any_opened, swallow};
 }
 
-bool
-SpineHandler::step2NewBlocks(ScannedLine &cur,
-                             const SpineMatchResult &match) {
+bool SpineHandler::step2NewBlocks(ScannedLine &cur,
+                                  const SpineMatchResult &match) {
   if (debug_)
     std::cerr << "STEP2  \"" << cur.content() << "\""
               << "  unmatch=" << match.first_unmatched
@@ -293,8 +291,13 @@ void SpineHandler::step3AppendText(const ScannedLine &cur,
     return;
   // Blank lines are content inside code blocks (indented or fenced).
   if (cur.is_blank()) {
-    if (tip()->type == NodeType::CodeBlock)
-      appendText(cur, 0);
+    if (tip()->type == NodeType::CodeBlock) {
+      if (!(std::get<CodeBlockData>(tip()->data)).fenced) {
+        appendText(cur, commonmark::kCodeBlockIndent);
+      } else {
+        appendText(cur, 0);
+      }
+    }
     return;
   }
   // If all remaining content (including any prefix_spaces) is whitespace
@@ -328,7 +331,8 @@ void SpineHandler::step3AppendText(const ScannedLine &cur,
     }
   } else if (tip()->type == NodeType::Paragraph) {
     // Strip up to 3 leading spaces per CommonMark §4.4.
-    // next_non_space is now relative to cur.content() so this is always correct.
+    // next_non_space is now relative to cur.content() so this is always
+    // correct.
     if (debug_) {
       std::cerr << "  STEP3  para text_start=" << cur.next_non_space() << "\n";
     }
@@ -431,14 +435,17 @@ void SpineHandler::closeUnmatched(std::size_t from_index) {
 }
 
 void SpineHandler::appendText(const ScannedLine &cur, std::size_t from_byte) {
+  std::size_t norm_from_byte = std::min(from_byte, cur.content().size());
   if (debug_)
-    std::cerr << "APPEND \"" << cur.content().substr(from_byte) << "\""
+    std::cerr << "APPEND \"" << cur.content().substr(norm_from_byte) << "\""
+              << "  from_byte=" << from_byte
+              << " norm_from_byte=" << norm_from_byte
               << "  pfx=" << cur.prefix_spaces()
               << " tip=" << nodeTypeToString(tip()->type) << "\n";
   BlockNode *t = tip();
   if (cur.prefix_spaces() > 0)
     t->string_content.append(cur.prefix_spaces(), ' ');
-  t->string_content += cur.content().substr(from_byte);
+  t->string_content += cur.content().substr(norm_from_byte);
   t->string_content += '\n';
 }
 
@@ -503,11 +510,11 @@ void SpineHandler::checkHtmlBlockEnd(std::string_view orig_content) {
   if (t->type != NodeType::HtmlBlock)
     return;
   const HtmlBlockType html_type = std::get<HtmlBlockData>(t->data).html_type;
-  if (html_type != HtmlBlockType::KnownTag && html_type != HtmlBlockType::Complete &&
+  if (html_type != HtmlBlockType::KnownTag &&
+      html_type != HtmlBlockType::Complete &&
       block_rules::htmlBlockEndMet(*t, orig_content))
     closeBlock();
 }
-
 
 void SpineHandler::parseInlineContent(BlockNode *node) {
   if (debug_)
@@ -521,6 +528,9 @@ void SpineHandler::parseInlineContent(BlockNode *node) {
       node->type == NodeType::List || node->type == NodeType::Item;
 
   if (needs_inline) {
+    if (debug_)
+      std::cerr << "PARSE INLINE for " << nodeTypeToString(node->type)
+                << "  content=\"" << node->string_content << "\"\n";
     inline_parser_.parse(node, ref_map_);
   } else if (is_container) {
     for (const auto &child : node->children)
@@ -539,7 +549,8 @@ bool SpineHandler::tryScanOneLinkRefDef(std::string_view content,
   const std::size_t len = content.size();
   std::size_t p = pos;
 
-  // 0–3 spaces of leading indentation (4+ would have been a code block already)
+  // 0–3 spaces of leading indentation (4+ would have been a code block
+  // already)
   std::size_t indent = 0;
   while (indent < 3 && p < len && content[p] == ' ') {
     ++p;
@@ -551,8 +562,8 @@ bool SpineHandler::tryScanOneLinkRefDef(std::string_view content,
   ++p;
 
   // Scan label: everything up to the first unescaped ']'.
-  // Newlines inside the label are allowed (issue 3); fail only if ']' is never
-  // found or the normalised content is empty (all-whitespace).
+  // Newlines inside the label are allowed (issue 3); fail only if ']' is
+  // never found or the normalised content is empty (all-whitespace).
   std::size_t label_start = p;
   while (p < len && content[p] != ']')
     ++p;
@@ -637,9 +648,9 @@ bool SpineHandler::tryScanOneLinkRefDef(std::string_view content,
       return false;
   }
 
-  // pos_after_dest: byte right after the last destination character, before any
-  // trailing whitespace or newline. This is the rewind point if title parsing
-  // fails on a separate line (issue 1).
+  // pos_after_dest: byte right after the last destination character, before
+  // any trailing whitespace or newline. This is the rewind point if title
+  // parsing fails on a separate line (issue 1).
   const std::size_t pos_after_dest = p;
 
   // Try to scan an optional title.
