@@ -81,7 +81,7 @@ SpineHandler::step1WalkSpine(ScannedLine &line) {
   result.first_unmatched = spine_.size();
 
   for (std::size_t i = 1; i < spine_.size(); ++i) {
-    auto cr = block_rules::continuationMatches(*spine_[i], line, line.base_col());
+    auto cr = block_rules::continuationMatches(*spine_[i], line, line.base_col(), debug_);
     if (cr.matched) {
       if (cr.cols_to_consume > 0)
         line.consume(cr.cols_to_consume);

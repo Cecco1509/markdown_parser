@@ -8,9 +8,9 @@ namespace block_rules {
 
 namespace {
 constexpr std::size_t kMaxHeadingLevel = 6;
-constexpr std::size_t kMaxListDigits   = 9;
-constexpr std::size_t kFenceMinRun     = 3;
-}
+constexpr std::size_t kMaxListDigits = 9;
+constexpr std::size_t kFenceMinRun = 3;
+} // namespace
 
 // ── Internal helpers ─────────────────────────────────────────────────────────
 
@@ -66,53 +66,73 @@ static void stripTrailingBlankLines(std::string &s) {
 
 ContinuationResult continuationMatches(const BlockNode &node,
                                        const ScannedLine &line,
-                                       std::size_t current_col) {
+                                       std::size_t current_col, bool debug) {
+#define CONT_LOG(matched, ...)                                                 \
+  do {                                                                         \
+    if (debug)                                                                 \
+      std::cerr << "  CONT " << nodeTypeToString(node.type)                    \
+                << (matched ? " ✓  " : " ✗  ") << __VA_ARGS__ << "\n";         \
+  } while (0)
+
   switch (node.type) {
 
   case NodeType::Document:
+    CONT_LOG(true, "always");
     return {true};
 
   case NodeType::BlockQuote: {
-    // > at 0–3 spaces virtual indent
-    if (line.indent() <= commonmark::kMaxBlockIndent && line.next_non_space() < line.content().size() &&
+    if (line.indent() <= commonmark::kMaxBlockIndent &&
+        line.next_non_space() < line.content().size() &&
         line.content()[line.next_non_space()] == '>') {
-      std::size_t cols = line.indent() + 1; // indent cols + '>'
+      std::size_t cols = line.indent() + 1;
       const std::size_t after = line.next_non_space() + 1;
       if (after < line.content().size()) {
         if (line.content()[after] == ' ') {
           ++cols;
         } else if (line.content()[after] == '\t') {
-          ++cols; // take only 1 virtual space from the tab; remainder becomes prefix_spaces
+          ++cols; // take only 1 virtual space from the tab
         }
       }
+      CONT_LOG(true, "indent=" << line.indent() << " '>' at pos "
+                               << line.next_non_space()
+                               << "  consume=" << cols);
       return {true, cols};
     }
+    if (line.indent() > commonmark::kMaxBlockIndent)
+      CONT_LOG(false, "indent=" << line.indent() << " > kMaxBlockIndent("
+                                << commonmark::kMaxBlockIndent << ")");
+    else
+      CONT_LOG(false, "no '>' at next_non_space pos " << line.next_non_space());
     return {false};
   }
 
   case NodeType::List:
-    // List itself always continues; its active Item decides.
+    CONT_LOG(true, "always (Item decides)");
     return {true};
 
   case NodeType::Item: {
     const auto &item = std::get<ItemData>(node.data);
-    if (line.is_blank())
+    if (line.is_blank()) {
+      CONT_LOG(true, "blank line (items absorb blanks)");
       return {true};
-    // An empty item (no block children yet) followed by a blank line cannot
-    // absorb subsequent indented content — the blank closes the item.
-    if (node.last_line_blank && node.children.empty())
+    }
+    if (node.last_line_blank && node.children.empty()) {
+      CONT_LOG(false, "empty item after blank  last_line_blank=1 children=0");
       return {false};
+    }
     if (line.indent() >= static_cast<std::size_t>(item.padding)) {
+      CONT_LOG(true, "indent=" << line.indent() << " >= padding="
+                               << item.padding << "  consume=" << item.padding);
       return {true, static_cast<std::size_t>(item.padding)};
     }
+    CONT_LOG(false,
+             "indent=" << line.indent() << " < padding=" << item.padding);
     return {false};
   }
 
   case NodeType::CodeBlock: {
     const auto &cbd = std::get<CodeBlockData>(node.data);
     if (cbd.fenced) {
-      // Closing fence: same char, length ≥ opener length, remaining indent
-      // (after parent containers consumed current_col columns) ≤ 3.
       if (line.indent() <= current_col + 3) {
         const std::size_t start = line.next_non_space();
         std::size_t run = 0;
@@ -127,42 +147,65 @@ ContinuationResult continuationMatches(const BlockNode &node,
               break;
             }
           }
-          if (trailing_ok)
+          if (trailing_ok) {
+            CONT_LOG(false, "closing fence: run=" << run << " >= fence_len="
+                                                  << cbd.fence_len
+                                                  << "  swallow");
             return {false, 0, /*swallow_line=*/true};
+          }
         }
       }
+      CONT_LOG(true, "fenced (continues until closing fence)");
       return {true};
     }
-    // Indented code block: blank or remaining indent (after parent containers
-    // consumed current_col columns) is still ≥ 4.
-    if (line.is_blank())
+    // Indented code block
+    if (line.is_blank()) {
+      CONT_LOG(true, "blank inside indented code block");
       return {true};
-    if (line.indent() >= current_col + commonmark::kCodeBlockIndent)
+    }
+    if (line.indent() >= commonmark::kCodeBlockIndent) {
+      CONT_LOG(true, "indent=" << line.indent()
+                               << " >= 4=" << (commonmark::kCodeBlockIndent)
+                               << "  consume=4");
       return {true, 4};
+    }
+    CONT_LOG(false, "indent=" << line.indent() << " < base+4="
+                              << (current_col + commonmark::kCodeBlockIndent));
     return {false};
   }
 
   case NodeType::Heading:
-    // ATX heading: single-line block, never continues.
+    CONT_LOG(false, "ATX heading is single-line");
     return {false};
 
   case NodeType::HtmlBlock: {
     const auto &hbd = std::get<HtmlBlockData>(node.data);
-    if (hbd.html_type == HtmlBlockType::Complete)
+    if (hbd.html_type == HtmlBlockType::Complete) {
+      CONT_LOG(false, "type=7 (Complete) never continues");
       return {false};
-    if (hbd.html_type == HtmlBlockType::KnownTag)
-      return {!line.is_blank()};
-    // Types 1–5: always continue; end condition checked post-append.
+    }
+    if (hbd.html_type == HtmlBlockType::KnownTag) {
+      const bool ok = !line.is_blank();
+      CONT_LOG(ok, "type=6 (KnownTag)  blank=" << line.is_blank());
+      return {ok};
+    }
+    CONT_LOG(true, "type=1-5 (end condition checked post-append)");
     return {true};
   }
 
-  case NodeType::Paragraph:
-    return {!line.is_blank()};
+  case NodeType::Paragraph: {
+    const bool ok = !line.is_blank();
+    CONT_LOG(ok, "blank=" << line.is_blank());
+    return {ok};
+  }
 
   case NodeType::ThematicBreak:
+    CONT_LOG(false, "ThematicBreak is single-line");
     return {false};
   }
   return {false};
+
+#undef CONT_LOG
 }
 
 // ── §3.1 HTML block end detection ────────────────────────────────────────────
@@ -241,7 +284,8 @@ static std::optional<OpenResult> tryOpenBlockQuote(const ScannedLine &line) {
     if (line.content()[after] == ' ') {
       ++cols;
     } else if (line.content()[after] == '\t') {
-      ++cols; // take only 1 virtual space from the tab; remainder becomes prefix_spaces
+      ++cols; // take only 1 virtual space from the tab; remainder becomes
+              // prefix_spaces
     }
   }
   return OpenResult{
@@ -514,7 +558,8 @@ static std::optional<OpenResult> tryOpenListItem(const ScannedLine &line,
     while (content_start < s.size() &&
            (s[content_start] == ' ' || s[content_start] == '\t')) {
       if (s[content_start] == '\t') {
-        const int tab_w = (col / commonmark::kTabStop + 1) * commonmark::kTabStop - col;
+        const int tab_w =
+            (col / commonmark::kTabStop + 1) * commonmark::kTabStop - col;
         spaces += tab_w;
         col += tab_w;
       } else {
