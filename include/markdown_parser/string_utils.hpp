@@ -6,8 +6,10 @@
 namespace string_utils {
 
 // Normalize a raw input line before scanning:
-//   - If strip_bom is true, removes a leading UTF-8 BOM (U+FEFF, bytes EF BB BF).
-//   - Replaces every NUL byte (\0) with the UTF-8 encoding of U+FFFD (EF BF BD).
+//   - If strip_bom is true, removes a leading UTF-8 BOM (U+FEFF, bytes EF BB
+//   BF).
+//   - Replaces every NUL byte (\0) with the UTF-8 encoding of U+FFFD (EF BF
+//   BD).
 // Returns an owned string; the caller must keep it alive as long as any
 // string_view into it (e.g. ScannedLine::content()) is in use.
 inline std::string line_init(std::string_view raw, bool strip_bom = false) {
@@ -25,9 +27,9 @@ inline std::string line_init(std::string_view raw, bool strip_bom = false) {
     else
       result += c;
   }
+
   return result;
 }
-
 
 inline std::string_view stripLineEnding(std::string_view raw) noexcept {
   if (!raw.empty() && raw.back() == '\n') {
@@ -46,5 +48,12 @@ inline bool isBlank(std::string_view content) noexcept {
       return false;
   return true;
 }
+
+inline std::string_view trimRight(std::string_view s) {
+  while (!s.empty() && (s.back() == ' ' || s.back() == '\t'))
+    s.remove_suffix(1);
+  return s;
+}
+
 
 } // namespace string_utils
