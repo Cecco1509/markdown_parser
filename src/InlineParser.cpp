@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cctype>
+#include <iostream>
 
 // ── file-local helpers
 // ────────────────────────────────────────────────────────
@@ -84,6 +85,8 @@ std::unique_ptr<InlineNode> InlineParser::parseInline() {
         return makeNode(InlineType::LineBreak);
       }
     }
+    if (!nodes_.empty() && nodes_.back()->type == InlineType::Text)
+      nodes_.back()->literal = string_utils::trimRight(nodes_.back()->literal);
     return makeNode(InlineType::SoftBreak);
   }
 
@@ -331,6 +334,9 @@ std::unique_ptr<InlineNode> InlineParser::parseHtmlInline() {
   std::size_t save = pos_;
   ++pos_; // skip '<'
 
+  // std::cerr << "parseHtmlInline at pos " << save << ": " << input_ <<
+  // "...\n";
+
   if (pos_ >= input_.size()) {
     pos_ = save;
     return nullptr;
@@ -349,6 +355,7 @@ std::unique_ptr<InlineNode> InlineParser::parseHtmlInline() {
     if (pos_ >= input_.size() ||
         !std::isalpha(static_cast<unsigned char>(input_[pos_]))) {
       pos_ = save;
+      // std::cerr << "Not a closing tag: " << input_ << "...\n";
       return nullptr;
     }
     while (pos_ < input_.size() &&
@@ -362,6 +369,7 @@ std::unique_ptr<InlineNode> InlineParser::parseHtmlInline() {
       return emit();
     }
     pos_ = save;
+    // std::cerr << "Malformed closing tag: " << input_ << "...\n";
     return nullptr;
   }
 
@@ -379,6 +387,7 @@ std::unique_ptr<InlineNode> InlineParser::parseHtmlInline() {
       if (pos_ + 1 < input_.size() && input_[pos_] == '-' &&
           input_[pos_ + 1] == '>') {
         pos_ = save;
+        // std::cerr << "Empty comment not allowed: " << input_ << "...\n";
         return nullptr;
       }
       while (pos_ < input_.size()) {
@@ -389,11 +398,13 @@ std::unique_ptr<InlineNode> InlineParser::parseHtmlInline() {
             return emit();
           }
           pos_ = save;
+          // std::cerr << "Comment cannot end with --: " << input_ << "...\n";
           return nullptr; // -- not followed by >
         }
         ++pos_;
       }
       pos_ = save;
+      // std::cerr << "Unclosed comment: " << input_ << "...\n";
       return nullptr;
     }
     // CDATA: <![CDATA[...]]>
@@ -450,6 +461,7 @@ std::unique_ptr<InlineNode> InlineParser::parseHtmlInline() {
   // Open tag: <tagname attributes? /?>
   if (!std::isalpha(static_cast<unsigned char>(c))) {
     pos_ = save;
+    // std::cerr << "Tag name must start with a letter: " << input_ << "...\n";
     return nullptr;
   }
 
@@ -466,6 +478,7 @@ std::unique_ptr<InlineNode> InlineParser::parseHtmlInline() {
     // Require at least one whitespace before each attribute.
     if (ch != ' ' && ch != '\t' && ch != '\n') {
       pos_ = save;
+      // std::cerr << "Expected space before attribute: " << input_ << "...\n";
       return nullptr;
     }
     while (
@@ -474,6 +487,7 @@ std::unique_ptr<InlineNode> InlineParser::parseHtmlInline() {
       ++pos_;
     if (pos_ >= input_.size()) {
       pos_ = save;
+      // std::cerr << "Unexpected end of input in tag: " << input_ << "...\n";
       return nullptr;
     }
     ch = input_[pos_];
@@ -484,6 +498,7 @@ std::unique_ptr<InlineNode> InlineParser::parseHtmlInline() {
     if (!std::isalpha(static_cast<unsigned char>(ch)) && ch != '_' &&
         ch != ':') {
       pos_ = save;
+      // std::cerr << "Invalid attribute name start: " << input_ << "...\n";
       return nullptr;
     }
     while (pos_ < input_.size() &&
@@ -504,20 +519,26 @@ std::unique_ptr<InlineNode> InlineParser::parseHtmlInline() {
         ++pos_;
       if (pos_ >= input_.size()) {
         pos_ = save;
+        // std::cerr << "Unexpected end of input after '=': " << input_ <<
+        // "...\n";
         return nullptr;
       }
       char q = input_[pos_];
       if (q == '"' || q == '\'') {
         ++pos_;
         while (pos_ < input_.size() && input_[pos_] != q) {
-          if (input_[pos_] == '\n') {
-            pos_ = save;
-            return nullptr;
-          }
+          // if (input_[pos_] == '\n') {
+          //   pos_ = save;
+          //   // std::cerr << "Newline not allowed in attribute value: " <<
+          //   input_
+          //             << "...\n";
+          //   return nullptr;
+          // }
           ++pos_;
         }
         if (pos_ >= input_.size()) {
           pos_ = save;
+          // std::cerr << "Unclosed attribute value: " << input_ << "...\n";
           return nullptr;
         }
         ++pos_;
@@ -531,6 +552,7 @@ std::unique_ptr<InlineNode> InlineParser::parseHtmlInline() {
           ++pos_;
       } else {
         pos_ = save;
+        // std::cerr << "Invalid attribute value start: " << input_ << "...\n";
         return nullptr;
       }
     } else {
@@ -540,12 +562,14 @@ std::unique_ptr<InlineNode> InlineParser::parseHtmlInline() {
 
   if (pos_ >= input_.size()) {
     pos_ = save;
+    // std::cerr << "Unexpected end of input in tag: " << input_ << "...\n";
     return nullptr;
   }
   if (input_[pos_] == '/') {
     ++pos_;
     if (pos_ >= input_.size() || input_[pos_] != '>') {
       pos_ = save;
+      // std::cerr << "Expected '>' after '/': " << input_ << "...\n";
       return nullptr;
     }
   }
@@ -554,6 +578,7 @@ std::unique_ptr<InlineNode> InlineParser::parseHtmlInline() {
     return emit();
   }
   pos_ = save;
+  // std::cerr << "Expected '>' at end of tag: " << input_ << "...\n";
   return nullptr;
 }
 
