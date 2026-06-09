@@ -22,6 +22,7 @@ add_library(md_parser
     src/JsonRenderer.cpp
     src/entities.cpp
     src/string_utils.cpp
+    src/unicode_fold.cpp
 )
 target_include_directories(md_parser PUBLIC include)
 
