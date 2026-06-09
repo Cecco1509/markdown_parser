@@ -4,6 +4,7 @@
 #include "markdown_parser/Types.hpp"
 
 #include <cassert>
+#include <functional>
 
 // ── helpers
 // ───────────────────────────────────────────────────────────────────
@@ -266,11 +267,16 @@ void HtmlRenderer::visit(const InlineNode &node) {
 
   case InlineType::Image: {
     const auto &ld = std::get<LinkData>(node.data);
-    // Alt text is the plain text of the children (no HTML tags).
+    // Alt text is the plain-text content of the whole subtree (no HTML tags).
     std::string alt;
+    std::function<void(const InlineNode &)> collectAlt = [&](const InlineNode &n) {
+      if (n.type == InlineType::Text || n.type == InlineType::Code)
+        alt += n.literal;
+      for (const auto &c : n.children)
+        collectAlt(*c);
+    };
     for (const auto &child : node.children)
-      if (child->type == InlineType::Text)
-        alt += child->literal;
+      collectAlt(*child);
     out_ += "<img src=\"" + escapeUrl(ld.destination) + "\"";
     out_ += " alt=\"" + escapeHtml(alt) + "\"";
     if (ld.title)
