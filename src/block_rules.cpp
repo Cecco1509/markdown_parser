@@ -1,5 +1,6 @@
 #include "markdown_parser/block_rules.hpp"
 #include "markdown_parser/commonmark_constants.hpp"
+#include "markdown_parser/entities.hpp"
 #include <cctype>
 #include <cstring>
 #include <iostream>
@@ -345,7 +346,8 @@ static std::optional<OpenResult> tryOpenFencedCode(const ScannedLine &line) {
   if (fc == '`' && info.find('`') != std::string_view::npos)
     return std::nullopt;
   CodeBlockData cbd{true, fc, static_cast<int>(run),
-                    static_cast<int>(line.indent()), std::string(info)};
+                    static_cast<int>(line.indent()),
+                    entities::decodeAll(info)};
   return OpenResult{NodeType::CodeBlock, cbd, {}, {}, /*swallow_line=*/true, 0};
 }
 
