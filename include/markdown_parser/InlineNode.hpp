@@ -25,4 +25,5 @@ struct BracketEntry {
     bool        is_image;
     InlineNode* node      = nullptr;
     std::size_t delim_top = 0;
+    std::size_t src_pos   = 0; // input position right after the opening '['
 };

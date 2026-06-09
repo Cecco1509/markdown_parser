@@ -603,7 +603,7 @@ std::unique_ptr<InlineNode> InlineParser::parseHtmlInline() {
 // ───────────────────────────────────────────────────────
 
 void InlineParser::handleBracketOpener(bool is_image) {
-  brackets_.push_back({is_image, nullptr, delimiters_.size()});
+  brackets_.push_back({is_image, nullptr, delimiters_.size(), pos_});
 }
 
 // ── scanLinkDestination
@@ -771,6 +771,7 @@ std::unique_ptr<InlineNode> InlineParser::handleBracketCloser() {
   std::size_t save = pos_;
   std::optional<std::string> dest, title, label;
   bool resolved = false;
+  bool tried_full_ref = false;
 
   // 1. Inline link: ](destination title?)
   if (!resolved && pos_ < input_.size() && input_[pos_] == '(') {
@@ -813,13 +814,19 @@ std::unique_ptr<InlineNode> InlineParser::handleBracketCloser() {
 
   // 2. Full reference: ][label]
   if (!resolved && pos_ < input_.size() && input_[pos_] == '[') {
+    tried_full_ref = true;
     std::size_t fr_save = pos_;
     ++pos_;
     std::size_t ls = pos_;
-    while (pos_ < input_.size() && input_[pos_] != ']' &&
-           input_[pos_] != '\n' && pos_ - ls < 999)
+    bool label_ok = true;
+    while (pos_ < input_.size() && pos_ - ls < 999) {
+      char lc = input_[pos_];
+      if (lc == ']') break;
+      if (lc == '[' || lc == '\n') { label_ok = false; break; }
+      if (lc == '\\' && pos_ + 1 < input_.size()) { pos_ += 2; continue; }
       ++pos_;
-    if (pos_ < input_.size() && input_[pos_] == ']' && pos_ > ls) {
+    }
+    if (label_ok && pos_ < input_.size() && input_[pos_] == ']' && pos_ > ls) {
       std::string raw(input_.substr(ls, pos_ - ls));
       ++pos_;
       auto it = ref_map_->find(normaliseLabel(raw));
@@ -834,28 +841,37 @@ std::unique_ptr<InlineNode> InlineParser::handleBracketCloser() {
       pos_ = fr_save;
   }
 
+  // Raw label text: input between the '[' and this ']' (pos_-1 after ++pos_).
+  // Used for shortcut/collapsed lookups to avoid backslash-processing effects.
+  auto raw_bracket_label = [&]() -> std::string {
+    std::size_t end = save - 1; // save is pos_ after ']++'
+    if (bracket.src_pos <= end)
+      return std::string(input_.substr(bracket.src_pos, end - bracket.src_pos));
+    return {};
+  };
+
   // 3. Collapsed reference: ][]
   if (!resolved && pos_ + 1 < input_.size() && input_[pos_] == '[' &&
       input_[pos_ + 1] == ']') {
-    std::string bt = get_bracket_text();
-    auto it = ref_map_->find(normaliseLabel(bt));
+    std::string raw = raw_bracket_label();
+    auto it = ref_map_->find(normaliseLabel(raw));
     if (it != ref_map_->end()) {
       pos_ += 2;
       dest = it->second.destination;
       title = it->second.title;
-      label = bt;
+      label = raw;
       resolved = true;
     }
   }
 
-  // 4. Shortcut reference: label = bracket text
-  if (!resolved) {
-    std::string bt = get_bracket_text();
-    auto it = ref_map_->find(normaliseLabel(bt));
+  // 4. Shortcut reference: label = raw bracket text (no ][label] was tried)
+  if (!resolved && !tried_full_ref) {
+    std::string raw = raw_bracket_label();
+    auto it = ref_map_->find(normaliseLabel(raw));
     if (it != ref_map_->end()) {
       dest = it->second.destination;
       title = it->second.title;
-      label = bt;
+      label = raw;
       resolved = true;
     }
   }
@@ -890,13 +906,9 @@ std::unique_ptr<InlineNode> InlineParser::handleBracketCloser() {
     return link;
   }
 
-  // Failed: deactivate delimiters inside this bracket range.
+  // Failed: bracket opener becomes literal; delimiters inside remain active.
   pos_ = save;
   brackets_.pop_back();
-  for (std::size_t i = bracket.delim_top; i < delimiters_.size(); ++i) {
-    delimiters_[i].can_open = false;
-    delimiters_[i].can_close = false;
-  }
   return literal_bracket();
 }
 

@@ -7,6 +7,12 @@
 #include <iostream>
 #include <optional>
 
+static bool isAsciiPunct(char c) {
+  auto u = static_cast<unsigned char>(c);
+  return (u >= '!' && u <= '/') || (u >= ':' && u <= '@') ||
+         (u >= '[' && u <= '`') || (u >= '{' && u <= '~');
+}
+
 SpineHandler::SpineHandler(InlineParser &inline_parser, bool debug)
     : inline_parser_(inline_parser), debug_(debug) {
   openBlock(NodeType::Document, std::monostate{});
@@ -565,13 +571,16 @@ bool SpineHandler::tryScanOneLinkRefDef(std::string_view content,
     return false;
   ++p;
 
-  // Scan label: everything up to the first unescaped ']'.
-  // Newlines inside the label are allowed (issue 3); fail only if ']' is
-  // never found or the normalised content is empty (all-whitespace).
+  // Scan label: up to the first unescaped ']'. Backslash-escaped chars
+  // (including \]) are skipped as a pair; unescaped '[' is also invalid.
   std::size_t label_start = p;
-  while (p < len && content[p] != ']')
-    ++p;
-  if (p >= len)
+  while (p < len && content[p] != ']' && content[p] != '[') {
+    if (content[p] == '\\' && p + 1 < len)
+      p += 2;
+    else
+      ++p;
+  }
+  if (p >= len || content[p] != ']')
     return false;
   std::string raw_label(content.substr(label_start, p - label_start));
   ++p; // skip ']'
@@ -613,8 +622,14 @@ bool SpineHandler::tryScanOneLinkRefDef(std::string_view content,
         break;
       }
       if (c == '\\' && p + 1 < len) {
-        destination += content[p + 1];
-        p += 2;
+        char next = content[p + 1];
+        if (isAsciiPunct(next)) {
+          destination += next;
+          p += 2;
+        } else {
+          destination += c;
+          ++p;
+        }
       } else if (c == '&') {
         std::string dec = entities::decode(content, p);
         if (!dec.empty())
@@ -649,8 +664,14 @@ bool SpineHandler::tryScanOneLinkRefDef(std::string_view content,
         destination += c;
         ++p;
       } else if (c == '\\' && p + 1 < len) {
-        destination += content[p + 1];
-        p += 2;
+        char next = content[p + 1];
+        if (isAsciiPunct(next)) {
+          destination += next;
+          p += 2;
+        } else {
+          destination += c;
+          ++p;
+        }
       } else if (c == '&') {
         std::string dec = entities::decode(content, p);
         if (!dec.empty()) {
@@ -677,6 +698,7 @@ bool SpineHandler::tryScanOneLinkRefDef(std::string_view content,
   std::optional<std::string> title;
   {
     std::size_t tp = p;
+    const std::size_t tp_start = p;
     bool crossed_newline = false;
 
     while (tp < len && (content[tp] == ' ' || content[tp] == '\t'))
@@ -688,7 +710,8 @@ bool SpineHandler::tryScanOneLinkRefDef(std::string_view content,
         ++tp;
     }
 
-    if (tp < len &&
+    // Spec requires whitespace between destination and title.
+    if (tp < len && tp > tp_start &&
         (content[tp] == '"' || content[tp] == '\'' || content[tp] == '(')) {
       const char open_d = content[tp];
       const char close_d = (open_d == '(') ? ')' : open_d;
@@ -715,8 +738,14 @@ bool SpineHandler::tryScanOneLinkRefDef(std::string_view content,
           break;
         }
         if (c == '\\' && tp + 1 < len) {
-          buf += content[tp + 1];
-          tp += 2;
+          char next = content[tp + 1];
+          if (isAsciiPunct(next)) {
+            buf += next;
+            tp += 2;
+          } else {
+            buf += c;
+            ++tp;
+          }
         } else if (c == '&') {
           std::string dec = entities::decode(content, tp);
           if (!dec.empty())

@@ -1,6 +1,6 @@
 Test project /Users/lorenzoceccotti/Desktop/Uni/Magi/AP/markdown_parser/build
         Start   6: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#1 [Tabs]
-  1/652 Test   #6: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#1 [Tabs] .......................................   Passed    0.03 sec
+  1/652 Test   #6: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#1 [Tabs] .......................................   Passed    0.33 sec
         Start   7: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#2 [Tabs]
   2/652 Test   #7: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#2 [Tabs] .......................................   Passed    0.03 sec
         Start   8: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#3 [Tabs]
@@ -14,13 +14,13 @@ Test project /Users/lorenzoceccotti/Desktop/Uni/Magi/AP/markdown_parser/build
         Start  12: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#7 [Tabs]
   7/652 Test  #12: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#7 [Tabs] .......................................   Passed    0.03 sec
         Start  13: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#8 [Tabs]
-  8/652 Test  #13: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#8 [Tabs] .......................................   Passed    0.03 sec
+  8/652 Test  #13: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#8 [Tabs] .......................................   Passed    0.06 sec
         Start  14: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#9 [Tabs]
-  9/652 Test  #14: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#9 [Tabs] .......................................   Passed    0.03 sec
+  9/652 Test  #14: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#9 [Tabs] .......................................   Passed    0.04 sec
         Start  15: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#10 [Tabs]
  10/652 Test  #15: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#10 [Tabs] ......................................   Passed    0.03 sec
         Start  16: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#11 [Tabs]
- 11/652 Test  #16: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#11 [Tabs] ......................................   Passed    0.03 sec
+ 11/652 Test  #16: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#11 [Tabs] ......................................   Passed    0.08 sec
         Start  17: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#12 [Backslash escapes]
  12/652 Test  #17: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#12 [Backslash escapes] .........................   Passed    0.03 sec
         Start  18: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#13 [Backslash escapes]
@@ -32,7 +32,7 @@ Test project /Users/lorenzoceccotti/Desktop/Uni/Magi/AP/markdown_parser/build
         Start  21: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#16 [Backslash escapes]
  16/652 Test  #21: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#16 [Backslash escapes] .........................   Passed    0.03 sec
         Start  22: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#17 [Backslash escapes]
- 17/652 Test  #22: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#17 [Backslash escapes] .........................   Passed    0.04 sec
+ 17/652 Test  #22: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#17 [Backslash escapes] .........................   Passed    0.03 sec
         Start  23: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#18 [Backslash escapes]
  18/652 Test  #23: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#18 [Backslash escapes] .........................   Passed    0.03 sec
         Start  24: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#19 [Backslash escapes]
@@ -78,7 +78,7 @@ Test project /Users/lorenzoceccotti/Desktop/Uni/Magi/AP/markdown_parser/build
         Start  44: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#39 [Entity and numeric character references]
  39/652 Test  #44: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#39 [Entity and numeric character references] ...   Passed    0.03 sec
         Start  45: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#40 [Entity and numeric character references]
- 40/652 Test  #45: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#40 [Entity and numeric character references] ...   Passed    0.03 sec
+ 40/652 Test  #45: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#40 [Entity and numeric character references] ...   Passed    0.04 sec
         Start  46: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#41 [Entity and numeric character references]
  41/652 Test  #46: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#41 [Entity and numeric character references] ...   Passed    0.03 sec
         Start  47: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#42 [Precedence]
@@ -104,7 +104,7 @@ Test project /Users/lorenzoceccotti/Desktop/Uni/Magi/AP/markdown_parser/build
         Start  57: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#52 [Thematic breaks]
  52/652 Test  #57: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#52 [Thematic breaks] ...........................   Passed    0.03 sec
         Start  58: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#53 [Thematic breaks]
- 53/652 Test  #58: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#53 [Thematic breaks] ...........................   Passed    0.02 sec
+ 53/652 Test  #58: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#53 [Thematic breaks] ...........................   Passed    0.03 sec
         Start  59: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#54 [Thematic breaks]
  54/652 Test  #59: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#54 [Thematic breaks] ...........................   Passed    0.03 sec
         Start  60: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#55 [Thematic breaks]
@@ -176,31 +176,31 @@ Test project /Users/lorenzoceccotti/Desktop/Uni/Magi/AP/markdown_parser/build
         Start  93: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#88 [Setext headings]
  88/652 Test  #93: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#88 [Setext headings] ...........................   Passed    0.03 sec
         Start  94: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#89 [Setext headings]
- 89/652 Test  #94: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#89 [Setext headings] ...........................   Passed    0.02 sec
+ 89/652 Test  #94: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#89 [Setext headings] ...........................   Passed    0.03 sec
         Start  95: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#90 [Setext headings]
- 90/652 Test  #95: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#90 [Setext headings] ...........................   Passed    0.02 sec
+ 90/652 Test  #95: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#90 [Setext headings] ...........................   Passed    0.03 sec
         Start  96: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#91 [Setext headings]
  91/652 Test  #96: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#91 [Setext headings] ...........................   Passed    0.03 sec
         Start  97: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#92 [Setext headings]
- 92/652 Test  #97: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#92 [Setext headings] ...........................   Passed    0.02 sec
+ 92/652 Test  #97: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#92 [Setext headings] ...........................   Passed    0.03 sec
         Start  98: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#93 [Setext headings]
  93/652 Test  #98: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#93 [Setext headings] ...........................   Passed    0.03 sec
         Start  99: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#94 [Setext headings]
- 94/652 Test  #99: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#94 [Setext headings] ...........................   Passed    0.02 sec
+ 94/652 Test  #99: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#94 [Setext headings] ...........................   Passed    0.03 sec
         Start 100: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#95 [Setext headings]
- 95/652 Test #100: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#95 [Setext headings] ...........................   Passed    0.02 sec
+ 95/652 Test #100: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#95 [Setext headings] ...........................   Passed    0.03 sec
         Start 101: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#96 [Setext headings]
  96/652 Test #101: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#96 [Setext headings] ...........................   Passed    0.03 sec
         Start 102: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#97 [Setext headings]
- 97/652 Test #102: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#97 [Setext headings] ...........................   Passed    0.02 sec
+ 97/652 Test #102: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#97 [Setext headings] ...........................   Passed    0.03 sec
         Start 103: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#98 [Setext headings]
- 98/652 Test #103: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#98 [Setext headings] ...........................   Passed    0.02 sec
+ 98/652 Test #103: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#98 [Setext headings] ...........................   Passed    0.03 sec
         Start 104: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#99 [Setext headings]
  99/652 Test #104: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#99 [Setext headings] ...........................   Passed    0.03 sec
         Start 105: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#100 [Setext headings]
-100/652 Test #105: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#100 [Setext headings] ..........................   Passed    0.02 sec
+100/652 Test #105: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#100 [Setext headings] ..........................   Passed    0.03 sec
         Start 106: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#101 [Setext headings]
-101/652 Test #106: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#101 [Setext headings] ..........................   Passed    0.02 sec
+101/652 Test #106: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#101 [Setext headings] ..........................   Passed    0.03 sec
         Start 107: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#102 [Setext headings]
 102/652 Test #107: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#102 [Setext headings] ..........................   Passed    0.03 sec
         Start 108: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#103 [Setext headings]
@@ -224,7 +224,7 @@ Test project /Users/lorenzoceccotti/Desktop/Uni/Magi/AP/markdown_parser/build
         Start 117: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#112 [Indented code blocks]
 112/652 Test #117: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#112 [Indented code blocks] .....................   Passed    0.03 sec
         Start 118: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#113 [Indented code blocks]
-113/652 Test #118: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#113 [Indented code blocks] .....................   Passed    0.03 sec
+113/652 Test #118: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#113 [Indented code blocks] .....................   Passed    0.02 sec
         Start 119: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#114 [Indented code blocks]
 114/652 Test #119: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#114 [Indented code blocks] .....................   Passed    0.03 sec
         Start 120: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#115 [Indented code blocks]
@@ -238,7 +238,7 @@ Test project /Users/lorenzoceccotti/Desktop/Uni/Magi/AP/markdown_parser/build
         Start 124: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#119 [Fenced code blocks]
 119/652 Test #124: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#119 [Fenced code blocks] .......................   Passed    0.03 sec
         Start 125: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#120 [Fenced code blocks]
-120/652 Test #125: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#120 [Fenced code blocks] .......................   Passed    0.02 sec
+120/652 Test #125: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#120 [Fenced code blocks] .......................   Passed    0.03 sec
         Start 126: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#121 [Fenced code blocks]
 121/652 Test #126: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#121 [Fenced code blocks] .......................   Passed    0.03 sec
         Start 127: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#122 [Fenced code blocks]
@@ -254,9 +254,9 @@ Test project /Users/lorenzoceccotti/Desktop/Uni/Magi/AP/markdown_parser/build
         Start 132: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#127 [Fenced code blocks]
 127/652 Test #132: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#127 [Fenced code blocks] .......................   Passed    0.03 sec
         Start 133: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#128 [Fenced code blocks]
-128/652 Test #133: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#128 [Fenced code blocks] .......................   Passed    0.02 sec
+128/652 Test #133: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#128 [Fenced code blocks] .......................   Passed    0.03 sec
         Start 134: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#129 [Fenced code blocks]
-129/652 Test #134: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#129 [Fenced code blocks] .......................   Passed    0.02 sec
+129/652 Test #134: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#129 [Fenced code blocks] .......................   Passed    0.03 sec
         Start 135: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#130 [Fenced code blocks]
 130/652 Test #135: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#130 [Fenced code blocks] .......................   Passed    0.03 sec
         Start 136: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#131 [Fenced code blocks]
@@ -282,7 +282,7 @@ Test project /Users/lorenzoceccotti/Desktop/Uni/Magi/AP/markdown_parser/build
         Start 146: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#141 [Fenced code blocks]
 141/652 Test #146: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#141 [Fenced code blocks] .......................   Passed    0.03 sec
         Start 147: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#142 [Fenced code blocks]
-142/652 Test #147: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#142 [Fenced code blocks] .......................   Passed    0.03 sec
+142/652 Test #147: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#142 [Fenced code blocks] .......................   Passed    0.04 sec
         Start 148: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#143 [Fenced code blocks]
 143/652 Test #148: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#143 [Fenced code blocks] .......................   Passed    0.03 sec
         Start 149: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#144 [Fenced code blocks]
@@ -328,11 +328,11 @@ Test project /Users/lorenzoceccotti/Desktop/Uni/Magi/AP/markdown_parser/build
         Start 169: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#164 [HTML blocks]
 164/652 Test #169: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#164 [HTML blocks] ..............................   Passed    0.03 sec
         Start 170: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#165 [HTML blocks]
-165/652 Test #170: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#165 [HTML blocks] ..............................   Passed    0.02 sec
+165/652 Test #170: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#165 [HTML blocks] ..............................   Passed    0.03 sec
         Start 171: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#166 [HTML blocks]
 166/652 Test #171: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#166 [HTML blocks] ..............................   Passed    0.03 sec
         Start 172: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#167 [HTML blocks]
-167/652 Test #172: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#167 [HTML blocks] ..............................   Passed    0.02 sec
+167/652 Test #172: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#167 [HTML blocks] ..............................   Passed    0.05 sec
         Start 173: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#168 [HTML blocks]
 168/652 Test #173: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#168 [HTML blocks] ..............................   Passed    0.03 sec
         Start 174: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#169 [HTML blocks]
@@ -340,37 +340,37 @@ Test project /Users/lorenzoceccotti/Desktop/Uni/Magi/AP/markdown_parser/build
         Start 175: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#170 [HTML blocks]
 170/652 Test #175: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#170 [HTML blocks] ..............................   Passed    0.03 sec
         Start 176: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#171 [HTML blocks]
-171/652 Test #176: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#171 [HTML blocks] ..............................   Passed    0.02 sec
+171/652 Test #176: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#171 [HTML blocks] ..............................   Passed    0.03 sec
         Start 177: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#172 [HTML blocks]
-172/652 Test #177: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#172 [HTML blocks] ..............................   Passed    0.02 sec
+172/652 Test #177: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#172 [HTML blocks] ..............................   Passed    0.03 sec
         Start 178: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#173 [HTML blocks]
-173/652 Test #178: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#173 [HTML blocks] ..............................   Passed    0.02 sec
+173/652 Test #178: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#173 [HTML blocks] ..............................   Passed    0.03 sec
         Start 179: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#174 [HTML blocks]
-174/652 Test #179: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#174 [HTML blocks] ..............................   Passed    0.02 sec
+174/652 Test #179: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#174 [HTML blocks] ..............................   Passed    0.03 sec
         Start 180: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#175 [HTML blocks]
-175/652 Test #180: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#175 [HTML blocks] ..............................   Passed    0.02 sec
+175/652 Test #180: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#175 [HTML blocks] ..............................   Passed    0.03 sec
         Start 181: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#176 [HTML blocks]
-176/652 Test #181: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#176 [HTML blocks] ..............................   Passed    0.02 sec
+176/652 Test #181: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#176 [HTML blocks] ..............................   Passed    0.03 sec
         Start 182: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#177 [HTML blocks]
-177/652 Test #182: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#177 [HTML blocks] ..............................   Passed    0.02 sec
+177/652 Test #182: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#177 [HTML blocks] ..............................   Passed    0.03 sec
         Start 183: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#178 [HTML blocks]
 178/652 Test #183: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#178 [HTML blocks] ..............................   Passed    0.03 sec
         Start 184: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#179 [HTML blocks]
 179/652 Test #184: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#179 [HTML blocks] ..............................   Passed    0.03 sec
         Start 185: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#180 [HTML blocks]
-180/652 Test #185: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#180 [HTML blocks] ..............................   Passed    0.02 sec
+180/652 Test #185: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#180 [HTML blocks] ..............................   Passed    0.03 sec
         Start 186: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#181 [HTML blocks]
 181/652 Test #186: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#181 [HTML blocks] ..............................   Passed    0.03 sec
         Start 187: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#182 [HTML blocks]
 182/652 Test #187: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#182 [HTML blocks] ..............................   Passed    0.03 sec
         Start 188: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#183 [HTML blocks]
-183/652 Test #188: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#183 [HTML blocks] ..............................   Passed    0.02 sec
+183/652 Test #188: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#183 [HTML blocks] ..............................   Passed    0.03 sec
         Start 189: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#184 [HTML blocks]
 184/652 Test #189: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#184 [HTML blocks] ..............................   Passed    0.03 sec
         Start 190: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#185 [HTML blocks]
 185/652 Test #190: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#185 [HTML blocks] ..............................   Passed    0.03 sec
         Start 191: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#186 [HTML blocks]
-186/652 Test #191: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#186 [HTML blocks] ..............................   Passed    0.02 sec
+186/652 Test #191: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#186 [HTML blocks] ..............................   Passed    0.03 sec
         Start 192: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#187 [HTML blocks]
 187/652 Test #192: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#187 [HTML blocks] ..............................   Passed    0.03 sec
         Start 193: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#188 [HTML blocks]
@@ -378,62 +378,15 @@ Test project /Users/lorenzoceccotti/Desktop/Uni/Magi/AP/markdown_parser/build
         Start 194: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#189 [HTML blocks]
 189/652 Test #194: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#189 [HTML blocks] ..............................   Passed    0.03 sec
         Start 195: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#190 [HTML blocks]
-190/652 Test #195: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#190 [HTML blocks] ..............................   Passed    0.02 sec
+190/652 Test #195: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#190 [HTML blocks] ..............................   Passed    0.03 sec
         Start 196: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#191 [HTML blocks]
 191/652 Test #196: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#191 [HTML blocks] ..............................   Passed    0.03 sec
         Start 197: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#192 [Link reference definitions]
 192/652 Test #197: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#192 [Link reference definitions] ...............   Passed    0.03 sec
         Start 198: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#193 [Link reference definitions]
-193/652 Test #198: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#193 [Link reference definitions] ...............   Passed    0.02 sec
+193/652 Test #198: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#193 [Link reference definitions] ...............   Passed    0.03 sec
         Start 199: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#194 [Link reference definitions]
-194/652 Test #199: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#194 [Link reference definitions] ...............***Failed    0.02 sec
-Running main() from /Users/lorenzoceccotti/Desktop/Uni/Magi/AP/markdown_parser/build/_deps/googletest-src/googletest/src/gtest_main.cc
-Note: Google Test filter = Spec/CommonMarkSpecTest.MatchesExpectedHtml/194_Link_reference_definitions
-[==========] Running 1 test from 1 test suite.
-[----------] Global test environment set-up.
-[----------] 1 test from Spec/CommonMarkSpecTest
-[ RUN      ] Spec/CommonMarkSpecTest.MatchesExpectedHtml/194_Link_reference_definitions
-[tryOpenIndentedCode] content="[Foo*bar\]]:my_(url) 'title (with parens)'" virtual_indent=0 is_blank=0 tip_is_paragraph=0 inside_list_blank=0
-[tryOpenIndentedCode] content="[Foo*bar\]]" virtual_indent=0 is_blank=0 tip_is_paragraph=0 inside_list_blank=0
-/Users/lorenzoceccotti/Desktop/Uni/Magi/AP/markdown_parser/tests/spec_tests/test_commonmark_spec.cpp:27: Failure
-Expected equality of these values:
-  tc.html
-    Which is: "<p><a href=\"my_(url)\" title=\"title (with parens)\">Foo*bar]</a></p>\n"
-  actual
-    Which is: "<p>[Foo*bar]]:my_(url) 'title (with parens)'</p>\n<p>[Foo*bar]]</p>\n"
-With diff:
-@@ -1,1 +1,2 @@
--<p><a href=\"my_(url)\" title=\"title (with parens)\">Foo*bar]</a></p>\n
-+<p>[Foo*bar]]:my_(url) 'title (with parens)'</p>
-+<p>[Foo*bar]]</p>\n
-
-
-┌─ Section    : Link reference definitions
-│  Example #  : 194
-│  Spec lines : 3199-3205
-├─ Markdown input ──────────────────────────────────────────
-[Foo*bar\]]:my_(url) 'title (with parens)'
-
-[Foo*bar\]]
-├─ Expected HTML ───────────────────────────────────────────
-<p><a href="my_(url)" title="title (with parens)">Foo*bar]</a></p>
-├─ Actual HTML ─────────────────────────────────────────────
-<p>[Foo*bar]]:my_(url) 'title (with parens)'</p>
-<p>[Foo*bar]]</p>
-└───────────────────────────────────────────────────────────
-
-
-[  FAILED  ] Spec/CommonMarkSpecTest.MatchesExpectedHtml/194_Link_reference_definitions, where GetParam() = #194 [Link reference definitions] (0 ms)
-[----------] 1 test from Spec/CommonMarkSpecTest (0 ms total)
-
-[----------] Global test environment tear-down
-[==========] 1 test from 1 test suite ran. (0 ms total)
-[  PASSED  ] 0 tests.
-[  FAILED  ] 1 test, listed below:
-[  FAILED  ] Spec/CommonMarkSpecTest.MatchesExpectedHtml/194_Link_reference_definitions, where GetParam() = #194 [Link reference definitions]
-
- 1 FAILED TEST
-
+194/652 Test #199: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#194 [Link reference definitions] ...............   Passed    0.03 sec
         Start 200: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#195 [Link reference definitions]
 195/652 Test #200: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#195 [Link reference definitions] ...............   Passed    0.03 sec
         Start 201: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#196 [Link reference definitions]
@@ -445,98 +398,11 @@ With diff:
         Start 204: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#199 [Link reference definitions]
 199/652 Test #204: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#199 [Link reference definitions] ...............   Passed    0.03 sec
         Start 205: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#200 [Link reference definitions]
-200/652 Test #205: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#200 [Link reference definitions] ...............   Passed    0.02 sec
+200/652 Test #205: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#200 [Link reference definitions] ...............   Passed    0.03 sec
         Start 206: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#201 [Link reference definitions]
-201/652 Test #206: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#201 [Link reference definitions] ...............***Failed    0.02 sec
-Running main() from /Users/lorenzoceccotti/Desktop/Uni/Magi/AP/markdown_parser/build/_deps/googletest-src/googletest/src/gtest_main.cc
-Note: Google Test filter = Spec/CommonMarkSpecTest.MatchesExpectedHtml/201_Link_reference_definitions
-[==========] Running 1 test from 1 test suite.
-[----------] Global test environment set-up.
-[----------] 1 test from Spec/CommonMarkSpecTest
-[ RUN      ] Spec/CommonMarkSpecTest.MatchesExpectedHtml/201_Link_reference_definitions
-[tryOpenIndentedCode] content="[foo]: <bar>(baz)" virtual_indent=0 is_blank=0 tip_is_paragraph=0 inside_list_blank=0
-[tryOpenIndentedCode] content="[foo]" virtual_indent=0 is_blank=0 tip_is_paragraph=0 inside_list_blank=0
-/Users/lorenzoceccotti/Desktop/Uni/Magi/AP/markdown_parser/tests/spec_tests/test_commonmark_spec.cpp:27: Failure
-Expected equality of these values:
-  tc.html
-    Which is: "<p>[foo]: <bar>(baz)</p>\n<p>[foo]</p>\n"
-  actual
-    Which is: "<p><a href=\"bar\" title=\"baz\">foo</a></p>\n"
-With diff:
-@@ -1,2 +1,1 @@
--<p>[foo]: <bar>(baz)</p>
--<p>[foo]</p>\n
-+<p><a href=\"bar\" title=\"baz\">foo</a></p>\n
-
-
-┌─ Section    : Link reference definitions
-│  Example #  : 201
-│  Spec lines : 3290-3297
-├─ Markdown input ──────────────────────────────────────────
-[foo]: <bar>(baz)
-
-[foo]
-├─ Expected HTML ───────────────────────────────────────────
-<p>[foo]: <bar>(baz)</p>
-<p>[foo]</p>
-├─ Actual HTML ─────────────────────────────────────────────
-<p><a href="bar" title="baz">foo</a></p>
-└───────────────────────────────────────────────────────────
-
-
-[  FAILED  ] Spec/CommonMarkSpecTest.MatchesExpectedHtml/201_Link_reference_definitions, where GetParam() = #201 [Link reference definitions] (0 ms)
-[----------] 1 test from Spec/CommonMarkSpecTest (0 ms total)
-
-[----------] Global test environment tear-down
-[==========] 1 test from 1 test suite ran. (0 ms total)
-[  PASSED  ] 0 tests.
-[  FAILED  ] 1 test, listed below:
-[  FAILED  ] Spec/CommonMarkSpecTest.MatchesExpectedHtml/201_Link_reference_definitions, where GetParam() = #201 [Link reference definitions]
-
- 1 FAILED TEST
-
+201/652 Test #206: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#201 [Link reference definitions] ...............   Passed    0.03 sec
         Start 207: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#202 [Link reference definitions]
-202/652 Test #207: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#202 [Link reference definitions] ...............***Failed    0.03 sec
-Running main() from /Users/lorenzoceccotti/Desktop/Uni/Magi/AP/markdown_parser/build/_deps/googletest-src/googletest/src/gtest_main.cc
-Note: Google Test filter = Spec/CommonMarkSpecTest.MatchesExpectedHtml/202_Link_reference_definitions
-[==========] Running 1 test from 1 test suite.
-[----------] Global test environment set-up.
-[----------] 1 test from Spec/CommonMarkSpecTest
-[ RUN      ] Spec/CommonMarkSpecTest.MatchesExpectedHtml/202_Link_reference_definitions
-[tryOpenIndentedCode] content="[foo]: /url\bar\*baz "foo\"bar\baz"" virtual_indent=0 is_blank=0 tip_is_paragraph=0 inside_list_blank=0
-[tryOpenIndentedCode] content="[foo]" virtual_indent=0 is_blank=0 tip_is_paragraph=0 inside_list_blank=0
-/Users/lorenzoceccotti/Desktop/Uni/Magi/AP/markdown_parser/tests/spec_tests/test_commonmark_spec.cpp:27: Failure
-Expected equality of these values:
-  tc.html
-    Which is: "<p><a href=\"/url%5Cbar*baz\" title=\"foo&quot;bar\\baz\">foo</a></p>\n"
-  actual
-    Which is: "<p><a href=\"/urlbar*baz\" title=\"foo&quot;barbaz\">foo</a></p>\n"
-
-┌─ Section    : Link reference definitions
-│  Example #  : 202
-│  Spec lines : 3303-3309
-├─ Markdown input ──────────────────────────────────────────
-[foo]: /url\bar\*baz "foo\"bar\baz"
-
-[foo]
-├─ Expected HTML ───────────────────────────────────────────
-<p><a href="/url%5Cbar*baz" title="foo&quot;bar\baz">foo</a></p>
-├─ Actual HTML ─────────────────────────────────────────────
-<p><a href="/urlbar*baz" title="foo&quot;barbaz">foo</a></p>
-└───────────────────────────────────────────────────────────
-
-
-[  FAILED  ] Spec/CommonMarkSpecTest.MatchesExpectedHtml/202_Link_reference_definitions, where GetParam() = #202 [Link reference definitions] (0 ms)
-[----------] 1 test from Spec/CommonMarkSpecTest (0 ms total)
-
-[----------] Global test environment tear-down
-[==========] 1 test from 1 test suite ran. (0 ms total)
-[  PASSED  ] 0 tests.
-[  FAILED  ] 1 test, listed below:
-[  FAILED  ] Spec/CommonMarkSpecTest.MatchesExpectedHtml/202_Link_reference_definitions, where GetParam() = #202 [Link reference definitions]
-
- 1 FAILED TEST
-
+202/652 Test #207: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#202 [Link reference definitions] ...............   Passed    0.03 sec
         Start 208: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#203 [Link reference definitions]
 203/652 Test #208: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#203 [Link reference definitions] ...............   Passed    0.03 sec
         Start 209: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#204 [Link reference definitions]
@@ -601,23 +467,23 @@ With diff:
  1 FAILED TEST
 
         Start 212: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#207 [Link reference definitions]
-207/652 Test #212: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#207 [Link reference definitions] ...............   Passed    0.02 sec
+207/652 Test #212: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#207 [Link reference definitions] ...............   Passed    0.03 sec
         Start 213: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#208 [Link reference definitions]
 208/652 Test #213: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#208 [Link reference definitions] ...............   Passed    0.03 sec
         Start 214: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#209 [Link reference definitions]
-209/652 Test #214: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#209 [Link reference definitions] ...............   Passed    0.02 sec
+209/652 Test #214: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#209 [Link reference definitions] ...............   Passed    0.03 sec
         Start 215: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#210 [Link reference definitions]
-210/652 Test #215: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#210 [Link reference definitions] ...............   Passed    0.02 sec
+210/652 Test #215: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#210 [Link reference definitions] ...............   Passed    0.03 sec
         Start 216: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#211 [Link reference definitions]
-211/652 Test #216: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#211 [Link reference definitions] ...............   Passed    0.02 sec
+211/652 Test #216: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#211 [Link reference definitions] ...............   Passed    0.03 sec
         Start 217: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#212 [Link reference definitions]
-212/652 Test #217: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#212 [Link reference definitions] ...............   Passed    0.02 sec
+212/652 Test #217: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#212 [Link reference definitions] ...............   Passed    0.03 sec
         Start 218: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#213 [Link reference definitions]
-213/652 Test #218: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#213 [Link reference definitions] ...............   Passed    0.02 sec
+213/652 Test #218: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#213 [Link reference definitions] ...............   Passed    0.03 sec
         Start 219: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#214 [Link reference definitions]
-214/652 Test #219: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#214 [Link reference definitions] ...............   Passed    0.02 sec
+214/652 Test #219: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#214 [Link reference definitions] ...............   Passed    0.03 sec
         Start 220: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#215 [Link reference definitions]
-215/652 Test #220: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#215 [Link reference definitions] ...............***Failed    0.02 sec
+215/652 Test #220: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#215 [Link reference definitions] ...............***Failed    0.03 sec
 Running main() from /Users/lorenzoceccotti/Desktop/Uni/Magi/AP/markdown_parser/build/_deps/googletest-src/googletest/src/gtest_main.cc
 Note: Google Test filter = Spec/CommonMarkSpecTest.MatchesExpectedHtml/215_Link_reference_definitions
 [==========] Running 1 test from 1 test suite.
@@ -672,7 +538,7 @@ bar</h1>
  1 FAILED TEST
 
         Start 221: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#216 [Link reference definitions]
-216/652 Test #221: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#216 [Link reference definitions] ...............***Failed    0.03 sec
+216/652 Test #221: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#216 [Link reference definitions] ...............***Failed    0.11 sec
 Running main() from /Users/lorenzoceccotti/Desktop/Uni/Magi/AP/markdown_parser/build/_deps/googletest-src/googletest/src/gtest_main.cc
 Note: Google Test filter = Spec/CommonMarkSpecTest.MatchesExpectedHtml/216_Link_reference_definitions
 [==========] Running 1 test from 1 test suite.
@@ -723,11 +589,11 @@ With diff:
  1 FAILED TEST
 
         Start 222: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#217 [Link reference definitions]
-217/652 Test #222: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#217 [Link reference definitions] ...............   Passed    0.02 sec
+217/652 Test #222: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#217 [Link reference definitions] ...............   Passed    0.05 sec
         Start 223: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#218 [Link reference definitions]
-218/652 Test #223: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#218 [Link reference definitions] ...............   Passed    0.03 sec
+218/652 Test #223: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#218 [Link reference definitions] ...............   Passed    0.10 sec
         Start 224: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#219 [Paragraphs]
-219/652 Test #224: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#219 [Paragraphs] ...............................   Passed    0.02 sec
+219/652 Test #224: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#219 [Paragraphs] ...............................   Passed    0.03 sec
         Start 225: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#220 [Paragraphs]
 220/652 Test #225: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#220 [Paragraphs] ...............................   Passed    0.03 sec
         Start 226: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#221 [Paragraphs]
@@ -745,13 +611,13 @@ With diff:
         Start 232: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#227 [Blank lines]
 227/652 Test #232: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#227 [Blank lines] ..............................   Passed    0.03 sec
         Start 233: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#228 [Block quotes]
-228/652 Test #233: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#228 [Block quotes] .............................   Passed    0.03 sec
+228/652 Test #233: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#228 [Block quotes] .............................   Passed    0.02 sec
         Start 234: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#229 [Block quotes]
-229/652 Test #234: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#229 [Block quotes] .............................   Passed    0.03 sec
+229/652 Test #234: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#229 [Block quotes] .............................   Passed    0.02 sec
         Start 235: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#230 [Block quotes]
-230/652 Test #235: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#230 [Block quotes] .............................   Passed    0.03 sec
+230/652 Test #235: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#230 [Block quotes] .............................   Passed    0.02 sec
         Start 236: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#231 [Block quotes]
-231/652 Test #236: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#231 [Block quotes] .............................   Passed    0.03 sec
+231/652 Test #236: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#231 [Block quotes] .............................   Passed    0.02 sec
         Start 237: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#232 [Block quotes]
 232/652 Test #237: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#232 [Block quotes] .............................   Passed    0.03 sec
         Start 238: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#233 [Block quotes]
@@ -763,7 +629,7 @@ With diff:
         Start 241: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#236 [Block quotes]
 236/652 Test #241: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#236 [Block quotes] .............................   Passed    0.03 sec
         Start 242: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#237 [Block quotes]
-237/652 Test #242: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#237 [Block quotes] .............................   Passed    0.03 sec
+237/652 Test #242: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#237 [Block quotes] .............................   Passed    0.04 sec
         Start 243: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#238 [Block quotes]
 238/652 Test #243: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#238 [Block quotes] .............................   Passed    0.03 sec
         Start 244: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#239 [Block quotes]
@@ -795,13 +661,13 @@ With diff:
         Start 257: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#252 [Block quotes]
 252/652 Test #257: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#252 [Block quotes] .............................   Passed    0.03 sec
         Start 258: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#253 [List items]
-253/652 Test #258: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#253 [List items] ...............................   Passed    0.02 sec
+253/652 Test #258: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#253 [List items] ...............................   Passed    0.03 sec
         Start 259: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#254 [List items]
-254/652 Test #259: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#254 [List items] ...............................   Passed    0.02 sec
+254/652 Test #259: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#254 [List items] ...............................   Passed    0.03 sec
         Start 260: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#255 [List items]
-255/652 Test #260: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#255 [List items] ...............................   Passed    0.02 sec
+255/652 Test #260: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#255 [List items] ...............................   Passed    0.03 sec
         Start 261: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#256 [List items]
-256/652 Test #261: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#256 [List items] ...............................   Passed    0.02 sec
+256/652 Test #261: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#256 [List items] ...............................   Passed    0.03 sec
         Start 262: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#257 [List items]
 257/652 Test #262: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#257 [List items] ...............................   Passed    0.03 sec
         Start 263: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#258 [List items]
@@ -857,13 +723,13 @@ With diff:
         Start 288: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#283 [List items]
 283/652 Test #288: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#283 [List items] ...............................   Passed    0.03 sec
         Start 289: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#284 [List items]
-284/652 Test #289: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#284 [List items] ...............................   Passed    0.02 sec
+284/652 Test #289: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#284 [List items] ...............................   Passed    0.03 sec
         Start 290: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#285 [List items]
-285/652 Test #290: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#285 [List items] ...............................   Passed    0.02 sec
+285/652 Test #290: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#285 [List items] ...............................   Passed    0.03 sec
         Start 291: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#286 [List items]
-286/652 Test #291: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#286 [List items] ...............................   Passed    0.02 sec
+286/652 Test #291: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#286 [List items] ...............................   Passed    0.03 sec
         Start 292: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#287 [List items]
-287/652 Test #292: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#287 [List items] ...............................   Passed    0.02 sec
+287/652 Test #292: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#287 [List items] ...............................   Passed    0.03 sec
         Start 293: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#288 [List items]
 288/652 Test #293: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#288 [List items] ...............................   Passed    0.03 sec
         Start 294: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#289 [List items]
@@ -889,11 +755,11 @@ With diff:
         Start 304: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#299 [List items]
 299/652 Test #304: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#299 [List items] ...............................   Passed    0.03 sec
         Start 305: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#300 [List items]
-300/652 Test #305: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#300 [List items] ...............................   Passed    0.02 sec
+300/652 Test #305: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#300 [List items] ...............................   Passed    0.03 sec
         Start 306: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#301 [Lists]
-301/652 Test #306: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#301 [Lists] ....................................   Passed    0.02 sec
+301/652 Test #306: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#301 [Lists] ....................................   Passed    0.03 sec
         Start 307: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#302 [Lists]
-302/652 Test #307: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#302 [Lists] ....................................   Passed    0.02 sec
+302/652 Test #307: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#302 [Lists] ....................................   Passed    0.03 sec
         Start 308: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#303 [Lists]
 303/652 Test #308: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#303 [Lists] ....................................   Passed    0.03 sec
         Start 309: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#304 [Lists]
@@ -925,41 +791,41 @@ With diff:
         Start 322: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#317 [Lists]
 317/652 Test #322: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#317 [Lists] ....................................   Passed    0.03 sec
         Start 323: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#318 [Lists]
-318/652 Test #323: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#318 [Lists] ....................................   Passed    0.02 sec
+318/652 Test #323: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#318 [Lists] ....................................   Passed    0.03 sec
         Start 324: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#319 [Lists]
-319/652 Test #324: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#319 [Lists] ....................................   Passed    0.02 sec
+319/652 Test #324: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#319 [Lists] ....................................   Passed    0.03 sec
         Start 325: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#320 [Lists]
 320/652 Test #325: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#320 [Lists] ....................................   Passed    0.03 sec
         Start 326: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#321 [Lists]
-321/652 Test #326: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#321 [Lists] ....................................   Passed    0.02 sec
+321/652 Test #326: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#321 [Lists] ....................................   Passed    0.03 sec
         Start 327: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#322 [Lists]
 322/652 Test #327: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#322 [Lists] ....................................   Passed    0.03 sec
         Start 328: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#323 [Lists]
-323/652 Test #328: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#323 [Lists] ....................................   Passed    0.02 sec
+323/652 Test #328: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#323 [Lists] ....................................   Passed    0.03 sec
         Start 329: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#324 [Lists]
-324/652 Test #329: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#324 [Lists] ....................................   Passed    0.02 sec
+324/652 Test #329: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#324 [Lists] ....................................   Passed    0.03 sec
         Start 330: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#325 [Lists]
 325/652 Test #330: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#325 [Lists] ....................................   Passed    0.03 sec
         Start 331: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#326 [Lists]
-326/652 Test #331: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#326 [Lists] ....................................   Passed    0.02 sec
+326/652 Test #331: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#326 [Lists] ....................................   Passed    0.03 sec
         Start 332: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#327 [Inlines]
-327/652 Test #332: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#327 [Inlines] ..................................   Passed    0.02 sec
+327/652 Test #332: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#327 [Inlines] ..................................   Passed    0.03 sec
         Start 333: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#328 [Code spans]
-328/652 Test #333: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#328 [Code spans] ...............................   Passed    0.02 sec
+328/652 Test #333: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#328 [Code spans] ...............................   Passed    0.03 sec
         Start 334: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#329 [Code spans]
-329/652 Test #334: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#329 [Code spans] ...............................   Passed    0.02 sec
+329/652 Test #334: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#329 [Code spans] ...............................   Passed    0.03 sec
         Start 335: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#330 [Code spans]
 330/652 Test #335: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#330 [Code spans] ...............................   Passed    0.03 sec
         Start 336: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#331 [Code spans]
 331/652 Test #336: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#331 [Code spans] ...............................   Passed    0.03 sec
         Start 337: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#332 [Code spans]
-332/652 Test #337: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#332 [Code spans] ...............................   Passed    0.03 sec
+332/652 Test #337: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#332 [Code spans] ...............................   Passed    0.02 sec
         Start 338: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#333 [Code spans]
-333/652 Test #338: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#333 [Code spans] ...............................   Passed    0.03 sec
+333/652 Test #338: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#333 [Code spans] ...............................   Passed    0.02 sec
         Start 339: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#334 [Code spans]
-334/652 Test #339: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#334 [Code spans] ...............................   Passed    0.03 sec
+334/652 Test #339: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#334 [Code spans] ...............................   Passed    0.02 sec
         Start 340: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#335 [Code spans]
-335/652 Test #340: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#335 [Code spans] ...............................   Passed    0.03 sec
+335/652 Test #340: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#335 [Code spans] ...............................   Passed    0.02 sec
         Start 341: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#336 [Code spans]
 336/652 Test #341: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#336 [Code spans] ...............................   Passed    0.03 sec
         Start 342: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#337 [Code spans]
@@ -1138,13 +1004,13 @@ With diff:
         Start 366: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#361 [Emphasis and strong emphasis]
 361/652 Test #366: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#361 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 367: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#362 [Emphasis and strong emphasis]
-362/652 Test #367: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#362 [Emphasis and strong emphasis] .............   Passed    0.02 sec
+362/652 Test #367: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#362 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 368: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#363 [Emphasis and strong emphasis]
 363/652 Test #368: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#363 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 369: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#364 [Emphasis and strong emphasis]
-364/652 Test #369: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#364 [Emphasis and strong emphasis] .............   Passed    0.02 sec
+364/652 Test #369: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#364 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 370: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#365 [Emphasis and strong emphasis]
-365/652 Test #370: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#365 [Emphasis and strong emphasis] .............   Passed    0.02 sec
+365/652 Test #370: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#365 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 371: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#366 [Emphasis and strong emphasis]
 366/652 Test #371: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#366 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 372: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#367 [Emphasis and strong emphasis]
@@ -1154,27 +1020,27 @@ With diff:
         Start 374: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#369 [Emphasis and strong emphasis]
 369/652 Test #374: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#369 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 375: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#370 [Emphasis and strong emphasis]
-370/652 Test #375: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#370 [Emphasis and strong emphasis] .............   Passed    0.02 sec
+370/652 Test #375: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#370 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 376: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#371 [Emphasis and strong emphasis]
 371/652 Test #376: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#371 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 377: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#372 [Emphasis and strong emphasis]
 372/652 Test #377: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#372 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 378: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#373 [Emphasis and strong emphasis]
-373/652 Test #378: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#373 [Emphasis and strong emphasis] .............   Passed    0.02 sec
+373/652 Test #378: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#373 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 379: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#374 [Emphasis and strong emphasis]
 374/652 Test #379: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#374 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 380: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#375 [Emphasis and strong emphasis]
-375/652 Test #380: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#375 [Emphasis and strong emphasis] .............   Passed    0.02 sec
+375/652 Test #380: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#375 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 381: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#376 [Emphasis and strong emphasis]
-376/652 Test #381: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#376 [Emphasis and strong emphasis] .............   Passed    0.02 sec
+376/652 Test #381: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#376 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 382: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#377 [Emphasis and strong emphasis]
-377/652 Test #382: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#377 [Emphasis and strong emphasis] .............   Passed    0.02 sec
+377/652 Test #382: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#377 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 383: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#378 [Emphasis and strong emphasis]
-378/652 Test #383: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#378 [Emphasis and strong emphasis] .............   Passed    0.02 sec
+378/652 Test #383: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#378 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 384: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#379 [Emphasis and strong emphasis]
-379/652 Test #384: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#379 [Emphasis and strong emphasis] .............   Passed    0.02 sec
+379/652 Test #384: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#379 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 385: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#380 [Emphasis and strong emphasis]
-380/652 Test #385: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#380 [Emphasis and strong emphasis] .............   Passed    0.02 sec
+380/652 Test #385: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#380 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 386: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#381 [Emphasis and strong emphasis]
 381/652 Test #386: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#381 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 387: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#382 [Emphasis and strong emphasis]
@@ -1196,17 +1062,17 @@ With diff:
         Start 395: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#390 [Emphasis and strong emphasis]
 390/652 Test #395: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#390 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 396: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#391 [Emphasis and strong emphasis]
-391/652 Test #396: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#391 [Emphasis and strong emphasis] .............   Passed    0.02 sec
+391/652 Test #396: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#391 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 397: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#392 [Emphasis and strong emphasis]
 392/652 Test #397: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#392 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 398: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#393 [Emphasis and strong emphasis]
-393/652 Test #398: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#393 [Emphasis and strong emphasis] .............   Passed    0.02 sec
+393/652 Test #398: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#393 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 399: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#394 [Emphasis and strong emphasis]
-394/652 Test #399: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#394 [Emphasis and strong emphasis] .............   Passed    0.02 sec
+394/652 Test #399: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#394 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 400: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#395 [Emphasis and strong emphasis]
-395/652 Test #400: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#395 [Emphasis and strong emphasis] .............   Passed    0.02 sec
+395/652 Test #400: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#395 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 401: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#396 [Emphasis and strong emphasis]
-396/652 Test #401: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#396 [Emphasis and strong emphasis] .............   Passed    0.02 sec
+396/652 Test #401: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#396 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 402: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#397 [Emphasis and strong emphasis]
 397/652 Test #402: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#397 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 403: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#398 [Emphasis and strong emphasis]
@@ -1214,29 +1080,29 @@ With diff:
         Start 404: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#399 [Emphasis and strong emphasis]
 399/652 Test #404: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#399 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 405: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#400 [Emphasis and strong emphasis]
-400/652 Test #405: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#400 [Emphasis and strong emphasis] .............   Passed    0.02 sec
+400/652 Test #405: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#400 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 406: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#401 [Emphasis and strong emphasis]
-401/652 Test #406: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#401 [Emphasis and strong emphasis] .............   Passed    0.02 sec
+401/652 Test #406: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#401 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 407: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#402 [Emphasis and strong emphasis]
-402/652 Test #407: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#402 [Emphasis and strong emphasis] .............   Passed    0.02 sec
+402/652 Test #407: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#402 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 408: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#403 [Emphasis and strong emphasis]
-403/652 Test #408: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#403 [Emphasis and strong emphasis] .............   Passed    0.02 sec
+403/652 Test #408: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#403 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 409: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#404 [Emphasis and strong emphasis]
-404/652 Test #409: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#404 [Emphasis and strong emphasis] .............   Passed    0.02 sec
+404/652 Test #409: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#404 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 410: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#405 [Emphasis and strong emphasis]
-405/652 Test #410: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#405 [Emphasis and strong emphasis] .............   Passed    0.02 sec
+405/652 Test #410: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#405 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 411: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#406 [Emphasis and strong emphasis]
-406/652 Test #411: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#406 [Emphasis and strong emphasis] .............   Passed    0.02 sec
+406/652 Test #411: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#406 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 412: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#407 [Emphasis and strong emphasis]
 407/652 Test #412: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#407 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 413: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#408 [Emphasis and strong emphasis]
 408/652 Test #413: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#408 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 414: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#409 [Emphasis and strong emphasis]
-409/652 Test #414: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#409 [Emphasis and strong emphasis] .............   Passed    0.02 sec
+409/652 Test #414: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#409 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 415: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#410 [Emphasis and strong emphasis]
-410/652 Test #415: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#410 [Emphasis and strong emphasis] .............   Passed    0.02 sec
+410/652 Test #415: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#410 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 416: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#411 [Emphasis and strong emphasis]
-411/652 Test #416: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#411 [Emphasis and strong emphasis] .............***Failed    0.02 sec
+411/652 Test #416: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#411 [Emphasis and strong emphasis] .............***Failed    0.03 sec
 Running main() from /Users/lorenzoceccotti/Desktop/Uni/Magi/AP/markdown_parser/build/_deps/googletest-src/googletest/src/gtest_main.cc
 Note: Google Test filter = Spec/CommonMarkSpecTest.MatchesExpectedHtml/411_Emphasis_and_strong_emphasis
 [==========] Running 1 test from 1 test suite.
@@ -1275,7 +1141,7 @@ Expected equality of these values:
  1 FAILED TEST
 
         Start 417: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#412 [Emphasis and strong emphasis]
-412/652 Test #417: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#412 [Emphasis and strong emphasis] .............***Failed    0.02 sec
+412/652 Test #417: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#412 [Emphasis and strong emphasis] .............***Failed    0.03 sec
 Running main() from /Users/lorenzoceccotti/Desktop/Uni/Magi/AP/markdown_parser/build/_deps/googletest-src/googletest/src/gtest_main.cc
 Note: Google Test filter = Spec/CommonMarkSpecTest.MatchesExpectedHtml/412_Emphasis_and_strong_emphasis
 [==========] Running 1 test from 1 test suite.
@@ -1314,11 +1180,11 @@ Expected equality of these values:
  1 FAILED TEST
 
         Start 418: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#413 [Emphasis and strong emphasis]
-413/652 Test #418: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#413 [Emphasis and strong emphasis] .............   Passed    0.02 sec
+413/652 Test #418: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#413 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 419: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#414 [Emphasis and strong emphasis]
 414/652 Test #419: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#414 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 420: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#415 [Emphasis and strong emphasis]
-415/652 Test #420: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#415 [Emphasis and strong emphasis] .............***Failed    0.02 sec
+415/652 Test #420: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#415 [Emphasis and strong emphasis] .............***Failed    0.03 sec
 Running main() from /Users/lorenzoceccotti/Desktop/Uni/Magi/AP/markdown_parser/build/_deps/googletest-src/googletest/src/gtest_main.cc
 Note: Google Test filter = Spec/CommonMarkSpecTest.MatchesExpectedHtml/415_Emphasis_and_strong_emphasis
 [==========] Running 1 test from 1 test suite.
@@ -1357,33 +1223,33 @@ Expected equality of these values:
  1 FAILED TEST
 
         Start 421: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#416 [Emphasis and strong emphasis]
-416/652 Test #421: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#416 [Emphasis and strong emphasis] .............   Passed    0.02 sec
+416/652 Test #421: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#416 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 422: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#417 [Emphasis and strong emphasis]
 417/652 Test #422: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#417 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 423: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#418 [Emphasis and strong emphasis]
 418/652 Test #423: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#418 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 424: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#419 [Emphasis and strong emphasis]
-419/652 Test #424: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#419 [Emphasis and strong emphasis] .............   Passed    0.02 sec
+419/652 Test #424: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#419 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 425: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#420 [Emphasis and strong emphasis]
-420/652 Test #425: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#420 [Emphasis and strong emphasis] .............   Passed    0.02 sec
+420/652 Test #425: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#420 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 426: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#421 [Emphasis and strong emphasis]
-421/652 Test #426: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#421 [Emphasis and strong emphasis] .............   Passed    0.02 sec
+421/652 Test #426: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#421 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 427: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#422 [Emphasis and strong emphasis]
-422/652 Test #427: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#422 [Emphasis and strong emphasis] .............   Passed    0.02 sec
+422/652 Test #427: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#422 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 428: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#423 [Emphasis and strong emphasis]
-423/652 Test #428: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#423 [Emphasis and strong emphasis] .............   Passed    0.02 sec
+423/652 Test #428: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#423 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 429: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#424 [Emphasis and strong emphasis]
-424/652 Test #429: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#424 [Emphasis and strong emphasis] .............   Passed    0.02 sec
+424/652 Test #429: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#424 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 430: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#425 [Emphasis and strong emphasis]
-425/652 Test #430: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#425 [Emphasis and strong emphasis] .............   Passed    0.02 sec
+425/652 Test #430: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#425 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 431: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#426 [Emphasis and strong emphasis]
-426/652 Test #431: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#426 [Emphasis and strong emphasis] .............   Passed    0.02 sec
+426/652 Test #431: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#426 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 432: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#427 [Emphasis and strong emphasis]
-427/652 Test #432: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#427 [Emphasis and strong emphasis] .............   Passed    0.02 sec
+427/652 Test #432: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#427 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 433: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#428 [Emphasis and strong emphasis]
-428/652 Test #433: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#428 [Emphasis and strong emphasis] .............   Passed    0.02 sec
+428/652 Test #433: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#428 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 434: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#429 [Emphasis and strong emphasis]
-429/652 Test #434: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#429 [Emphasis and strong emphasis] .............***Failed    0.02 sec
+429/652 Test #434: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#429 [Emphasis and strong emphasis] .............***Failed    0.03 sec
 Running main() from /Users/lorenzoceccotti/Desktop/Uni/Magi/AP/markdown_parser/build/_deps/googletest-src/googletest/src/gtest_main.cc
 Note: Google Test filter = Spec/CommonMarkSpecTest.MatchesExpectedHtml/429_Emphasis_and_strong_emphasis
 [==========] Running 1 test from 1 test suite.
@@ -1422,9 +1288,9 @@ Expected equality of these values:
  1 FAILED TEST
 
         Start 435: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#430 [Emphasis and strong emphasis]
-430/652 Test #435: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#430 [Emphasis and strong emphasis] .............   Passed    0.02 sec
+430/652 Test #435: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#430 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 436: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#431 [Emphasis and strong emphasis]
-431/652 Test #436: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#431 [Emphasis and strong emphasis] .............   Passed    0.02 sec
+431/652 Test #436: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#431 [Emphasis and strong emphasis] .............   Passed    0.04 sec
         Start 437: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#432 [Emphasis and strong emphasis]
 432/652 Test #437: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#432 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 438: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#433 [Emphasis and strong emphasis]
@@ -1438,9 +1304,9 @@ Expected equality of these values:
         Start 442: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#437 [Emphasis and strong emphasis]
 437/652 Test #442: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#437 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 443: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#438 [Emphasis and strong emphasis]
-438/652 Test #443: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#438 [Emphasis and strong emphasis] .............   Passed    0.02 sec
+438/652 Test #443: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#438 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 444: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#439 [Emphasis and strong emphasis]
-439/652 Test #444: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#439 [Emphasis and strong emphasis] .............   Passed    0.02 sec
+439/652 Test #444: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#439 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 445: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#440 [Emphasis and strong emphasis]
 440/652 Test #445: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#440 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 446: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#441 [Emphasis and strong emphasis]
@@ -1458,19 +1324,19 @@ Expected equality of these values:
         Start 452: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#447 [Emphasis and strong emphasis]
 447/652 Test #452: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#447 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 453: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#448 [Emphasis and strong emphasis]
-448/652 Test #453: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#448 [Emphasis and strong emphasis] .............   Passed    0.02 sec
+448/652 Test #453: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#448 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 454: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#449 [Emphasis and strong emphasis]
-449/652 Test #454: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#449 [Emphasis and strong emphasis] .............   Passed    0.02 sec
+449/652 Test #454: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#449 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 455: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#450 [Emphasis and strong emphasis]
 450/652 Test #455: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#450 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 456: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#451 [Emphasis and strong emphasis]
 451/652 Test #456: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#451 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 457: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#452 [Emphasis and strong emphasis]
-452/652 Test #457: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#452 [Emphasis and strong emphasis] .............   Passed    0.02 sec
+452/652 Test #457: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#452 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 458: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#453 [Emphasis and strong emphasis]
-453/652 Test #458: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#453 [Emphasis and strong emphasis] .............   Passed    0.02 sec
+453/652 Test #458: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#453 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 459: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#454 [Emphasis and strong emphasis]
-454/652 Test #459: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#454 [Emphasis and strong emphasis] .............   Passed    0.02 sec
+454/652 Test #459: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#454 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 460: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#455 [Emphasis and strong emphasis]
 455/652 Test #460: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#455 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 461: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#456 [Emphasis and strong emphasis]
@@ -1488,27 +1354,27 @@ Expected equality of these values:
         Start 467: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#462 [Emphasis and strong emphasis]
 462/652 Test #467: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#462 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 468: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#463 [Emphasis and strong emphasis]
-463/652 Test #468: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#463 [Emphasis and strong emphasis] .............   Passed    0.02 sec
+463/652 Test #468: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#463 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 469: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#464 [Emphasis and strong emphasis]
-464/652 Test #469: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#464 [Emphasis and strong emphasis] .............   Passed    0.02 sec
+464/652 Test #469: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#464 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 470: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#465 [Emphasis and strong emphasis]
-465/652 Test #470: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#465 [Emphasis and strong emphasis] .............   Passed    0.02 sec
+465/652 Test #470: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#465 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 471: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#466 [Emphasis and strong emphasis]
-466/652 Test #471: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#466 [Emphasis and strong emphasis] .............   Passed    0.02 sec
+466/652 Test #471: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#466 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 472: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#467 [Emphasis and strong emphasis]
 467/652 Test #472: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#467 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 473: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#468 [Emphasis and strong emphasis]
-468/652 Test #473: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#468 [Emphasis and strong emphasis] .............   Passed    0.02 sec
+468/652 Test #473: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#468 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 474: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#469 [Emphasis and strong emphasis]
-469/652 Test #474: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#469 [Emphasis and strong emphasis] .............   Passed    0.02 sec
+469/652 Test #474: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#469 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 475: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#470 [Emphasis and strong emphasis]
-470/652 Test #475: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#470 [Emphasis and strong emphasis] .............   Passed    0.02 sec
+470/652 Test #475: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#470 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 476: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#471 [Emphasis and strong emphasis]
 471/652 Test #476: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#471 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 477: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#472 [Emphasis and strong emphasis]
 472/652 Test #477: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#472 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 478: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#473 [Emphasis and strong emphasis]
-473/652 Test #478: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#473 [Emphasis and strong emphasis] .............   Passed    0.02 sec
+473/652 Test #478: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#473 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 479: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#474 [Emphasis and strong emphasis]
 474/652 Test #479: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#474 [Emphasis and strong emphasis] .............   Passed    0.03 sec
         Start 480: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#475 [Emphasis and strong emphasis]
@@ -1530,7 +1396,7 @@ Expected equality of these values:
         Start 488: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#483 [Links]
 483/652 Test #488: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#483 [Links] ....................................   Passed    0.03 sec
         Start 489: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#484 [Links]
-484/652 Test #489: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#484 [Links] ....................................   Passed    0.03 sec
+484/652 Test #489: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#484 [Links] ....................................   Passed    0.04 sec
         Start 490: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#485 [Links]
 485/652 Test #490: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#485 [Links] ....................................   Passed    0.03 sec
         Start 491: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#486 [Links]
@@ -1602,50 +1468,13 @@ Expected equality of these values:
         Start 524: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#519 [Links]
 519/652 Test #524: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#519 [Links] ....................................   Passed    0.03 sec
         Start 525: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#520 [Links]
-520/652 Test #525: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#520 [Links] ....................................   Passed    0.03 sec
+520/652 Test #525: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#520 [Links] ....................................   Passed    0.02 sec
         Start 526: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#521 [Links]
 521/652 Test #526: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#521 [Links] ....................................   Passed    0.03 sec
         Start 527: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#522 [Links]
 522/652 Test #527: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#522 [Links] ....................................   Passed    0.03 sec
         Start 528: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#523 [Links]
-523/652 Test #528: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#523 [Links] ....................................***Failed    0.04 sec
-Running main() from /Users/lorenzoceccotti/Desktop/Uni/Magi/AP/markdown_parser/build/_deps/googletest-src/googletest/src/gtest_main.cc
-Note: Google Test filter = Spec/CommonMarkSpecTest.MatchesExpectedHtml/523_Links
-[==========] Running 1 test from 1 test suite.
-[----------] Global test environment set-up.
-[----------] 1 test from Spec/CommonMarkSpecTest
-[ RUN      ] Spec/CommonMarkSpecTest.MatchesExpectedHtml/523_Links
-[tryOpenIndentedCode] content="*foo [bar* baz]" virtual_indent=0 is_blank=0 tip_is_paragraph=0 inside_list_blank=0
-/Users/lorenzoceccotti/Desktop/Uni/Magi/AP/markdown_parser/tests/spec_tests/test_commonmark_spec.cpp:27: Failure
-Expected equality of these values:
-  tc.html
-    Which is: "<p><em>foo [bar</em> baz]</p>\n"
-  actual
-    Which is: "<p>*foo [bar* baz]</p>\n"
-
-┌─ Section    : Links
-│  Example #  : 523
-│  Spec lines : 7927-7931
-├─ Markdown input ──────────────────────────────────────────
-*foo [bar* baz]
-├─ Expected HTML ───────────────────────────────────────────
-<p><em>foo [bar</em> baz]</p>
-├─ Actual HTML ─────────────────────────────────────────────
-<p>*foo [bar* baz]</p>
-└───────────────────────────────────────────────────────────
-
-
-[  FAILED  ] Spec/CommonMarkSpecTest.MatchesExpectedHtml/523_Links, where GetParam() = #523 [Links] (0 ms)
-[----------] 1 test from Spec/CommonMarkSpecTest (0 ms total)
-
-[----------] Global test environment tear-down
-[==========] 1 test from 1 test suite ran. (0 ms total)
-[  PASSED  ] 0 tests.
-[  FAILED  ] 1 test, listed below:
-[  FAILED  ] Spec/CommonMarkSpecTest.MatchesExpectedHtml/523_Links, where GetParam() = #523 [Links]
-
- 1 FAILED TEST
-
+523/652 Test #528: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#523 [Links] ....................................   Passed    0.03 sec
         Start 529: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#524 [Links]
 524/652 Test #529: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#524 [Links] ....................................   Passed    0.03 sec
         Start 530: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#525 [Links]
@@ -1655,7 +1484,7 @@ Expected equality of these values:
         Start 532: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#527 [Links]
 527/652 Test #532: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#527 [Links] ....................................   Passed    0.03 sec
         Start 533: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#528 [Links]
-528/652 Test #533: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#528 [Links] ....................................   Passed    0.03 sec
+528/652 Test #533: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#528 [Links] ....................................   Passed    0.02 sec
         Start 534: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#529 [Links]
 529/652 Test #534: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#529 [Links] ....................................   Passed    0.03 sec
         Start 535: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#530 [Links]
@@ -1744,154 +1573,27 @@ With diff:
         Start 549: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#544 [Links]
 544/652 Test #549: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#544 [Links] ....................................   Passed    0.03 sec
         Start 550: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#545 [Links]
-545/652 Test #550: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#545 [Links] ....................................***Failed    0.03 sec
-Running main() from /Users/lorenzoceccotti/Desktop/Uni/Magi/AP/markdown_parser/build/_deps/googletest-src/googletest/src/gtest_main.cc
-Note: Google Test filter = Spec/CommonMarkSpecTest.MatchesExpectedHtml/545_Links
-[==========] Running 1 test from 1 test suite.
-[----------] Global test environment set-up.
-[----------] 1 test from Spec/CommonMarkSpecTest
-[ RUN      ] Spec/CommonMarkSpecTest.MatchesExpectedHtml/545_Links
-[tryOpenIndentedCode] content="[bar][foo\!]" virtual_indent=0 is_blank=0 tip_is_paragraph=0 inside_list_blank=0
-[tryOpenIndentedCode] content="[foo!]: /url" virtual_indent=0 is_blank=0 tip_is_paragraph=0 inside_list_blank=0
-/Users/lorenzoceccotti/Desktop/Uni/Magi/AP/markdown_parser/tests/spec_tests/test_commonmark_spec.cpp:27: Failure
-Expected equality of these values:
-  tc.html
-    Which is: "<p>[bar][foo!]</p>\n"
-  actual
-    Which is: "<p>[bar]<a href=\"/url\">foo!</a></p>\n"
-
-┌─ Section    : Links
-│  Example #  : 545
-│  Spec lines : 8219-8225
-├─ Markdown input ──────────────────────────────────────────
-[bar][foo\!]
-
-[foo!]: /url
-├─ Expected HTML ───────────────────────────────────────────
-<p>[bar][foo!]</p>
-├─ Actual HTML ─────────────────────────────────────────────
-<p>[bar]<a href="/url">foo!</a></p>
-└───────────────────────────────────────────────────────────
-
-
-[  FAILED  ] Spec/CommonMarkSpecTest.MatchesExpectedHtml/545_Links, where GetParam() = #545 [Links] (0 ms)
-[----------] 1 test from Spec/CommonMarkSpecTest (0 ms total)
-
-[----------] Global test environment tear-down
-[==========] 1 test from 1 test suite ran. (0 ms total)
-[  PASSED  ] 0 tests.
-[  FAILED  ] 1 test, listed below:
-[  FAILED  ] Spec/CommonMarkSpecTest.MatchesExpectedHtml/545_Links, where GetParam() = #545 [Links]
-
- 1 FAILED TEST
-
+545/652 Test #550: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#545 [Links] ....................................   Passed    0.03 sec
         Start 551: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#546 [Links]
-546/652 Test #551: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#546 [Links] ....................................***Failed    0.03 sec
-Running main() from /Users/lorenzoceccotti/Desktop/Uni/Magi/AP/markdown_parser/build/_deps/googletest-src/googletest/src/gtest_main.cc
-Note: Google Test filter = Spec/CommonMarkSpecTest.MatchesExpectedHtml/546_Links
-[==========] Running 1 test from 1 test suite.
-[----------] Global test environment set-up.
-[----------] 1 test from Spec/CommonMarkSpecTest
-[ RUN      ] Spec/CommonMarkSpecTest.MatchesExpectedHtml/546_Links
-[tryOpenIndentedCode] content="[foo][ref[]" virtual_indent=0 is_blank=0 tip_is_paragraph=0 inside_list_blank=0
-[tryOpenIndentedCode] content="[ref[]: /uri" virtual_indent=0 is_blank=0 tip_is_paragraph=0 inside_list_blank=0
-/Users/lorenzoceccotti/Desktop/Uni/Magi/AP/markdown_parser/tests/spec_tests/test_commonmark_spec.cpp:27: Failure
-Expected equality of these values:
-  tc.html
-    Which is: "<p>[foo][ref[]</p>\n<p>[ref[]: /uri</p>\n"
-  actual
-    Which is: "<p><a href=\"/uri\">foo</a></p>\n"
-With diff:
-@@ -1,2 +1,1 @@
--<p>[foo][ref[]</p>
--<p>[ref[]: /uri</p>\n
-+<p><a href=\"/uri\">foo</a></p>\n
-
-
-┌─ Section    : Links
-│  Example #  : 546
-│  Spec lines : 8231-8238
-├─ Markdown input ──────────────────────────────────────────
-[foo][ref[]
-
-[ref[]: /uri
-├─ Expected HTML ───────────────────────────────────────────
-<p>[foo][ref[]</p>
-<p>[ref[]: /uri</p>
-├─ Actual HTML ─────────────────────────────────────────────
-<p><a href="/uri">foo</a></p>
-└───────────────────────────────────────────────────────────
-
-
-[  FAILED  ] Spec/CommonMarkSpecTest.MatchesExpectedHtml/546_Links, where GetParam() = #546 [Links] (0 ms)
-[----------] 1 test from Spec/CommonMarkSpecTest (0 ms total)
-
-[----------] Global test environment tear-down
-[==========] 1 test from 1 test suite ran. (0 ms total)
-[  PASSED  ] 0 tests.
-[  FAILED  ] 1 test, listed below:
-[  FAILED  ] Spec/CommonMarkSpecTest.MatchesExpectedHtml/546_Links, where GetParam() = #546 [Links]
-
- 1 FAILED TEST
-
+546/652 Test #551: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#546 [Links] ....................................   Passed    0.03 sec
         Start 552: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#547 [Links]
-547/652 Test #552: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#547 [Links] ....................................   Passed    0.03 sec
+547/652 Test #552: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#547 [Links] ....................................   Passed    0.02 sec
         Start 553: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#548 [Links]
-548/652 Test #553: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#548 [Links] ....................................   Passed    0.03 sec
+548/652 Test #553: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#548 [Links] ....................................   Passed    0.02 sec
         Start 554: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#549 [Links]
-549/652 Test #554: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#549 [Links] ....................................   Passed    0.03 sec
+549/652 Test #554: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#549 [Links] ....................................   Passed    0.02 sec
         Start 555: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#550 [Links]
-550/652 Test #555: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#550 [Links] ....................................***Failed    0.03 sec
-Running main() from /Users/lorenzoceccotti/Desktop/Uni/Magi/AP/markdown_parser/build/_deps/googletest-src/googletest/src/gtest_main.cc
-Note: Google Test filter = Spec/CommonMarkSpecTest.MatchesExpectedHtml/550_Links
-[==========] Running 1 test from 1 test suite.
-[----------] Global test environment set-up.
-[----------] 1 test from Spec/CommonMarkSpecTest
-[ RUN      ] Spec/CommonMarkSpecTest.MatchesExpectedHtml/550_Links
-[tryOpenIndentedCode] content="[bar\\]: /uri" virtual_indent=0 is_blank=0 tip_is_paragraph=0 inside_list_blank=0
-[tryOpenIndentedCode] content="[bar\\]" virtual_indent=0 is_blank=0 tip_is_paragraph=0 inside_list_blank=0
-/Users/lorenzoceccotti/Desktop/Uni/Magi/AP/markdown_parser/tests/spec_tests/test_commonmark_spec.cpp:27: Failure
-Expected equality of these values:
-  tc.html
-    Which is: "<p><a href=\"/uri\">bar\\</a></p>\n"
-  actual
-    Which is: "<p>[bar\\]</p>\n"
-
-┌─ Section    : Links
-│  Example #  : 550
-│  Spec lines : 8272-8278
-├─ Markdown input ──────────────────────────────────────────
-[bar\\]: /uri
-
-[bar\\]
-├─ Expected HTML ───────────────────────────────────────────
-<p><a href="/uri">bar\</a></p>
-├─ Actual HTML ─────────────────────────────────────────────
-<p>[bar\]</p>
-└───────────────────────────────────────────────────────────
-
-
-[  FAILED  ] Spec/CommonMarkSpecTest.MatchesExpectedHtml/550_Links, where GetParam() = #550 [Links] (0 ms)
-[----------] 1 test from Spec/CommonMarkSpecTest (0 ms total)
-
-[----------] Global test environment tear-down
-[==========] 1 test from 1 test suite ran. (0 ms total)
-[  PASSED  ] 0 tests.
-[  FAILED  ] 1 test, listed below:
-[  FAILED  ] Spec/CommonMarkSpecTest.MatchesExpectedHtml/550_Links, where GetParam() = #550 [Links]
-
- 1 FAILED TEST
-
+550/652 Test #555: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#550 [Links] ....................................   Passed    0.02 sec
         Start 556: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#551 [Links]
 551/652 Test #556: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#551 [Links] ....................................   Passed    0.03 sec
         Start 557: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#552 [Links]
-552/652 Test #557: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#552 [Links] ....................................   Passed    0.03 sec
+552/652 Test #557: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#552 [Links] ....................................   Passed    0.02 sec
         Start 558: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#553 [Links]
 553/652 Test #558: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#553 [Links] ....................................   Passed    0.03 sec
         Start 559: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#554 [Links]
-554/652 Test #559: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#554 [Links] ....................................   Passed    0.03 sec
+554/652 Test #559: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#554 [Links] ....................................   Passed    0.02 sec
         Start 560: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#555 [Links]
-555/652 Test #560: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#555 [Links] ....................................   Passed    0.03 sec
+555/652 Test #560: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#555 [Links] ....................................   Passed    0.02 sec
         Start 561: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#556 [Links]
 556/652 Test #561: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#556 [Links] ....................................   Passed    0.03 sec
         Start 562: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#557 [Links]
@@ -1899,7 +1601,7 @@ Expected equality of these values:
         Start 563: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#558 [Links]
 558/652 Test #563: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#558 [Links] ....................................   Passed    0.03 sec
         Start 564: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#559 [Links]
-559/652 Test #564: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#559 [Links] ....................................   Passed    0.03 sec
+559/652 Test #564: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#559 [Links] ....................................   Passed    0.02 sec
         Start 565: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#560 [Links]
 560/652 Test #565: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#560 [Links] ....................................   Passed    0.03 sec
         Start 566: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#561 [Links]
@@ -1923,49 +1625,7 @@ Expected equality of these values:
         Start 575: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#570 [Links]
 570/652 Test #575: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#570 [Links] ....................................   Passed    0.03 sec
         Start 576: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#571 [Links]
-571/652 Test #576: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#571 [Links] ....................................***Failed    0.03 sec
-Running main() from /Users/lorenzoceccotti/Desktop/Uni/Magi/AP/markdown_parser/build/_deps/googletest-src/googletest/src/gtest_main.cc
-Note: Google Test filter = Spec/CommonMarkSpecTest.MatchesExpectedHtml/571_Links
-[==========] Running 1 test from 1 test suite.
-[----------] Global test environment set-up.
-[----------] 1 test from Spec/CommonMarkSpecTest
-[ RUN      ] Spec/CommonMarkSpecTest.MatchesExpectedHtml/571_Links
-[tryOpenIndentedCode] content="[foo][bar][baz]" virtual_indent=0 is_blank=0 tip_is_paragraph=0 inside_list_blank=0
-[tryOpenIndentedCode] content="[baz]: /url1" virtual_indent=0 is_blank=0 tip_is_paragraph=0 inside_list_blank=0
-[tryOpenIndentedCode] content="[foo]: /url2" virtual_indent=0 is_blank=0 tip_is_paragraph=1 inside_list_blank=0
-/Users/lorenzoceccotti/Desktop/Uni/Magi/AP/markdown_parser/tests/spec_tests/test_commonmark_spec.cpp:27: Failure
-Expected equality of these values:
-  tc.html
-    Which is: "<p>[foo]<a href=\"/url1\">bar</a></p>\n"
-  actual
-    Which is: "<p><a href=\"/url2\">foo</a><a href=\"/url1\">bar</a></p>\n"
-
-┌─ Section    : Links
-│  Example #  : 571
-│  Spec lines : 8518-8525
-├─ Markdown input ──────────────────────────────────────────
-[foo][bar][baz]
-
-[baz]: /url1
-[foo]: /url2
-├─ Expected HTML ───────────────────────────────────────────
-<p>[foo]<a href="/url1">bar</a></p>
-├─ Actual HTML ─────────────────────────────────────────────
-<p><a href="/url2">foo</a><a href="/url1">bar</a></p>
-└───────────────────────────────────────────────────────────
-
-
-[  FAILED  ] Spec/CommonMarkSpecTest.MatchesExpectedHtml/571_Links, where GetParam() = #571 [Links] (0 ms)
-[----------] 1 test from Spec/CommonMarkSpecTest (0 ms total)
-
-[----------] Global test environment tear-down
-[==========] 1 test from 1 test suite ran. (0 ms total)
-[  PASSED  ] 0 tests.
-[  FAILED  ] 1 test, listed below:
-[  FAILED  ] Spec/CommonMarkSpecTest.MatchesExpectedHtml/571_Links, where GetParam() = #571 [Links]
-
- 1 FAILED TEST
-
+571/652 Test #576: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#571 [Links] ....................................   Passed    0.03 sec
         Start 577: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#572 [Images]
 572/652 Test #577: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#572 [Images] ...................................   Passed    0.03 sec
         Start 578: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#573 [Images]
@@ -1973,11 +1633,11 @@ Expected equality of these values:
         Start 579: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#574 [Images]
 574/652 Test #579: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#574 [Images] ...................................   Passed    0.03 sec
         Start 580: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#575 [Images]
-575/652 Test #580: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#575 [Images] ...................................   Passed    0.03 sec
+575/652 Test #580: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#575 [Images] ...................................   Passed    0.04 sec
         Start 581: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#576 [Images]
 576/652 Test #581: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#576 [Images] ...................................   Passed    0.03 sec
         Start 582: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#577 [Images]
-577/652 Test #582: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#577 [Images] ...................................   Passed    0.03 sec
+577/652 Test #582: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#577 [Images] ...................................   Passed    0.05 sec
         Start 583: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#578 [Images]
 578/652 Test #583: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#578 [Images] ...................................   Passed    0.03 sec
         Start 584: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#579 [Images]
@@ -2129,9 +1789,9 @@ bim!bop /></p>
         Start 628: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#623 [Raw HTML]
 623/652 Test #628: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#623 [Raw HTML] .................................   Passed    0.03 sec
         Start 629: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#624 [Raw HTML]
-624/652 Test #629: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#624 [Raw HTML] .................................   Passed    0.03 sec
+624/652 Test #629: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#624 [Raw HTML] .................................   Passed    0.04 sec
         Start 630: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#625 [Raw HTML]
-625/652 Test #630: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#625 [Raw HTML] .................................***Failed    0.03 sec
+625/652 Test #630: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#625 [Raw HTML] .................................***Failed    0.04 sec
 Running main() from /Users/lorenzoceccotti/Desktop/Uni/Magi/AP/markdown_parser/build/_deps/googletest-src/googletest/src/gtest_main.cc
 Note: Google Test filter = Spec/CommonMarkSpecTest.MatchesExpectedHtml/625_Raw_HTML
 [==========] Running 1 test from 1 test suite.
@@ -2284,17 +1944,14 @@ foo <!---> foo -->
         Start 657: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#652 [Textual content]
 652/652 Test #657: Spec/CommonMarkSpecTest.MatchesExpectedHtml/#652 [Textual content] ..........................   Passed    0.03 sec
 
-97% tests passed, 21 tests failed out of 652
+98% tests passed, 13 tests failed out of 652
 
 Label Time Summary:
-spec    =  16.77 sec*proc (652 tests)
+spec    =  18.11 sec*proc (652 tests)
 
-Total Test time (real) =  17.10 sec
+Total Test time (real) =  18.48 sec
 
 The following tests FAILED:
-	199 - Spec/CommonMarkSpecTest.MatchesExpectedHtml/#194 [Link reference definitions] (Failed) spec
-	206 - Spec/CommonMarkSpecTest.MatchesExpectedHtml/#201 [Link reference definitions] (Failed) spec
-	207 - Spec/CommonMarkSpecTest.MatchesExpectedHtml/#202 [Link reference definitions] (Failed) spec
 	211 - Spec/CommonMarkSpecTest.MatchesExpectedHtml/#206 [Link reference definitions] (Failed) spec
 	220 - Spec/CommonMarkSpecTest.MatchesExpectedHtml/#215 [Link reference definitions] (Failed) spec
 	221 - Spec/CommonMarkSpecTest.MatchesExpectedHtml/#216 [Link reference definitions] (Failed) spec
@@ -2304,12 +1961,7 @@ The following tests FAILED:
 	417 - Spec/CommonMarkSpecTest.MatchesExpectedHtml/#412 [Emphasis and strong emphasis] (Failed) spec
 	420 - Spec/CommonMarkSpecTest.MatchesExpectedHtml/#415 [Emphasis and strong emphasis] (Failed) spec
 	434 - Spec/CommonMarkSpecTest.MatchesExpectedHtml/#429 [Emphasis and strong emphasis] (Failed) spec
-	528 - Spec/CommonMarkSpecTest.MatchesExpectedHtml/#523 [Links] (Failed) spec
 	545 - Spec/CommonMarkSpecTest.MatchesExpectedHtml/#540 [Links] (Failed) spec
-	550 - Spec/CommonMarkSpecTest.MatchesExpectedHtml/#545 [Links] (Failed) spec
-	551 - Spec/CommonMarkSpecTest.MatchesExpectedHtml/#546 [Links] (Failed) spec
-	555 - Spec/CommonMarkSpecTest.MatchesExpectedHtml/#550 [Links] (Failed) spec
-	576 - Spec/CommonMarkSpecTest.MatchesExpectedHtml/#571 [Links] (Failed) spec
 	626 - Spec/CommonMarkSpecTest.MatchesExpectedHtml/#621 [Raw HTML] (Failed) spec
 	630 - Spec/CommonMarkSpecTest.MatchesExpectedHtml/#625 [Raw HTML] (Failed) spec
 	631 - Spec/CommonMarkSpecTest.MatchesExpectedHtml/#626 [Raw HTML] (Failed) spec
