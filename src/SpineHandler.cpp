@@ -289,7 +289,8 @@ void SpineHandler::step3AppendText(const ScannedLine &cur,
               << " tip=" << nodeTypeToString(tip()->type) << "\n";
   if (swallow)
     return;
-  // Blank lines are content inside code blocks (indented or fenced).
+  // Blank lines are content inside code blocks (indented or fenced) and
+  // inside HTML blocks types 1-5 (which end on a specific string, not a blank).
   if (cur.is_blank()) {
     if (tip()->type == NodeType::CodeBlock) {
       if (!(std::get<CodeBlockData>(tip()->data)).fenced) {
@@ -297,6 +298,8 @@ void SpineHandler::step3AppendText(const ScannedLine &cur,
       } else {
         appendText(cur, 0);
       }
+    } else if (tip()->type == NodeType::HtmlBlock) {
+      appendText(cur, 0);
     }
     return;
   }

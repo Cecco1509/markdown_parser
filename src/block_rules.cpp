@@ -180,13 +180,10 @@ ContinuationResult continuationMatches(const BlockNode &node,
 
   case NodeType::HtmlBlock: {
     const auto &hbd = std::get<HtmlBlockData>(node.data);
-    if (hbd.html_type == HtmlBlockType::Complete) {
-      CONT_LOG(false, "type=7 (Complete) never continues");
-      return {false};
-    }
-    if (hbd.html_type == HtmlBlockType::KnownTag) {
+    if (hbd.html_type == HtmlBlockType::Complete ||
+        hbd.html_type == HtmlBlockType::KnownTag) {
       const bool ok = !line.is_blank();
-      CONT_LOG(ok, "type=6 (KnownTag)  blank=" << line.is_blank());
+      CONT_LOG(ok, "type=6/7 (KnownTag/Complete)  blank=" << line.is_blank());
       return {ok};
     }
     CONT_LOG(true, "type=1-5 (end condition checked post-append)");
@@ -387,6 +384,87 @@ static bool isTagNameEnd(char c) {
   return c == ' ' || c == '\t' || c == '>' || c == '/';
 }
 
+// Returns true if rest[pos..] parses as zero-or-more attributes followed by
+// optional whitespace, optional '/', '>', and only whitespace until end.
+// Used for CommonMark §4.6 type-7 complete open tag detection.
+static bool isCompleteOpenTagSuffix(std::string_view rest, std::size_t pos) {
+  while (pos < rest.size()) {
+    char c = rest[pos];
+    if (c == '>') {
+      ++pos;
+      while (pos < rest.size() && (rest[pos] == ' ' || rest[pos] == '\t'))
+        ++pos;
+      return pos >= rest.size();
+    }
+    if (c == '/') {
+      if (pos + 1 < rest.size() && rest[pos + 1] == '>') {
+        pos += 2;
+        while (pos < rest.size() && (rest[pos] == ' ' || rest[pos] == '\t'))
+          ++pos;
+        return pos >= rest.size();
+      }
+      return false;
+    }
+    if (c != ' ' && c != '\t')
+      return false;
+    // Skip whitespace before next attribute or '>'/'/'
+    while (pos < rest.size() && (rest[pos] == ' ' || rest[pos] == '\t'))
+      ++pos;
+    if (pos >= rest.size())
+      return false;
+    c = rest[pos];
+    if (c == '>' || c == '/')
+      continue; // handled on next iteration
+    // Attribute name: must start with letter, '_', or ':'
+    if (!std::isalpha(static_cast<unsigned char>(c)) && c != '_' && c != ':')
+      return false;
+    ++pos;
+    while (pos < rest.size()) {
+      char ac = rest[pos];
+      if (std::isalnum(static_cast<unsigned char>(ac)) || ac == '_' ||
+          ac == '.' || ac == ':' || ac == '-')
+        ++pos;
+      else
+        break;
+    }
+    // Optional '=' followed by attribute value
+    if (pos < rest.size() && rest[pos] == '=') {
+      ++pos;
+      if (pos >= rest.size())
+        return false;
+      char vc = rest[pos];
+      if (vc == '"') {
+        ++pos;
+        while (pos < rest.size() && rest[pos] != '"')
+          ++pos;
+        if (pos >= rest.size())
+          return false;
+        ++pos;
+      } else if (vc == '\'') {
+        ++pos;
+        while (pos < rest.size() && rest[pos] != '\'')
+          ++pos;
+        if (pos >= rest.size())
+          return false;
+        ++pos;
+      } else {
+        // Unquoted value: no whitespace, '"', '\'', '=', '<', '>', '`'
+        if (vc == ' ' || vc == '\t' || vc == '"' || vc == '\'' || vc == '=' ||
+            vc == '<' || vc == '>' || vc == '`')
+          return false;
+        while (pos < rest.size()) {
+          char uv = rest[pos];
+          if (uv == ' ' || uv == '\t' || uv == '"' || uv == '\'' || uv == '=' ||
+              uv == '<' || uv == '>' || uv == '`')
+            break;
+          ++pos;
+        }
+      }
+    }
+  }
+  return false; // never reached '>'
+}
+
 static std::optional<OpenResult> tryOpenHtmlBlock(const ScannedLine &line,
                                                   bool tip_is_paragraph) {
   if (line.indent() > commonmark::kMaxBlockIndent)
@@ -440,29 +518,25 @@ static std::optional<OpenResult> tryOpenHtmlBlock(const ScannedLine &line,
     return make(HtmlBlockType::KnownTag);
 
   // Type 7: complete open/close tag, cannot interrupt a paragraph.
-  // Full regex matching is deferred; basic heuristic only.
-  // TODO: implement full CommonMark §4.6 type-7 pattern.
   if (!tip_is_paragraph) {
-    // Simplified type-7: close tag with no attributes followed by optional
-    // spaces.
+    bool complete = false;
     if (closing) {
+      // Close tag: </tagname ws* > (no attributes allowed)
       std::size_t j = name_end;
       while (j < rest.size() && (rest[j] == ' ' || rest[j] == '\t'))
         ++j;
       if (j < rest.size() && rest[j] == '>') {
         ++j;
-        bool trail_ok = true;
-        while (j < rest.size()) {
-          if (rest[j] != ' ' && rest[j] != '\t') {
-            trail_ok = false;
-            break;
-          }
+        while (j < rest.size() && (rest[j] == ' ' || rest[j] == '\t'))
           ++j;
-        }
-        if (trail_ok)
-          return make(HtmlBlockType::Complete);
+        complete = (j >= rest.size());
       }
+    } else if (!matchesTagList(tag, kType1Tags)) {
+      // Open tag: <tagname attrs* ws* /? > — not pre/script/style/textarea
+      complete = isCompleteOpenTagSuffix(rest, name_end);
     }
+    if (complete)
+      return make(HtmlBlockType::Complete);
   }
 
   return std::nullopt;
