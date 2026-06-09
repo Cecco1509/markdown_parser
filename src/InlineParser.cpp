@@ -393,37 +393,33 @@ std::unique_ptr<InlineNode> InlineParser::parseHtmlInline() {
 
   // ! variants: comment, CDATA, declaration
   if (c == '!') {
-    // HTML comment: <!--...-->
+    // HTML comment per spec 0.31.2:
+    //   "<!-->", "<!--->", or "<!--" + text not containing "-->" + "-->"
     if (pos_ + 2 < input_.size() && input_[pos_ + 1] == '-' &&
         input_[pos_ + 2] == '-') {
-      pos_ += 3;
-      // must not start with > or ->
+      pos_ += 3; // now past "<!--"
+      // "<!-->": the very next char closes it.
       if (pos_ < input_.size() && input_[pos_] == '>') {
-        pos_ = save;
-        return nullptr;
+        ++pos_;
+        return emit();
       }
+      // "<!--->": dash then close.
       if (pos_ + 1 < input_.size() && input_[pos_] == '-' &&
           input_[pos_ + 1] == '>') {
-        pos_ = save;
-        // std::cerr << "Empty comment not allowed: " << input_ << "...\n";
-        return nullptr;
+        pos_ += 2;
+        return emit();
       }
-      while (pos_ < input_.size()) {
-        if (pos_ + 1 < input_.size() && input_[pos_] == '-' &&
-            input_[pos_ + 1] == '-') {
-          if (pos_ + 2 < input_.size() && input_[pos_ + 2] == '>') {
-            pos_ += 3;
-            return emit();
-          }
-          pos_ = save;
-          // std::cerr << "Comment cannot end with --: " << input_ << "...\n";
-          return nullptr; // -- not followed by >
+      // General: scan until "-->" (content may contain "--" but not "-->").
+      while (pos_ + 2 < input_.size()) {
+        if (input_[pos_] == '-' && input_[pos_ + 1] == '-' &&
+            input_[pos_ + 2] == '>') {
+          pos_ += 3;
+          return emit();
         }
         ++pos_;
       }
       pos_ = save;
-      // std::cerr << "Unclosed comment: " << input_ << "...\n";
-      return nullptr;
+      return nullptr; // unclosed comment
     }
     // CDATA: <![CDATA[...]]>
     if (pos_ + 7 < input_.size() && input_.substr(pos_, 8) == "![CDATA[") {
@@ -496,7 +492,6 @@ std::unique_ptr<InlineNode> InlineParser::parseHtmlInline() {
     // Require at least one whitespace before each attribute.
     if (ch != ' ' && ch != '\t' && ch != '\n') {
       pos_ = save;
-      // std::cerr << "Expected space before attribute: " << input_ << "...\n";
       return nullptr;
     }
     while (
@@ -545,28 +540,20 @@ std::unique_ptr<InlineNode> InlineParser::parseHtmlInline() {
       if (q == '"' || q == '\'') {
         ++pos_;
         while (pos_ < input_.size() && input_[pos_] != q) {
-          // if (input_[pos_] == '\n') {
-          //   pos_ = save;
-          //   // std::cerr << "Newline not allowed in attribute value: " <<
-          //   input_
-          //             << "...\n";
-          //   return nullptr;
-          // }
           ++pos_;
         }
         if (pos_ >= input_.size()) {
           pos_ = save;
-          // std::cerr << "Unclosed attribute value: " << input_ << "...\n";
           return nullptr;
         }
         ++pos_;
       } else if (q != ' ' && q != '\t' && q != '"' && q != '\'' && q != '=' &&
-                 q != '<' && q != '>' && q != '`') {
+                 q != '<' && q != '>' && q != '`' && q != '\n') {
         while (pos_ < input_.size() && input_[pos_] != ' ' &&
-               input_[pos_] != '\t' && input_[pos_] != '"' &&
-               input_[pos_] != '\'' && input_[pos_] != '=' &&
-               input_[pos_] != '<' && input_[pos_] != '>' &&
-               input_[pos_] != '`')
+               input_[pos_] != '\t' && input_[pos_] != '\n' &&
+               input_[pos_] != '"' && input_[pos_] != '\'' &&
+               input_[pos_] != '=' && input_[pos_] != '<' &&
+               input_[pos_] != '>' && input_[pos_] != '`')
           ++pos_;
       } else {
         pos_ = save;
@@ -822,9 +809,16 @@ std::unique_ptr<InlineNode> InlineParser::handleBracketCloser() {
     bool label_ok = true;
     while (pos_ < input_.size() && pos_ - ls < 999) {
       char lc = input_[pos_];
-      if (lc == ']') break;
-      if (lc == '[' || lc == '\n') { label_ok = false; break; }
-      if (lc == '\\' && pos_ + 1 < input_.size()) { pos_ += 2; continue; }
+      if (lc == ']')
+        break;
+      if (lc == '[' || lc == '\n') {
+        label_ok = false;
+        break;
+      }
+      if (lc == '\\' && pos_ + 1 < input_.size()) {
+        pos_ += 2;
+        continue;
+      }
       ++pos_;
     }
     if (label_ok && pos_ < input_.size() && input_[pos_] == ']' && pos_ > ls) {
