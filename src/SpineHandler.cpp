@@ -501,6 +501,14 @@ bool SpineHandler::tryPromoteSetextHeading(const ScannedLine &line,
   // arrived via lazy continuation and must be appended as plain text instead.
   if (spine_.size() >= 2 && (spine_.size() - 2) >= match.first_unmatched)
     return false;
+
+  // compute links definitions before promoting the paragraph to a heading
+  maybeScanLinkRefDefs(t);
+  if (debug_)
+    std::cerr << "SETEXT?  para content=\"" << t->string_content << "\"\n";
+  if (t->string_content.empty())
+    return false; // spec disallows empty heading content
+
   const char c = line.content()[line.next_non_space()];
   t->type = NodeType::Heading;
   t->data = HeadingData{(c == '=') ? 1 : 2, /*setext=*/true};
