@@ -2,6 +2,7 @@
 #include "markdown_parser/InlineParser.hpp"
 #include "markdown_parser/block_rules.hpp"
 #include "markdown_parser/commonmark_constants.hpp"
+#include "markdown_parser/entities.hpp"
 #include <algorithm>
 #include <iostream>
 #include <optional>
@@ -614,6 +615,14 @@ bool SpineHandler::tryScanOneLinkRefDef(std::string_view content,
       if (c == '\\' && p + 1 < len) {
         destination += content[p + 1];
         p += 2;
+      } else if (c == '&') {
+        std::string dec = entities::decode(content, p);
+        if (!dec.empty())
+          destination += dec;
+        else {
+          destination += c;
+          ++p;
+        }
       } else {
         destination += c;
         ++p;
@@ -642,6 +651,14 @@ bool SpineHandler::tryScanOneLinkRefDef(std::string_view content,
       } else if (c == '\\' && p + 1 < len) {
         destination += content[p + 1];
         p += 2;
+      } else if (c == '&') {
+        std::string dec = entities::decode(content, p);
+        if (!dec.empty()) {
+          destination += dec;
+          continue;
+        }
+        destination += c;
+        ++p;
       } else {
         destination += c;
         ++p;
@@ -700,6 +717,14 @@ bool SpineHandler::tryScanOneLinkRefDef(std::string_view content,
         if (c == '\\' && tp + 1 < len) {
           buf += content[tp + 1];
           tp += 2;
+        } else if (c == '&') {
+          std::string dec = entities::decode(content, tp);
+          if (!dec.empty())
+            buf += dec;
+          else {
+            buf += c;
+            ++tp;
+          }
         } else {
           buf += c;
           ++tp;
