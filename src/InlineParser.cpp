@@ -1,4 +1,5 @@
 #include "markdown_parser/InlineParser.hpp"
+#include "markdown_parser/entities.hpp"
 #include "markdown_parser/string_utils.hpp"
 #include <algorithm>
 #include <cassert>
@@ -180,12 +181,28 @@ std::unique_ptr<InlineNode> InlineParser::parseInline() {
     return node;
   }
 
+  // ── entity reference (spec §2.5) ─────────────────────────────────────────
+  if (c == '&') {
+    std::size_t save = pos_;
+    std::string decoded = entities::decode(input_, pos_);
+    if (!decoded.empty()) {
+      auto node = makeNode(InlineType::Text);
+      node->literal = std::move(decoded);
+      return node;
+    }
+    // Not a valid entity; emit '&' as literal text.
+    pos_ = save + 1;
+    auto node = makeNode(InlineType::Text);
+    node->literal = "&";
+    return node;
+  }
+
   // ── regular text run ─────────────────────────────────────────────────────
   std::size_t start = pos_;
   while (pos_ < input_.size()) {
     char ch = input_[pos_];
     if (ch == '\n' || ch == '\\' || ch == '`' || ch == '*' || ch == '_' ||
-        ch == '[' || ch == ']' || ch == '!' || ch == '<')
+        ch == '[' || ch == ']' || ch == '!' || ch == '<' || ch == '&')
       break;
     ++pos_;
   }
@@ -614,6 +631,14 @@ std::optional<std::string> InlineParser::scanLinkDestination() {
           isAsciiPunct(input_[pos_ + 1])) {
         dest += input_[pos_ + 1];
         pos_ += 2;
+      } else if (c == '&') {
+        std::string decoded = entities::decode(input_, pos_);
+        if (!decoded.empty())
+          dest += decoded;
+        else {
+          dest += c;
+          ++pos_;
+        }
       } else {
         dest += c;
         ++pos_;
@@ -641,6 +666,12 @@ std::optional<std::string> InlineParser::scanLinkDestination() {
       dest += input_[pos_ + 1];
       pos_ += 2;
       continue;
+    } else if (c == '&') {
+      std::string decoded = entities::decode(input_, pos_);
+      if (!decoded.empty()) {
+        dest += decoded;
+        continue;
+      }
     }
     dest += c;
     ++pos_;
@@ -686,6 +717,14 @@ std::optional<std::string> InlineParser::scanLinkTitle() {
         isAsciiPunct(input_[pos_ + 1])) {
       title += input_[pos_ + 1];
       pos_ += 2;
+    } else if (c == '&') {
+      std::string decoded = entities::decode(input_, pos_);
+      if (!decoded.empty())
+        title += decoded;
+      else {
+        title += c;
+        ++pos_;
+      }
     } else {
       title += c;
       ++pos_;
