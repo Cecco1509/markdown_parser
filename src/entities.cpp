@@ -1,5 +1,4 @@
 #include "markdown_parser/entities.hpp"
-#include <algorithm>
 #include <cctype>
 #include <cstring>
 
@@ -28,7 +27,8 @@ static std::string cpToUtf8(uint32_t cp) {
   return s;
 }
 
-// ── Entity tables ─────────────────────────────────────────────────────────────
+// ── Entity tables
+// ─────────────────────────────────────────────────────────────
 
 // Multi-codepoint entities (pre-encoded UTF-8).
 struct MultiEntry {
@@ -341,7 +341,8 @@ static uint32_t lookupNamedCp(std::string_view name) {
   return 0;
 }
 
-// ── Public API ────────────────────────────────────────────────────────────────
+// ── Public API
+// ────────────────────────────────────────────────────────────────
 
 namespace entities {
 
@@ -398,7 +399,8 @@ std::string decode(std::string_view input, std::size_t &pos) {
   std::size_t start = i;
   while (i < input.size() &&
          (std::isalnum(static_cast<unsigned char>(input[i])) ||
-          input[i] == '_' || input[i] == '-')) // some HTML5 names have -/_ but standard ones don't
+          input[i] == '_' ||
+          input[i] == '-')) // some HTML5 names have -/_ but standard ones don't
     ++i;
 
   if (i == start || i >= input.size() || input[i] != ';')

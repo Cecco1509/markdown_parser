@@ -1,6 +1,7 @@
 #include "markdown_parser/block_rules.hpp"
 #include "markdown_parser/commonmark_constants.hpp"
 #include "markdown_parser/entities.hpp"
+#include "markdown_parser/string_utils.hpp"
 #include <cctype>
 #include <cstring>
 #include <iostream>
@@ -345,9 +346,10 @@ static std::optional<OpenResult> tryOpenFencedCode(const ScannedLine &line) {
   // Backtick fence: info string must not contain a backtick.
   if (fc == '`' && info.find('`') != std::string_view::npos)
     return std::nullopt;
+  std::string info_str = string_utils::processEscapesAndEntities(info);
   CodeBlockData cbd{true, fc, static_cast<int>(run),
                     static_cast<int>(line.indent()),
-                    entities::decodeAll(info)};
+                    std::move(info_str)};
   return OpenResult{NodeType::CodeBlock, cbd, {}, {}, /*swallow_line=*/true, 0};
 }
 
