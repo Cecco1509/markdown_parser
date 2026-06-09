@@ -16,6 +16,7 @@ struct InlineNode {
 struct Delimiter {
     char        ch;
     int         num;
+    int         orig_num;  // length at scan time, for sum-rule
     bool        can_open;
     bool        can_close;
     InlineNode* node = nullptr;
