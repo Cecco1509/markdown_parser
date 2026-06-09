@@ -5,6 +5,11 @@
 
 namespace string_utils {
 
+// Process backslash escapes (\X where X is ASCII punctuation → X) and HTML
+// entity references (&name;, &#N;, &#xN;) in s. Used for fenced-code info
+// strings and other block-level text that allows both transformations.
+std::string processEscapesAndEntities(std::string_view s);
+
 // Normalize a raw input line before scanning:
 //   - If strip_bom is true, removes a leading UTF-8 BOM (U+FEFF, bytes EF BB
 //   BF).

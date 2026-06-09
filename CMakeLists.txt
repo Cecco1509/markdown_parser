@@ -21,6 +21,7 @@ add_library(md_parser
     src/HtmlRenderDebug.cpp
     src/JsonRenderer.cpp
     src/entities.cpp
+    src/string_utils.cpp
 )
 target_include_directories(md_parser PUBLIC include)
 
