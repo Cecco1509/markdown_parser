@@ -18,6 +18,7 @@ add_library(md_parser
     src/InlineParser.cpp
     src/block_rules.cpp
     src/HtmlRenderer.cpp
+    src/HtmlRenderDebug.cpp
     src/JsonRenderer.cpp
 )
 target_include_directories(md_parser PUBLIC include)

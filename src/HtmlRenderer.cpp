@@ -4,7 +4,6 @@
 #include "markdown_parser/Types.hpp"
 
 #include <cassert>
-#include <variant>
 
 // ── helpers
 // ───────────────────────────────────────────────────────────────────
@@ -141,7 +140,7 @@ void HtmlRenderer::visit(const BlockNode &node) {
         visit(*child);
     } else {
       bool first_is_block = !node.children.empty() &&
-                           node.children[0]->type != NodeType::Paragraph;
+                            node.children[0]->type != NodeType::Paragraph;
       out_ += first_is_block ? "<li>\n" : "<li>";
       for (size_t i = 0; i < node.children.size(); ++i) {
         const auto &child = *node.children[i];

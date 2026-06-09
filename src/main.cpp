@@ -1,4 +1,5 @@
 #include "markdown_parser/HtmlRenderer.hpp"
+#include "markdown_parser/HtmlRendererDebug.hpp"
 #include "markdown_parser/InlineParser.hpp"
 #include "markdown_parser/JsonRenderer.hpp"
 #include "markdown_parser/SpineHandler.hpp"
@@ -10,18 +11,21 @@
 int main(int argc, char *argv[]) {
   // Usage: program [--json] <input_file>
   bool json_mode = false;
+  bool debug_mode = false;
   std::string input_file;
 
   for (int i = 1; i < argc; ++i) {
     if (std::string(argv[i]) == "--json") {
       json_mode = true;
+    } else if (std::string(argv[i]) == "--debug") {
+      debug_mode = true;
     } else {
       input_file = argv[i];
     }
   }
 
   if (input_file.empty()) {
-    std::cerr << "Usage: " << argv[0] << " [--json] <input_file>\n";
+    std::cerr << "Usage: " << argv[0] << " [--json] [--debug] <input_file>\n";
     return 1;
   }
 
@@ -32,7 +36,7 @@ int main(int argc, char *argv[]) {
   }
 
   InlineParser inline_parser;
-  SpineHandler spine(inline_parser, /*debug=*/true);
+  SpineHandler spine(inline_parser, /*debug=*/debug_mode);
 
   std::string line;
   while (std::getline(file, line)) {
@@ -46,6 +50,9 @@ int main(int argc, char *argv[]) {
   if (json_mode) {
     JsonRenderer jr;
     std::cout << jr.render(*doc) << '\n';
+  } else if (debug_mode) {
+    HtmlRendererDebug hr;
+    std::cout << hr.render(*doc);
   } else {
     HtmlRenderer hr;
     std::cout << hr.render(*doc);
