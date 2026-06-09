@@ -1,6 +1,7 @@
 #include "markdown_parser/InlineParser.hpp"
 #include "markdown_parser/entities.hpp"
 #include "markdown_parser/string_utils.hpp"
+#include "markdown_parser/unicode_fold.hpp"
 #include <algorithm>
 #include <cassert>
 #include <cctype>
@@ -1058,22 +1059,23 @@ void InlineParser::processEmphasis(std::optional<std::size_t> stack_bottom) {
 // ───────────────────────
 
 std::string InlineParser::normaliseLabel(std::string_view label) {
-  std::string out;
-  out.reserve(label.size());
-  bool space = true; // trim leading whitespace
+  // Collapse whitespace, then apply full Unicode case folding.
+  std::string collapsed;
+  collapsed.reserve(label.size());
+  bool space = true;
   for (char c : label) {
     if (c == ' ' || c == '\t' || c == '\n' || c == '\r') {
       if (!space)
-        out += ' ';
+        collapsed += ' ';
       space = true;
     } else {
-      out += static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+      collapsed += c;
       space = false;
     }
   }
-  if (!out.empty() && out.back() == ' ')
-    out.pop_back(); // trim trailing
-  return out;
+  if (!collapsed.empty() && collapsed.back() == ' ')
+    collapsed.pop_back();
+  return unicode_fold::foldString(collapsed);
 }
 
 // ── makeNode
