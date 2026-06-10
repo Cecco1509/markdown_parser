@@ -1,0 +1,128 @@
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+:root {
+    --header-height: 48px;
+    --divider-width: 4px;
+    --border-color: #d0d7de;
+    --header-bg: #24292f;
+    --header-fg: #f0f6fc;
+    --pane-header-bg: #f6f8fa;
+    --pane-header-fg: #57606a;
+    --editor-font: 'ui-monospace', 'SFMono-Regular', 'Menlo', monospace;
+    --font-size: 14px;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: var(--font-size);
+    background: #ffffff;
+    color: #24292f;
+}
+
+/* ── Header ── */
+header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: var(--header-height);
+    padding: 0 20px;
+    background: var(--header-bg);
+    color: var(--header-fg);
+    flex-shrink: 0;
+}
+
+.logo {
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: 0.3px;
+}
+
+.status {
+    font-size: 12px;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-weight: 500;
+}
+
+.status.loading {
+    background: #444c56;
+    color: #adbac7;
+}
+
+.status.ready {
+    background: #1a7f37;
+    color: #ffffff;
+}
+
+/* ── Main layout ── */
+main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+.pane {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+    min-width: 0;
+}
+
+.pane-header {
+    padding: 8px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--pane-header-fg);
+    background: var(--pane-header-bg);
+    border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0;
+}
+
+/* ── Divider ── */
+.divider {
+    width: var(--divider-width);
+    background: var(--border-color);
+    flex-shrink: 0;
+}
+
+/* ── Editor textarea ── */
+#editor {
+    flex: 1;
+    resize: none;
+    border: none;
+    outline: none;
+    padding: 20px;
+    font-family: var(--editor-font);
+    font-size: var(--font-size);
+    line-height: 1.6;
+    color: #24292f;
+    background: #ffffff;
+    tab-size: 4;
+}
+
+#editor::placeholder {
+    color: #8c959f;
+}
+
+/* ── Preview pane ── */
+#preview {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 24px;
+}
+
+/* Override github-markdown-css max-width constraint inside the pane */
+.markdown-body {
+    max-width: none;
+    font-size: var(--font-size);
+}

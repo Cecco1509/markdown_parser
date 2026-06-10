@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown Parser</title>
+
+    <!-- GitHub Markdown CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.5.1/github-markdown-light.min.css">
+
+    <!-- Editor UI styles -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <span class="logo">Markdown Parser</span>
+        <span id="status" class="status loading">Loading WASM...</span>
+    </header>
+
+    <main>
+        <div class="pane" id="editor-pane">
+            <div class="pane-header">Markdown</div>
+            <textarea id="editor" spellcheck="false" placeholder="Type markdown here..."></textarea>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="pane" id="preview-pane">
+            <div class="pane-header">Preview</div>
+            <div id="preview" class="markdown-body"></div>
+        </div>
+    </main>
+
+    <script src="dist/markdown_parser.js"></script>
+    <script>
+        const editor   = document.getElementById('editor');
+        const preview  = document.getElementById('preview');
+        const status   = document.getElementById('status');
+
+        Module.onRuntimeInitialized = () => {
+            status.textContent = 'Ready';
+            status.className = 'status ready';
+            render();
+        };
+
+        function render() {
+            const md = editor.value;
+            if (typeof Module.parseMarkdown === 'function') {
+                preview.innerHTML = Module.parseMarkdown(md);
+            }
+        }
+
+        editor.addEventListener('input', render);
+
+        // Default content shown on load
+        editor.value = [
+            '# Welcome to Markdown Parser',
+            '',
+            'Type on the left, see the result on the right.',
+            '',
+            '## Features',
+            '',
+            '- **Bold** and *italic* text',
+            '- `inline code` and fenced code blocks',
+            '- [Links](https://example.com)',
+            '- Blockquotes, lists, and more',
+            '',
+            '```js',
+            'console.log("Hello, world!");',
+            '```',
+        ].join('\n');
+    </script>
+</body>
+</html>
