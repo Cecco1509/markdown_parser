@@ -18,7 +18,7 @@ jobs:
         run: cmake -B build -DCMAKE_BUILD_TYPE=Release
 
       - name: Build
-        run: cmake --build build
+        run: cmake --build build --parallel
 
       - name: Run tests
         run: ctest --test-dir build -L spec --output-on-failure
@@ -29,6 +29,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: test          # only runs if tests pass
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
