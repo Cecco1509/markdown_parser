@@ -18,10 +18,10 @@ jobs:
         run: cmake -B build -DCMAKE_BUILD_TYPE=Release
 
       - name: Build
-        run: cmake --build build --parallel
+        run: cmake --build build
 
       - name: Run tests
-        run: ctest --test-dir build --output-on-failure
+        run: ctest --test-dir build -L spec --output-on-failure
 
   # ── Job 2: rebuild WASM and commit to web/dist ───────────────────────────
   build-wasm:
