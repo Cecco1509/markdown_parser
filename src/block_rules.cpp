@@ -348,8 +348,7 @@ static std::optional<OpenResult> tryOpenFencedCode(const ScannedLine &line) {
     return std::nullopt;
   std::string info_str = string_utils::processEscapesAndEntities(info);
   CodeBlockData cbd{true, fc, static_cast<int>(run),
-                    static_cast<int>(line.indent()),
-                    std::move(info_str)};
+                    static_cast<int>(line.indent()), std::move(info_str)};
   return OpenResult{NodeType::CodeBlock, cbd, {}, {}, /*swallow_line=*/true, 0};
 }
 
@@ -675,11 +674,11 @@ static std::optional<OpenResult> tryOpenIndentedCode(const ScannedLine &line,
                                                      bool tip_is_paragraph,
                                                      bool inside_list_blank) {
   // Print line info for debugging
-  std::cerr << "[tryOpenIndentedCode] content=\"" << line.content()
-            << "\" virtual_indent=" << line.indent()
-            << " is_blank=" << line.is_blank()
-            << " tip_is_paragraph=" << tip_is_paragraph
-            << " inside_list_blank=" << inside_list_blank << "\n";
+  // std::cerr << "[tryOpenIndentedCode] content=\"" << line.content()
+  //           << "\" virtual_indent=" << line.indent()
+  //           << " is_blank=" << line.is_blank()
+  //           << " tip_is_paragraph=" << tip_is_paragraph
+  //           << " inside_list_blank=" << inside_list_blank << "\n";
 
   if (tip_is_paragraph)
     return std::nullopt;
