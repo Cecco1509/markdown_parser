@@ -1,5 +1,6 @@
 #include "markdown_parser/entities.hpp"
 #include <cctype>
+#include <cstdint>
 #include <cstring>
 
 // ── Unicode codepoint → UTF-8 string ─────────────────────────────────────────
