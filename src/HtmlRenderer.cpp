@@ -5,6 +5,7 @@
 
 #include <cassert>
 #include <functional>
+#include <stdexcept>
 
 // ── helpers
 // ───────────────────────────────────────────────────────────────────
@@ -83,6 +84,22 @@ std::string HtmlRenderer::escapeUrl(const std::string &s) {
 
 // ── public API
 // ────────────────────────────────────────────────────────────────
+
+void HtmlRenderer::registerHandler(const std::string &lang, HandlerFn fn) {
+  if (!fn) throw std::invalid_argument("null handler for lang: " + lang);
+  fenced_handlers_[lang] = std::move(fn);
+}
+
+std::string HtmlRenderer::renderFencedCode(const std::string &lang,
+                                           const std::string &content) {
+  auto it = fenced_handlers_.find(lang);
+  if (it != fenced_handlers_.end())
+    return it->second(content);
+  if (lang.empty())
+    return "<pre><code>" + escapeHtml(content) + "</code></pre>\n";
+  return "<pre><code class=\"language-" + escapeHtml(lang) + "\">" +
+         escapeHtml(content) + "</code></pre>\n";
+}
 
 std::string HtmlRenderer::render(const BlockNode &root) {
   out_.clear();
@@ -192,18 +209,12 @@ void HtmlRenderer::visit(const BlockNode &node) {
 
   case NodeType::CodeBlock: {
     const auto &cd = std::get<CodeBlockData>(node.data);
-    // Extract first word of the info string as the language tag.
     std::string lang;
     if (!cd.info_string.empty()) {
       auto end = cd.info_string.find_first_of(" \t\n");
       lang = cd.info_string.substr(0, end);
     }
-    if (lang.empty())
-      out_ += "<pre><code>";
-    else
-      out_ += "<pre><code class=\"language-" + escapeHtml(lang) + "\">";
-    out_ += escapeHtml(node.string_content);
-    out_ += "</code></pre>\n";
+    out_ += renderFencedCode(lang, node.string_content);
     break;
   }
 

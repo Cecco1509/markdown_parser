@@ -10,10 +10,19 @@
 
     <!-- Editor UI styles -->
     <link rel="stylesheet" href="style.css">
+
+    <!-- Mermaid -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
 </head>
 <body>
     <header>
         <span class="logo">Markdown Parser</span>
+        <label id="mermaid-toggle-label">
+            <input type="checkbox" id="mermaid-toggle"> Mermaid
+        </label>
+        <label id="math-toggle-label">
+            <input type="checkbox" id="math-toggle"> Math
+        </label>
         <span id="status" class="status loading">Loading WASM...</span>
     </header>
 
@@ -33,9 +42,13 @@
 
     <script src="dist/markdown_parser.js"></script>
     <script>
-        const editor   = document.getElementById('editor');
-        const preview  = document.getElementById('preview');
-        const status   = document.getElementById('status');
+        const editor        = document.getElementById('editor');
+        const preview       = document.getElementById('preview');
+        const status        = document.getElementById('status');
+        const mermaidToggle = document.getElementById('mermaid-toggle');
+        const mathToggle    = document.getElementById('math-toggle');
+
+        mermaid.initialize({ startOnLoad: false });
 
         Module.onRuntimeInitialized = () => {
             status.textContent = 'Ready';
@@ -43,14 +56,35 @@
             render();
         };
 
+        function activeFlags() {
+            const flags = [];
+            if (mermaidToggle.checked) flags.push('mermaid');
+            if (mathToggle.checked)    flags.push('math');
+            return flags;
+        }
+
         function render() {
-            const md = editor.value;
-            if (typeof Module.parseMarkdown === 'function') {
-                preview.innerHTML = Module.parseMarkdown(md);
+            const md    = editor.value;
+            const flags = activeFlags();
+
+            let html;
+            if (flags.length > 0 && typeof Module.parseMarkdownWithFlags === 'function') {
+                html = Module.parseMarkdownWithFlags(md, flags);
+            } else if (typeof Module.parseMarkdown === 'function') {
+                html = Module.parseMarkdown(md);
+            } else {
+                return;
             }
+
+            preview.innerHTML = html;
+
+            if (mermaidToggle.checked)
+                mermaid.run({ nodes: preview.querySelectorAll('.mermaid') });
         }
 
         editor.addEventListener('input', render);
+        mermaidToggle.addEventListener('change', render);
+        mathToggle.addEventListener('change', render);
 
         // Default content shown on load
         editor.value = [

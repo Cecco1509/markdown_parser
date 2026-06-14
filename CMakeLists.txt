@@ -20,10 +20,14 @@ add_library(md_parser
     src/block_rules.cpp
     src/HtmlRenderer.cpp
     src/HtmlRenderDebug.cpp
+    src/HtmlRendererFactory.cpp
+    src/HandlerRegistry.cpp
     src/JsonRenderer.cpp
     src/entities.cpp
     src/string_utils.cpp
     src/unicode_fold.cpp
+    src/handlers/MermaidHandler.cpp
+    src/handlers/MathHandler.cpp
 )
 target_include_directories(md_parser PUBLIC include)
 
@@ -44,10 +48,14 @@ if(EMSCRIPTEN)
         src/block_rules.cpp
         src/HtmlRenderer.cpp
         src/HtmlRenderDebug.cpp
+        src/HtmlRendererFactory.cpp
+        src/HandlerRegistry.cpp
         src/JsonRenderer.cpp
         src/entities.cpp
         src/string_utils.cpp
         src/unicode_fold.cpp
+        src/handlers/MermaidHandler.cpp
+        src/handlers/MathHandler.cpp
         src/wasm_bindings.cpp
     )
     target_include_directories(markdown_parser_wasm PRIVATE include)
