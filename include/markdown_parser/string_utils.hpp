@@ -11,6 +11,9 @@ namespace string_utils {
 // strings and other block-level text that allows both transformations.
 std::string processEscapesAndEntities(std::string_view s);
 
+std::string escapeHtml(const std::string &s);
+std::string escapeUrl(const std::string &s);
+
 // Normalize a raw input line before scanning:
 //   - If strip_bom is true, removes a leading UTF-8 BOM (U+FEFF, bytes EF BB
 //   BF).

@@ -2,87 +2,12 @@
 #include "markdown_parser/BlockNode.hpp"
 #include "markdown_parser/InlineNode.hpp"
 #include "markdown_parser/Types.hpp"
+#include "markdown_parser/string_utils.hpp"
 
 #include <cassert>
-#include <functional>
 #include <stdexcept>
 
 namespace markdown_parser {
-
-// ── helpers
-// ───────────────────────────────────────────────────────────────────
-
-std::string HtmlRenderer::escapeHtml(const std::string &s) {
-  std::string out;
-  out.reserve(s.size());
-  for (char c : s) {
-    switch (c) {
-    case '&':
-      out += "&amp;";
-      break;
-    case '<':
-      out += "&lt;";
-      break;
-    case '>':
-      out += "&gt;";
-      break;
-    case '"':
-      out += "&quot;";
-      break;
-    default:
-      out += c;
-      break;
-    }
-  }
-  return out;
-}
-
-// Characters that are safe to emit verbatim in an href/src attribute.
-// Matches cmark's HREF_SAFE table: unreserved URI chars plus reserved chars
-// that carry structural meaning in URLs, minus '&' and '"' which are
-// HTML-escaped separately.
-static bool isHrefSafe(unsigned char c) {
-  // clang-format off
-  static const bool safe[256] = {
-    //       0     1     2     3     4     5     6     7     8     9     A     B     C     D     E     F
-    /* 0 */ false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,
-    /* 1 */ false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,
-    /* 2 */ false,true, false,true, true, true, false,false,true, true, true, true, true, true, true, true,
-    //       sp    !     "     #     $     %     &     '     (     )     *     +     ,     -     .     /
-    /* 3 */ true, true, true, true, true, true, true, true, true, true, true, true,false,true, false,true,
-    //       0     1     2     3     4     5     6     7     8     9     :     ;     <     =     >     ?
-    /* 4 */ true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true,
-    //       @     A     B     C     D     E     F     G     H     I     J     K     L     M     N     O
-    /* 5 */ true, true, true, true, true, true, true, true, true, true, true,false,false,false,false,true,
-    //       P     Q     R     S     T     U     V     W     X     Y     Z     [     \     ]     ^     _
-    /* 6 */ false,true, true, true, true, true, true, true, true, true, true, true, true, true, true, true,
-    //       `     a     b     c     d     e     f     g     h     i     j     k     l     m     n     o
-    /* 7 */ true, true, true, true, true, true, true, true, true, true, true,false,false,false,false,false,
-    //       p     q     r     s     t     u     v     w     x     y     z     {     |     }     ~     DEL
-    // 0x80-0xFF: all false (non-ASCII must be percent-encoded)
-  };
-  // clang-format on
-  return safe[c];
-}
-
-static const char kHex[] = "0123456789ABCDEF";
-
-std::string HtmlRenderer::escapeUrl(const std::string &s) {
-  std::string out;
-  out.reserve(s.size() + 16);
-  for (unsigned char c : s) {
-    if (c == '&') {
-      out += "&amp;";
-    } else if (isHrefSafe(c)) {
-      out += static_cast<char>(c);
-    } else {
-      out += '%';
-      out += kHex[c >> 4];
-      out += kHex[c & 0xF];
-    }
-  }
-  return out;
-}
 
 // ── public API
 // ────────────────────────────────────────────────────────────────
@@ -98,9 +23,9 @@ std::string HtmlRenderer::renderFencedCode(const std::string &lang,
   if (it != fenced_handlers_.end())
     return it->second(content);
   if (lang.empty())
-    return "<pre><code>" + escapeHtml(content) + "</code></pre>\n";
-  return "<pre><code class=\"language-" + escapeHtml(lang) + "\">" +
-         escapeHtml(content) + "</code></pre>\n";
+    return "<pre><code>" + string_utils::escapeHtml(content) + "</code></pre>\n";
+  return "<pre><code class=\"language-" + string_utils::escapeHtml(lang) + "\">" +
+         string_utils::escapeHtml(content) + "</code></pre>\n";
 }
 
 std::string HtmlRenderer::render(const BlockNode &root) {
@@ -233,7 +158,7 @@ void HtmlRenderer::visit(const InlineNode &node) {
   switch (node.type) {
 
   case InlineType::Text:
-    out_ += escapeHtml(node.literal);
+    out_ += string_utils::escapeHtml(node.literal);
     break;
 
   case InlineType::SoftBreak:
@@ -245,7 +170,7 @@ void HtmlRenderer::visit(const InlineNode &node) {
     break;
 
   case InlineType::Code:
-    out_ += "<code>" + escapeHtml(node.literal) + "</code>";
+    out_ += "<code>" + string_utils::escapeHtml(node.literal) + "</code>";
     break;
 
   case InlineType::HtmlInline:
@@ -268,9 +193,9 @@ void HtmlRenderer::visit(const InlineNode &node) {
 
   case InlineType::Link: {
     const auto &ld = std::get<LinkData>(node.data);
-    out_ += "<a href=\"" + escapeUrl(ld.destination) + "\"";
+    out_ += "<a href=\"" + string_utils::escapeUrl(ld.destination) + "\"";
     if (ld.title)
-      out_ += " title=\"" + escapeHtml(*ld.title) + "\"";
+      out_ += " title=\"" + string_utils::escapeHtml(*ld.title) + "\"";
     out_ += ">";
     for (const auto &child : node.children)
       visit(*child);
@@ -290,10 +215,10 @@ void HtmlRenderer::visit(const InlineNode &node) {
     };
     for (const auto &child : node.children)
       collectAlt(*child);
-    out_ += "<img src=\"" + escapeUrl(ld.destination) + "\"";
-    out_ += " alt=\"" + escapeHtml(alt) + "\"";
+    out_ += "<img src=\"" + string_utils::escapeUrl(ld.destination) + "\"";
+    out_ += " alt=\"" + string_utils::escapeHtml(alt) + "\"";
     if (ld.title)
-      out_ += " title=\"" + escapeHtml(*ld.title) + "\"";
+      out_ += " title=\"" + string_utils::escapeHtml(*ld.title) + "\"";
     out_ += " />";
     break;
   }

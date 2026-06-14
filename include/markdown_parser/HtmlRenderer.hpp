@@ -23,9 +23,6 @@ protected:
   virtual std::string renderFencedCode(const std::string &lang,
                                        const std::string &content);
 
-  static std::string escapeHtml(const std::string &s);
-  static std::string escapeUrl(const std::string &s);
-
 private:
   std::unordered_map<std::string, HandlerFn> fenced_handlers_;
 };
