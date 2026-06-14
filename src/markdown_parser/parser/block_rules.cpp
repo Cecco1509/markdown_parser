@@ -20,11 +20,15 @@ constexpr std::size_t kFenceMinRun = 3;
 static bool icontains(std::string_view hay, std::string_view needle) {
   if (needle.size() > hay.size())
     return false;
-  for (std::size_t i = 0; i + needle.size() <= hay.size(); ++i) {
+  char lower_needle[32];
+  const std::size_t nlen = needle.size();
+  for (std::size_t j = 0; j < nlen; ++j)
+    lower_needle[j] = static_cast<char>(
+        std::tolower(static_cast<unsigned char>(needle[j])));
+  for (std::size_t i = 0; i + nlen <= hay.size(); ++i) {
     bool ok = true;
-    for (std::size_t j = 0; j < needle.size() && ok; ++j)
-      ok = std::tolower(static_cast<unsigned char>(hay[i + j])) ==
-           std::tolower(static_cast<unsigned char>(needle[j]));
+    for (std::size_t j = 0; j < nlen && ok; ++j)
+      ok = std::tolower(static_cast<unsigned char>(hay[i + j])) == lower_needle[j];
     if (ok)
       return true;
   }

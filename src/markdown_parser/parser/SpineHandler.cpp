@@ -620,6 +620,7 @@ bool SpineHandler::tryScanOneLinkRefDef(std::string_view content,
 
   // Scan destination.
   std::string destination;
+  destination.reserve(len - p);
   if (content[p] == '<') {
     ++p;
     bool closed = false;
@@ -818,8 +819,7 @@ bool SpineHandler::tryScanOneLinkRefDef(std::string_view content,
   if (p < len)
     ++p;
 
-  if (ref_map_.find(norm_key) == ref_map_.end())
-    ref_map_[norm_key] = LinkDef{std::move(destination), std::move(title)};
+  ref_map_.try_emplace(std::move(norm_key), std::move(destination), std::move(title));
 
   pos = p;
   return true;

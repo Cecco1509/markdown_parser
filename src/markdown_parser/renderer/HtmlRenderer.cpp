@@ -4,10 +4,16 @@
 #include "markdown_parser/core/Types.hpp"
 #include "markdown_parser/utils/string_utils.hpp"
 
-#include <cassert>
 #include <stdexcept>
 
 namespace markdown_parser {
+
+static void collectAlt(const InlineNode &n, std::string &alt) {
+  if (n.type == InlineType::Text || n.type == InlineType::Code)
+    alt += n.literal;
+  for (const auto &c : n.children)
+    collectAlt(*c, alt);
+}
 
 // ── public API
 // ────────────────────────────────────────────────────────────────
@@ -22,14 +28,27 @@ std::string HtmlRenderer::renderFencedCode(const std::string &lang,
   auto it = fenced_handlers_.find(lang);
   if (it != fenced_handlers_.end())
     return it->second(content);
-  if (lang.empty())
-    return "<pre><code>" + string_utils::escapeHtml(content) + "</code></pre>\n";
-  return "<pre><code class=\"language-" + string_utils::escapeHtml(lang) + "\">" +
-         string_utils::escapeHtml(content) + "</code></pre>\n";
+  if (lang.empty()) {
+    std::string r;
+    r.reserve(28 + content.size());
+    r += "<pre><code>";
+    r += string_utils::escapeHtml(content);
+    r += "</code></pre>\n";
+    return r;
+  }
+  std::string r;
+  r.reserve(42 + lang.size() + content.size());
+  r += "<pre><code class=\"language-";
+  r += string_utils::escapeHtml(lang);
+  r += "\">";
+  r += string_utils::escapeHtml(content);
+  r += "</code></pre>\n";
+  return r;
 }
 
 std::string HtmlRenderer::render(const BlockNode &root) {
   out_.clear();
+  out_.reserve(4096);
   tight_ = false;
   visit(root);
   return out_;
@@ -61,10 +80,10 @@ void HtmlRenderer::visit(const BlockNode &node) {
 
   case NodeType::Heading: {
     const auto &hd = std::get<HeadingData>(node.data);
-    out_ += "<h" + std::to_string(hd.level) + ">";
+    out_ += "<h"; out_ += std::to_string(hd.level); out_ += ">";
     for (const auto &il : node.inline_children)
       visit(*il);
-    out_ += "</h" + std::to_string(hd.level) + ">\n";
+    out_ += "</h"; out_ += std::to_string(hd.level); out_ += ">\n";
     break;
   }
 
@@ -89,8 +108,9 @@ void HtmlRenderer::visit(const BlockNode &node) {
     tight_ = ld.tight;
 
     if (ld.list_type == ListType::Ordered) {
-      if (ld.start != 1)
-        out_ += "<ol start=\"" + std::to_string(ld.start) + "\">\n";
+      if (ld.start != 1) {
+        out_ += "<ol start=\""; out_ += std::to_string(ld.start); out_ += "\">\n";
+      }
       else
         out_ += "<ol>\n";
     } else {
@@ -170,7 +190,7 @@ void HtmlRenderer::visit(const InlineNode &node) {
     break;
 
   case InlineType::Code:
-    out_ += "<code>" + string_utils::escapeHtml(node.literal) + "</code>";
+    out_ += "<code>"; out_ += string_utils::escapeHtml(node.literal); out_ += "</code>";
     break;
 
   case InlineType::HtmlInline:
@@ -193,9 +213,10 @@ void HtmlRenderer::visit(const InlineNode &node) {
 
   case InlineType::Link: {
     const auto &ld = std::get<LinkData>(node.data);
-    out_ += "<a href=\"" + string_utils::escapeUrl(ld.destination) + "\"";
-    if (ld.title)
-      out_ += " title=\"" + string_utils::escapeHtml(*ld.title) + "\"";
+    out_ += "<a href=\""; out_ += string_utils::escapeUrl(ld.destination); out_ += "\"";
+    if (ld.title) {
+      out_ += " title=\""; out_ += string_utils::escapeHtml(*ld.title); out_ += "\"";
+    }
     out_ += ">";
     for (const auto &child : node.children)
       visit(*child);
@@ -207,18 +228,13 @@ void HtmlRenderer::visit(const InlineNode &node) {
     const auto &ld = std::get<LinkData>(node.data);
     // Alt text is the plain-text content of the whole subtree (no HTML tags).
     std::string alt;
-    std::function<void(const InlineNode &)> collectAlt = [&](const InlineNode &n) {
-      if (n.type == InlineType::Text || n.type == InlineType::Code)
-        alt += n.literal;
-      for (const auto &c : n.children)
-        collectAlt(*c);
-    };
     for (const auto &child : node.children)
-      collectAlt(*child);
-    out_ += "<img src=\"" + string_utils::escapeUrl(ld.destination) + "\"";
-    out_ += " alt=\"" + string_utils::escapeHtml(alt) + "\"";
-    if (ld.title)
-      out_ += " title=\"" + string_utils::escapeHtml(*ld.title) + "\"";
+      collectAlt(*child, alt);
+    out_ += "<img src=\""; out_ += string_utils::escapeUrl(ld.destination); out_ += "\"";
+    out_ += " alt=\""; out_ += string_utils::escapeHtml(alt); out_ += "\"";
+    if (ld.title) {
+      out_ += " title=\""; out_ += string_utils::escapeHtml(*ld.title); out_ += "\"";
+    }
     out_ += " />";
     break;
   }

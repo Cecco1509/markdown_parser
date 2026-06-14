@@ -450,7 +450,7 @@ InlineParser::parseInline(const std::unordered_map<std::string, LinkDef> &ref_ma
       if (isAsciiPunct(next)) {
         ++pos_;
         auto node = makeNode(InlineType::Text);
-        node->literal = std::string(1, next);
+        node->literal.assign(1, next);
         return node;
       }
     }
@@ -470,7 +470,7 @@ InlineParser::parseInline(const std::unordered_map<std::string, LinkDef> &ref_ma
       ++pos_;
     std::size_t run_len = pos_ - start;
     auto node = makeNode(InlineType::Text);
-    node->literal = std::string(input_.substr(start, run_len));
+    node->literal.assign(input_.data() + start, run_len);
     std::size_t prev_sz = delimiters_.size();
     handleEmphasis(c, run_len);
     if (delimiters_.size() > prev_sz)
@@ -555,7 +555,7 @@ InlineParser::parseInline(const std::unordered_map<std::string, LinkDef> &ref_ma
     ++pos_;
   }
   auto node = makeNode(InlineType::Text);
-  node->literal = std::string(input_.substr(start, pos_ - start));
+  node->literal.assign(input_.data() + start, pos_ - start);
   return node;
 }
 
@@ -595,7 +595,7 @@ std::unique_ptr<InlineNode> InlineParser::parseBacktickString() {
   }
   // No matching close: emit opening ticks as literal text.
   auto node = makeNode(InlineType::Text);
-  node->literal = std::string(tick_len, '`');
+  node->literal.assign(tick_len, '`');
   return node;
 }
 
@@ -710,7 +710,7 @@ std::unique_ptr<InlineNode> InlineParser::parseHtmlInline() {
 
   auto emit = [&]() -> std::unique_ptr<InlineNode> {
     auto node = makeNode(InlineType::HtmlInline);
-    node->literal = std::string(input_.substr(save, pos_ - save));
+    node->literal.assign(input_.data() + save, pos_ - save);
     return node;
   };
 
