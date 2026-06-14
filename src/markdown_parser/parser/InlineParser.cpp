@@ -5,7 +5,6 @@
 #include <algorithm>
 #include <cassert>
 #include <cctype>
-#include <iostream>
 
 namespace markdown_parser {
 
@@ -22,21 +21,27 @@ static bool isAsciiPunct(char c) {
 
 // Decode the UTF-8 codepoint starting at s[pos]; returns U+FFFD on error.
 static uint32_t cpAt(std::string_view s, std::size_t pos) {
-  if (pos >= s.size()) return 0;
+  if (pos >= s.size())
+    return 0;
   auto b0 = static_cast<unsigned char>(s[pos]);
-  if (b0 < 0x80) return b0;
+  if (b0 < 0x80)
+    return b0;
   auto cont = [&](std::size_t i) -> uint32_t {
     return (i < s.size()) ? (static_cast<unsigned char>(s[i]) & 0x3F) : 0;
   };
-  if (b0 < 0xE0) return ((b0 & 0x1F) << 6) | cont(pos + 1);
-  if (b0 < 0xF0) return ((b0 & 0x0F) << 12) | (cont(pos + 1) << 6) | cont(pos + 2);
-  return ((b0 & 0x07) << 18) | (cont(pos + 1) << 12) | (cont(pos + 2) << 6) | cont(pos + 3);
+  if (b0 < 0xE0)
+    return ((b0 & 0x1F) << 6) | cont(pos + 1);
+  if (b0 < 0xF0)
+    return ((b0 & 0x0F) << 12) | (cont(pos + 1) << 6) | cont(pos + 2);
+  return ((b0 & 0x07) << 18) | (cont(pos + 1) << 12) | (cont(pos + 2) << 6) |
+         cont(pos + 3);
 }
 
 // Walk backward past continuation bytes to find the start of the last codepoint
 // that ends at or before pos, then decode it.
 static uint32_t cpBefore(std::string_view s, std::size_t pos) {
-  if (pos == 0) return 0;
+  if (pos == 0)
+    return 0;
   std::size_t p = pos - 1;
   while (p > 0 && (static_cast<unsigned char>(s[p]) & 0xC0) == 0x80)
     --p;
@@ -45,96 +50,310 @@ static uint32_t cpBefore(std::string_view s, std::size_t pos) {
 
 // Unicode Zs (space separator) + ASCII control whitespace.
 static bool isUnicodeWhitespaceCp(uint32_t cp) {
-  if (cp == 0x09 || cp == 0x0A || cp == 0x0C || cp == 0x0D || cp == 0x20) return true;
-  if (cp == 0x00A0 || cp == 0x1680) return true;
-  if (cp >= 0x2000 && cp <= 0x200A) return true;
-  if (cp == 0x202F || cp == 0x205F || cp == 0x3000) return true;
+  if (cp == 0x09 || cp == 0x0A || cp == 0x0C || cp == 0x0D || cp == 0x20)
+    return true;
+  if (cp == 0x00A0 || cp == 0x1680)
+    return true;
+  if (cp >= 0x2000 && cp <= 0x200A)
+    return true;
+  if (cp == 0x202F || cp == 0x205F || cp == 0x3000)
+    return true;
   return false;
 }
 
 // Unicode P (punctuation) and S (symbol) general categories.
 // Table generated from Unicode 15 data; ranges are [lo, hi] inclusive.
 static const uint32_t kUniPunctRanges[][2] = {
-    {0x0021, 0x002F}, {0x003A, 0x0040}, {0x005B, 0x0060}, {0x007B, 0x007E},
-    {0x00A1, 0x00A9}, {0x00AB, 0x00AC}, {0x00AE, 0x00B1}, {0x00B4, 0x00B4},
-    {0x00B6, 0x00B8}, {0x00BB, 0x00BB}, {0x00BF, 0x00BF}, {0x00D7, 0x00D7},
-    {0x00F7, 0x00F7}, {0x02C2, 0x02C5}, {0x02D2, 0x02DF}, {0x02E5, 0x02EB},
-    {0x02ED, 0x02ED}, {0x02EF, 0x02FF}, {0x0375, 0x0375}, {0x037E, 0x037E},
-    {0x0384, 0x0385}, {0x0387, 0x0387}, {0x03F6, 0x03F6}, {0x0482, 0x0482},
-    {0x055A, 0x055F}, {0x0589, 0x058A}, {0x058D, 0x058F}, {0x05BE, 0x05BE},
-    {0x05C0, 0x05C0}, {0x05C3, 0x05C3}, {0x05C6, 0x05C6}, {0x05F3, 0x05F4},
-    {0x0606, 0x060F}, {0x061B, 0x061B}, {0x061D, 0x061F}, {0x066A, 0x066D},
-    {0x06D4, 0x06D4}, {0x06E9, 0x06E9}, {0x06FD, 0x06FE}, {0x0700, 0x070D},
-    {0x07F6, 0x07F9}, {0x07FE, 0x07FF}, {0x0830, 0x083E}, {0x085E, 0x085E},
-    {0x0888, 0x0888}, {0x0964, 0x0965}, {0x0970, 0x0970}, {0x09F2, 0x09F3},
-    {0x09FA, 0x09FB}, {0x09FD, 0x09FD}, {0x0A76, 0x0A76}, {0x0AF0, 0x0AF1},
-    {0x0B70, 0x0B70}, {0x0BF3, 0x0BFA}, {0x0C77, 0x0C77}, {0x0C7F, 0x0C7F},
-    {0x0C84, 0x0C84}, {0x0D4F, 0x0D4F}, {0x0D79, 0x0D79}, {0x0DF4, 0x0DF4},
-    {0x0E3F, 0x0E3F}, {0x0E4F, 0x0E4F}, {0x0E5A, 0x0E5B}, {0x0F01, 0x0F17},
-    {0x0F1A, 0x0F1F}, {0x0F34, 0x0F34}, {0x0F36, 0x0F36}, {0x0F38, 0x0F38},
-    {0x0F3A, 0x0F3D}, {0x0F85, 0x0F85}, {0x0FBE, 0x0FC5}, {0x0FC7, 0x0FCC},
-    {0x0FCE, 0x0FCF}, {0x0FD5, 0x0FD8}, {0x109E, 0x109F}, {0x10FB, 0x10FB},
-    {0x1360, 0x1368}, {0x1390, 0x1399}, {0x1400, 0x1400}, {0x166D, 0x166E},
-    {0x169B, 0x169C}, {0x16EB, 0x16ED}, {0x1735, 0x1736}, {0x17D4, 0x17D6},
-    {0x17D8, 0x17DB}, {0x1800, 0x180A}, {0x1940, 0x1940}, {0x1944, 0x1945},
-    {0x19DE, 0x19FF}, {0x1A1E, 0x1A1F}, {0x1AA0, 0x1AA6}, {0x1AA8, 0x1AAD},
-    {0x1B5A, 0x1B6A}, {0x1B74, 0x1B7E}, {0x1BFC, 0x1BFF}, {0x1C3B, 0x1C3F},
-    {0x1C7E, 0x1C7F}, {0x1CC0, 0x1CC7}, {0x1CD3, 0x1CD3}, {0x1FBD, 0x1FBD},
-    {0x1FBF, 0x1FC1}, {0x1FCD, 0x1FCF}, {0x1FDD, 0x1FDF}, {0x1FED, 0x1FEF},
-    {0x1FFD, 0x1FFE}, {0x2010, 0x2027}, {0x2030, 0x205E}, {0x2060, 0x2064},
-    {0x2066, 0x2070}, {0x207A, 0x207E}, {0x208A, 0x208E}, {0x20A0, 0x20C0},
-    {0x2100, 0x2101}, {0x2103, 0x2106}, {0x2108, 0x2109}, {0x2114, 0x2114},
-    {0x2116, 0x2118}, {0x211E, 0x2123}, {0x2125, 0x2125}, {0x2127, 0x2127},
-    {0x2129, 0x2129}, {0x212E, 0x212E}, {0x213A, 0x213B}, {0x2140, 0x2144},
-    {0x214A, 0x214D}, {0x214F, 0x214F}, {0x218A, 0x218B}, {0x2190, 0x2426},
-    {0x2440, 0x244A}, {0x249C, 0x24E9}, {0x2500, 0x2775}, {0x2794, 0x27C4},
-    {0x27C7, 0x27E5}, {0x27F0, 0x2982}, {0x2999, 0x29D7}, {0x29DC, 0x29FB},
-    {0x29FE, 0x2B73}, {0x2B76, 0x2B95}, {0x2B97, 0x2BFF}, {0x2CE5, 0x2CEA},
-    {0x2CF9, 0x2CFC}, {0x2CFE, 0x2CFF}, {0x2D70, 0x2D70}, {0x2E00, 0x2E5D},
-    {0x2E80, 0x2E99}, {0x2E9B, 0x2EF3}, {0x2F00, 0x2FD5}, {0x2FF0, 0x2FFB},
-    {0x3001, 0x3004}, {0x3008, 0x3020}, {0x3030, 0x3030}, {0x3036, 0x3037},
-    {0x303D, 0x303F}, {0x309B, 0x309C}, {0x30A0, 0x30A0}, {0x30FB, 0x30FB},
-    {0x3190, 0x3191}, {0x3196, 0x319F}, {0x31C0, 0x31E3}, {0x31EF, 0x31EF},
-    {0x3200, 0x321E}, {0x3220, 0x3247}, {0x3260, 0x327E}, {0x327F, 0x32CF},
-    {0x3358, 0x33FF}, {0x4DC0, 0x4DFF}, {0xA490, 0xA4C6}, {0xA4FE, 0xA4FF},
-    {0xA60D, 0xA60F}, {0xA673, 0xA673}, {0xA67E, 0xA67F}, {0xA6F2, 0xA6F7},
-    {0xA700, 0xA716}, {0xA720, 0xA721}, {0xA789, 0xA78A}, {0xA828, 0xA82B},
-    {0xA836, 0xA839}, {0xA874, 0xA877}, {0xA8CE, 0xA8CF}, {0xA8F8, 0xA8FA},
-    {0xA8FC, 0xA8FC}, {0xA92E, 0xA92F}, {0xA95F, 0xA95F}, {0xA9C1, 0xA9CD},
-    {0xA9DE, 0xA9DF}, {0xAA5C, 0xAA5F}, {0xAA77, 0xAA79}, {0xAADE, 0xAADF},
-    {0xAAF0, 0xAAF1}, {0xAB5B, 0xAB5B}, {0xAB6A, 0xAB6B}, {0xABEB, 0xABEB},
-    {0xFB29, 0xFB29}, {0xFBB2, 0xFBC2}, {0xFD3E, 0xFD3F}, {0xFD40, 0xFD4F},
-    {0xFDCF, 0xFDCF}, {0xFDFC, 0xFDFF}, {0xFE10, 0xFE19}, {0xFE30, 0xFE52},
-    {0xFE54, 0xFE66}, {0xFE68, 0xFE6B}, {0xFF01, 0xFF0F}, {0xFF1A, 0xFF20},
-    {0xFF3B, 0xFF40}, {0xFF5B, 0xFF65}, {0xFF70, 0xFF70}, {0xFF9E, 0xFF9F},
-    {0xFFE0, 0xFFE6}, {0xFFE8, 0xFFEE}, {0xFFF9, 0xFFFD},
+    {0x0021, 0x002F},
+    {0x003A, 0x0040},
+    {0x005B, 0x0060},
+    {0x007B, 0x007E},
+    {0x00A1, 0x00A9},
+    {0x00AB, 0x00AC},
+    {0x00AE, 0x00B1},
+    {0x00B4, 0x00B4},
+    {0x00B6, 0x00B8},
+    {0x00BB, 0x00BB},
+    {0x00BF, 0x00BF},
+    {0x00D7, 0x00D7},
+    {0x00F7, 0x00F7},
+    {0x02C2, 0x02C5},
+    {0x02D2, 0x02DF},
+    {0x02E5, 0x02EB},
+    {0x02ED, 0x02ED},
+    {0x02EF, 0x02FF},
+    {0x0375, 0x0375},
+    {0x037E, 0x037E},
+    {0x0384, 0x0385},
+    {0x0387, 0x0387},
+    {0x03F6, 0x03F6},
+    {0x0482, 0x0482},
+    {0x055A, 0x055F},
+    {0x0589, 0x058A},
+    {0x058D, 0x058F},
+    {0x05BE, 0x05BE},
+    {0x05C0, 0x05C0},
+    {0x05C3, 0x05C3},
+    {0x05C6, 0x05C6},
+    {0x05F3, 0x05F4},
+    {0x0606, 0x060F},
+    {0x061B, 0x061B},
+    {0x061D, 0x061F},
+    {0x066A, 0x066D},
+    {0x06D4, 0x06D4},
+    {0x06E9, 0x06E9},
+    {0x06FD, 0x06FE},
+    {0x0700, 0x070D},
+    {0x07F6, 0x07F9},
+    {0x07FE, 0x07FF},
+    {0x0830, 0x083E},
+    {0x085E, 0x085E},
+    {0x0888, 0x0888},
+    {0x0964, 0x0965},
+    {0x0970, 0x0970},
+    {0x09F2, 0x09F3},
+    {0x09FA, 0x09FB},
+    {0x09FD, 0x09FD},
+    {0x0A76, 0x0A76},
+    {0x0AF0, 0x0AF1},
+    {0x0B70, 0x0B70},
+    {0x0BF3, 0x0BFA},
+    {0x0C77, 0x0C77},
+    {0x0C7F, 0x0C7F},
+    {0x0C84, 0x0C84},
+    {0x0D4F, 0x0D4F},
+    {0x0D79, 0x0D79},
+    {0x0DF4, 0x0DF4},
+    {0x0E3F, 0x0E3F},
+    {0x0E4F, 0x0E4F},
+    {0x0E5A, 0x0E5B},
+    {0x0F01, 0x0F17},
+    {0x0F1A, 0x0F1F},
+    {0x0F34, 0x0F34},
+    {0x0F36, 0x0F36},
+    {0x0F38, 0x0F38},
+    {0x0F3A, 0x0F3D},
+    {0x0F85, 0x0F85},
+    {0x0FBE, 0x0FC5},
+    {0x0FC7, 0x0FCC},
+    {0x0FCE, 0x0FCF},
+    {0x0FD5, 0x0FD8},
+    {0x109E, 0x109F},
+    {0x10FB, 0x10FB},
+    {0x1360, 0x1368},
+    {0x1390, 0x1399},
+    {0x1400, 0x1400},
+    {0x166D, 0x166E},
+    {0x169B, 0x169C},
+    {0x16EB, 0x16ED},
+    {0x1735, 0x1736},
+    {0x17D4, 0x17D6},
+    {0x17D8, 0x17DB},
+    {0x1800, 0x180A},
+    {0x1940, 0x1940},
+    {0x1944, 0x1945},
+    {0x19DE, 0x19FF},
+    {0x1A1E, 0x1A1F},
+    {0x1AA0, 0x1AA6},
+    {0x1AA8, 0x1AAD},
+    {0x1B5A, 0x1B6A},
+    {0x1B74, 0x1B7E},
+    {0x1BFC, 0x1BFF},
+    {0x1C3B, 0x1C3F},
+    {0x1C7E, 0x1C7F},
+    {0x1CC0, 0x1CC7},
+    {0x1CD3, 0x1CD3},
+    {0x1FBD, 0x1FBD},
+    {0x1FBF, 0x1FC1},
+    {0x1FCD, 0x1FCF},
+    {0x1FDD, 0x1FDF},
+    {0x1FED, 0x1FEF},
+    {0x1FFD, 0x1FFE},
+    {0x2010, 0x2027},
+    {0x2030, 0x205E},
+    {0x2060, 0x2064},
+    {0x2066, 0x2070},
+    {0x207A, 0x207E},
+    {0x208A, 0x208E},
+    {0x20A0, 0x20C0},
+    {0x2100, 0x2101},
+    {0x2103, 0x2106},
+    {0x2108, 0x2109},
+    {0x2114, 0x2114},
+    {0x2116, 0x2118},
+    {0x211E, 0x2123},
+    {0x2125, 0x2125},
+    {0x2127, 0x2127},
+    {0x2129, 0x2129},
+    {0x212E, 0x212E},
+    {0x213A, 0x213B},
+    {0x2140, 0x2144},
+    {0x214A, 0x214D},
+    {0x214F, 0x214F},
+    {0x218A, 0x218B},
+    {0x2190, 0x2426},
+    {0x2440, 0x244A},
+    {0x249C, 0x24E9},
+    {0x2500, 0x2775},
+    {0x2794, 0x27C4},
+    {0x27C7, 0x27E5},
+    {0x27F0, 0x2982},
+    {0x2999, 0x29D7},
+    {0x29DC, 0x29FB},
+    {0x29FE, 0x2B73},
+    {0x2B76, 0x2B95},
+    {0x2B97, 0x2BFF},
+    {0x2CE5, 0x2CEA},
+    {0x2CF9, 0x2CFC},
+    {0x2CFE, 0x2CFF},
+    {0x2D70, 0x2D70},
+    {0x2E00, 0x2E5D},
+    {0x2E80, 0x2E99},
+    {0x2E9B, 0x2EF3},
+    {0x2F00, 0x2FD5},
+    {0x2FF0, 0x2FFB},
+    {0x3001, 0x3004},
+    {0x3008, 0x3020},
+    {0x3030, 0x3030},
+    {0x3036, 0x3037},
+    {0x303D, 0x303F},
+    {0x309B, 0x309C},
+    {0x30A0, 0x30A0},
+    {0x30FB, 0x30FB},
+    {0x3190, 0x3191},
+    {0x3196, 0x319F},
+    {0x31C0, 0x31E3},
+    {0x31EF, 0x31EF},
+    {0x3200, 0x321E},
+    {0x3220, 0x3247},
+    {0x3260, 0x327E},
+    {0x327F, 0x32CF},
+    {0x3358, 0x33FF},
+    {0x4DC0, 0x4DFF},
+    {0xA490, 0xA4C6},
+    {0xA4FE, 0xA4FF},
+    {0xA60D, 0xA60F},
+    {0xA673, 0xA673},
+    {0xA67E, 0xA67F},
+    {0xA6F2, 0xA6F7},
+    {0xA700, 0xA716},
+    {0xA720, 0xA721},
+    {0xA789, 0xA78A},
+    {0xA828, 0xA82B},
+    {0xA836, 0xA839},
+    {0xA874, 0xA877},
+    {0xA8CE, 0xA8CF},
+    {0xA8F8, 0xA8FA},
+    {0xA8FC, 0xA8FC},
+    {0xA92E, 0xA92F},
+    {0xA95F, 0xA95F},
+    {0xA9C1, 0xA9CD},
+    {0xA9DE, 0xA9DF},
+    {0xAA5C, 0xAA5F},
+    {0xAA77, 0xAA79},
+    {0xAADE, 0xAADF},
+    {0xAAF0, 0xAAF1},
+    {0xAB5B, 0xAB5B},
+    {0xAB6A, 0xAB6B},
+    {0xABEB, 0xABEB},
+    {0xFB29, 0xFB29},
+    {0xFBB2, 0xFBC2},
+    {0xFD3E, 0xFD3F},
+    {0xFD40, 0xFD4F},
+    {0xFDCF, 0xFDCF},
+    {0xFDFC, 0xFDFF},
+    {0xFE10, 0xFE19},
+    {0xFE30, 0xFE52},
+    {0xFE54, 0xFE66},
+    {0xFE68, 0xFE6B},
+    {0xFF01, 0xFF0F},
+    {0xFF1A, 0xFF20},
+    {0xFF3B, 0xFF40},
+    {0xFF5B, 0xFF65},
+    {0xFF70, 0xFF70},
+    {0xFF9E, 0xFF9F},
+    {0xFFE0, 0xFFE6},
+    {0xFFE8, 0xFFEE},
+    {0xFFF9, 0xFFFD},
     // Supplementary planes (selected ranges)
-    {0x10100, 0x10102}, {0x10137, 0x1013F}, {0x10179, 0x10189},
-    {0x1018C, 0x1018E}, {0x10190, 0x1019C}, {0x101A0, 0x101A0},
-    {0x101D0, 0x101FC}, {0x10877, 0x10878}, {0x10AC8, 0x10AC8},
-    {0x1173F, 0x1173F}, {0x11FD5, 0x11FF1}, {0x16B3C, 0x16B3F},
-    {0x16B45, 0x16B45}, {0x1BC9C, 0x1BC9C}, {0x1D000, 0x1D0F5},
-    {0x1D100, 0x1D126}, {0x1D129, 0x1D164}, {0x1D16A, 0x1D16C},
-    {0x1D183, 0x1D184}, {0x1D18C, 0x1D1A9}, {0x1D1AE, 0x1D1EA},
-    {0x1D1ED, 0x1D1FF}, {0x1D200, 0x1D241}, {0x1D245, 0x1D245},
-    {0x1D300, 0x1D356}, {0x1D6C1, 0x1D6C1}, {0x1D6DB, 0x1D6DB},
-    {0x1D6FB, 0x1D6FB}, {0x1D715, 0x1D715}, {0x1D735, 0x1D735},
-    {0x1D74F, 0x1D74F}, {0x1D76F, 0x1D76F}, {0x1D789, 0x1D789},
-    {0x1D7A9, 0x1D7A9}, {0x1D7C3, 0x1D7C3}, {0x1D800, 0x1DA8B},
-    {0x1DA9B, 0x1DA9F}, {0x1DAA1, 0x1DAAF}, {0x1E14F, 0x1E14F},
-    {0x1ECAC, 0x1ECAC}, {0x1ECB0, 0x1ECB0}, {0x1ED2E, 0x1ED2E},
-    {0x1EEF0, 0x1EEF1}, {0x1F000, 0x1F02B}, {0x1F030, 0x1F093},
-    {0x1F0A0, 0x1F0AE}, {0x1F0B1, 0x1F0BF}, {0x1F0C1, 0x1F0CF},
-    {0x1F0D1, 0x1F0F5}, {0x1F10D, 0x1F1AD}, {0x1F1E0, 0x1F1FF},
-    {0x1F201, 0x1F202}, {0x1F210, 0x1F23B}, {0x1F240, 0x1F248},
-    {0x1F250, 0x1F251}, {0x1F300, 0x1F6D7}, {0x1F6DC, 0x1F6EC},
-    {0x1F6F0, 0x1F6FC}, {0x1F700, 0x1F776}, {0x1F77B, 0x1F7D9},
-    {0x1F7E0, 0x1F7EB}, {0x1F7F0, 0x1F7F0}, {0x1F800, 0x1F80B},
-    {0x1F810, 0x1F847}, {0x1F850, 0x1F859}, {0x1F860, 0x1F887},
-    {0x1F890, 0x1F8AD}, {0x1F8B0, 0x1F8B1}, {0x1F900, 0x1FA53},
-    {0x1FA60, 0x1FA6D}, {0x1FA70, 0x1FA74}, {0x1FA78, 0x1FA7C},
-    {0x1FA80, 0x1FA86}, {0x1FA90, 0x1FAAC}, {0x1FAB0, 0x1FABA},
-    {0x1FAC0, 0x1FAC5}, {0x1FAD0, 0x1FAD9}, {0x1FAE0, 0x1FAE7},
+    {0x10100, 0x10102},
+    {0x10137, 0x1013F},
+    {0x10179, 0x10189},
+    {0x1018C, 0x1018E},
+    {0x10190, 0x1019C},
+    {0x101A0, 0x101A0},
+    {0x101D0, 0x101FC},
+    {0x10877, 0x10878},
+    {0x10AC8, 0x10AC8},
+    {0x1173F, 0x1173F},
+    {0x11FD5, 0x11FF1},
+    {0x16B3C, 0x16B3F},
+    {0x16B45, 0x16B45},
+    {0x1BC9C, 0x1BC9C},
+    {0x1D000, 0x1D0F5},
+    {0x1D100, 0x1D126},
+    {0x1D129, 0x1D164},
+    {0x1D16A, 0x1D16C},
+    {0x1D183, 0x1D184},
+    {0x1D18C, 0x1D1A9},
+    {0x1D1AE, 0x1D1EA},
+    {0x1D1ED, 0x1D1FF},
+    {0x1D200, 0x1D241},
+    {0x1D245, 0x1D245},
+    {0x1D300, 0x1D356},
+    {0x1D6C1, 0x1D6C1},
+    {0x1D6DB, 0x1D6DB},
+    {0x1D6FB, 0x1D6FB},
+    {0x1D715, 0x1D715},
+    {0x1D735, 0x1D735},
+    {0x1D74F, 0x1D74F},
+    {0x1D76F, 0x1D76F},
+    {0x1D789, 0x1D789},
+    {0x1D7A9, 0x1D7A9},
+    {0x1D7C3, 0x1D7C3},
+    {0x1D800, 0x1DA8B},
+    {0x1DA9B, 0x1DA9F},
+    {0x1DAA1, 0x1DAAF},
+    {0x1E14F, 0x1E14F},
+    {0x1ECAC, 0x1ECAC},
+    {0x1ECB0, 0x1ECB0},
+    {0x1ED2E, 0x1ED2E},
+    {0x1EEF0, 0x1EEF1},
+    {0x1F000, 0x1F02B},
+    {0x1F030, 0x1F093},
+    {0x1F0A0, 0x1F0AE},
+    {0x1F0B1, 0x1F0BF},
+    {0x1F0C1, 0x1F0CF},
+    {0x1F0D1, 0x1F0F5},
+    {0x1F10D, 0x1F1AD},
+    {0x1F1E0, 0x1F1FF},
+    {0x1F201, 0x1F202},
+    {0x1F210, 0x1F23B},
+    {0x1F240, 0x1F248},
+    {0x1F250, 0x1F251},
+    {0x1F300, 0x1F6D7},
+    {0x1F6DC, 0x1F6EC},
+    {0x1F6F0, 0x1F6FC},
+    {0x1F700, 0x1F776},
+    {0x1F77B, 0x1F7D9},
+    {0x1F7E0, 0x1F7EB},
+    {0x1F7F0, 0x1F7F0},
+    {0x1F800, 0x1F80B},
+    {0x1F810, 0x1F847},
+    {0x1F850, 0x1F859},
+    {0x1F860, 0x1F887},
+    {0x1F890, 0x1F8AD},
+    {0x1F8B0, 0x1F8B1},
+    {0x1F900, 0x1FA53},
+    {0x1FA60, 0x1FA6D},
+    {0x1FA70, 0x1FA74},
+    {0x1FA78, 0x1FA7C},
+    {0x1FA80, 0x1FA86},
+    {0x1FA90, 0x1FAAC},
+    {0x1FAB0, 0x1FABA},
+    {0x1FAC0, 0x1FAC5},
+    {0x1FAD0, 0x1FAD9},
+    {0x1FAE0, 0x1FAE7},
     {0x1FAF0, 0x1FAF6},
 };
 static const std::size_t kUniPunctRangesLen =
@@ -144,9 +363,12 @@ static bool isUnicodePunctCp(uint32_t cp) {
   std::size_t lo = 0, hi = kUniPunctRangesLen;
   while (lo < hi) {
     std::size_t mid = (lo + hi) / 2;
-    if      (cp < kUniPunctRanges[mid][0]) hi = mid;
-    else if (cp > kUniPunctRanges[mid][1]) lo = mid + 1;
-    else                                   return true;
+    if (cp < kUniPunctRanges[mid][0])
+      hi = mid;
+    else if (cp > kUniPunctRanges[mid][1])
+      lo = mid + 1;
+    else
+      return true;
   }
   return false;
 }
@@ -155,12 +377,11 @@ static bool isUnicodePunctCp(uint32_t cp) {
 // ───────────────────────────────────────────────────────
 
 void InlineParser::parse(
-    BlockNode *block, const std::unordered_map<std::string, LinkDef> &ref_map) {
-  input_ = block->string_content;
+    BlockNode &block, const std::unordered_map<std::string, LinkDef> &ref_map) {
+  input_ = block.string_content;
   while (!input_.empty() && input_.back() == '\n')
     input_.remove_suffix(1);
   pos_ = 0;
-  ref_map_ = &ref_map;
   delimiters_.clear();
   brackets_.clear();
   nodes_.clear();
@@ -168,7 +389,7 @@ void InlineParser::parse(
   nodes_.reserve(input_.size() + 1);
 
   while (pos_ < input_.size()) {
-    auto node = parseInline();
+    auto node = parseInline(ref_map);
     if (node)
       nodes_.push_back(std::move(node));
   }
@@ -179,13 +400,14 @@ void InlineParser::parse(
       !string_utils::isBlank(nodes_.back()->literal))
     nodes_.back()->literal = string_utils::trimRight(nodes_.back()->literal);
 
-  block->inline_children = std::move(nodes_);
+  block.inline_children = std::move(nodes_);
 }
 
 // ── parseInline (dispatcher)
 // ──────────────────────────────────────────────────
 
-std::unique_ptr<InlineNode> InlineParser::parseInline() {
+std::unique_ptr<InlineNode>
+InlineParser::parseInline(const std::unordered_map<std::string, LinkDef> &ref_map) {
   char c = input_[pos_];
 
   // ── newline: soft break or hard line break (spec §6.7) ───────────────────
@@ -252,7 +474,7 @@ std::unique_ptr<InlineNode> InlineParser::parseInline() {
     std::size_t prev_sz = delimiters_.size();
     handleEmphasis(c, run_len);
     if (delimiters_.size() > prev_sz)
-      delimiters_.back().node = node.get();
+      delimiters_.back().node_idx = nodes_.size();
     return node;
   }
 
@@ -263,8 +485,10 @@ std::unique_ptr<InlineNode> InlineParser::parseInline() {
       auto node = makeNode(InlineType::Text);
       node->literal = "![";
       handleBracketOpener(true);
-      if (!brackets_.empty())
-        brackets_.back().node = node.get();
+      if (!brackets_.empty()) {
+        brackets_.back().node_idx = nodes_.size();
+        brackets_.back().active = true;
+      }
       return node;
     }
     // Bare '!': emit as literal and advance, or it would loop forever.
@@ -280,15 +504,17 @@ std::unique_ptr<InlineNode> InlineParser::parseInline() {
     auto node = makeNode(InlineType::Text);
     node->literal = "[";
     handleBracketOpener(false);
-    if (!brackets_.empty())
-      brackets_.back().node = node.get();
+    if (!brackets_.empty()) {
+      brackets_.back().node_idx = nodes_.size();
+      brackets_.back().active = true;
+    }
     return node;
   }
 
   // ── bracket closer ───────────────────────────────────────────────────────
   if (c == ']') {
     ++pos_;
-    return handleBracketCloser();
+    return handleBracketCloser(ref_map);
   }
 
   // ── autolink or inline HTML ───────────────────────────────────────────────
@@ -712,7 +938,7 @@ std::unique_ptr<InlineNode> InlineParser::parseHtmlInline() {
 // ───────────────────────────────────────────────────────
 
 void InlineParser::handleBracketOpener(bool is_image) {
-  brackets_.push_back({is_image, nullptr, delimiters_.size(), pos_});
+  brackets_.push_back({is_image, 0, false, delimiters_.size(), pos_});
 }
 
 // ── scanLinkDestination
@@ -846,7 +1072,8 @@ std::optional<std::string> InlineParser::scanLinkTitle() {
 // ── handleBracketCloser
 // ───────────────────────────────────────────────────────
 
-std::unique_ptr<InlineNode> InlineParser::handleBracketCloser() {
+std::unique_ptr<InlineNode> InlineParser::handleBracketCloser(
+    const std::unordered_map<std::string, LinkDef> &ref_map) {
   auto literal_bracket = [&]() -> std::unique_ptr<InlineNode> {
     auto node = makeNode(InlineType::Text);
     node->literal = "]";
@@ -858,21 +1085,16 @@ std::unique_ptr<InlineNode> InlineParser::handleBracketCloser() {
 
   BracketEntry bracket = brackets_.back();
 
-  // Deactivated openers (set to nullptr when a containing link was resolved).
-  if (bracket.node == nullptr) {
+  // Deactivated openers (cleared when a containing link was resolved).
+  if (!bracket.active) {
     brackets_.pop_back();
     return literal_bracket();
   }
 
   // Helper: collect literal text of nodes after the bracket opener node.
   auto get_bracket_text = [&]() -> std::string {
-    auto op_it = std::find_if(nodes_.begin(), nodes_.end(), [&](const auto &p) {
-      return p.get() == bracket.node;
-    });
     std::string text;
-    if (op_it == nodes_.end())
-      return text;
-    for (auto it = op_it + 1; it != nodes_.end(); ++it)
+    for (auto it = nodes_.begin() + bracket.node_idx + 1; it != nodes_.end(); ++it)
       text += (*it)->literal;
     return text;
   };
@@ -945,8 +1167,8 @@ std::unique_ptr<InlineNode> InlineParser::handleBracketCloser() {
     if (label_ok && pos_ < input_.size() && input_[pos_] == ']' && pos_ > ls) {
       std::string raw(input_.substr(ls, pos_ - ls));
       ++pos_;
-      auto it = ref_map_->find(normaliseLabel(raw));
-      if (it != ref_map_->end()) {
+      auto it = ref_map.find(normaliseLabel(raw));
+      if (it != ref_map.end()) {
         dest = it->second.destination;
         title = it->second.title;
         label = raw;
@@ -970,8 +1192,8 @@ std::unique_ptr<InlineNode> InlineParser::handleBracketCloser() {
   if (!resolved && pos_ + 1 < input_.size() && input_[pos_] == '[' &&
       input_[pos_ + 1] == ']') {
     std::string raw = raw_bracket_label();
-    auto it = ref_map_->find(normaliseLabel(raw));
-    if (it != ref_map_->end()) {
+    auto it = ref_map.find(normaliseLabel(raw));
+    if (it != ref_map.end()) {
       pos_ += 2;
       dest = it->second.destination;
       title = it->second.title;
@@ -983,8 +1205,8 @@ std::unique_ptr<InlineNode> InlineParser::handleBracketCloser() {
   // 4. Shortcut reference: label = raw bracket text (no ][label] was tried)
   if (!resolved && !tried_full_ref) {
     std::string raw = raw_bracket_label();
-    auto it = ref_map_->find(normaliseLabel(raw));
-    if (it != ref_map_->end()) {
+    auto it = ref_map.find(normaliseLabel(raw));
+    if (it != ref_map.end()) {
       dest = it->second.destination;
       title = it->second.title;
       label = raw;
@@ -999,23 +1221,19 @@ std::unique_ptr<InlineNode> InlineParser::handleBracketCloser() {
         makeNode(bracket.is_image ? InlineType::Image : InlineType::Link);
     link->data = LinkData{dest.value(), title, label};
 
-    auto op_it = std::find_if(nodes_.begin(), nodes_.end(), [&](const auto &p) {
-      return p.get() == bracket.node;
-    });
+    auto op_it = nodes_.begin() + bracket.node_idx;
 
-    if (op_it != nodes_.end()) {
-      for (auto it = op_it + 1; it != nodes_.end(); ++it)
-        link->children.push_back(std::move(*it));
-      nodes_.erase(op_it + 1, nodes_.end());
-      nodes_.erase(op_it); // remove the "[" / "![" text node
-    }
+    for (auto it = op_it + 1; it != nodes_.end(); ++it)
+      link->children.push_back(std::move(*it));
+    nodes_.erase(op_it + 1, nodes_.end());
+    nodes_.erase(op_it); // remove the "[" / "![" text node
 
     // Links cannot be nested: deactivate any preceding link (not image)
     // openers.
     if (!bracket.is_image) {
       for (auto &b : brackets_)
         if (!b.is_image)
-          b.node = nullptr;
+          b.active = false;
     }
 
     brackets_.pop_back();
@@ -1063,7 +1281,7 @@ void InlineParser::handleEmphasis(char delim_char, std::size_t run_len) {
   d.orig_num = static_cast<int>(run_len);
   d.can_open = can_open;
   d.can_close = can_close;
-  d.node = nullptr; // set by parseInline after this call returns
+  d.node_idx = 0; // set by parseInline after this call returns
   delimiters_.push_back(d);
 }
 
@@ -1130,15 +1348,11 @@ void InlineParser::processEmphasis(std::optional<std::size_t> stack_bottom) {
     int use = (delimiters_[opIdx].num >= 2 && delimiters_[ci].num >= 2) ? 2 : 1;
     auto type = (use == 2) ? InlineType::Strong : InlineType::Emph;
 
-    InlineNode *op_ptr = delimiters_[opIdx].node;
-    InlineNode *cl_ptr = delimiters_[ci].node;
+    std::size_t op_node_idx = delimiters_[opIdx].node_idx;
+    std::size_t cl_node_idx = delimiters_[ci].node_idx;
 
-    auto op_it =
-        std::find_if(nodes_.begin(), nodes_.end(),
-                     [op_ptr](const auto &p) { return p.get() == op_ptr; });
-    auto cl_it =
-        std::find_if(nodes_.begin(), nodes_.end(),
-                     [cl_ptr](const auto &p) { return p.get() == cl_ptr; });
+    auto op_it = nodes_.begin() + op_node_idx;
+    auto cl_it = nodes_.begin() + cl_node_idx;
 
     auto emph = makeNode(type);
     for (auto it = op_it + 1; it != cl_it; ++it)
@@ -1148,13 +1362,26 @@ void InlineParser::processEmphasis(std::optional<std::size_t> stack_bottom) {
     auto ins = nodes_.erase(op_it + 1, cl_it);
     nodes_.insert(ins, std::move(emph));
 
+    // Shift all stored node indices that were at or beyond cl_node_idx.
+    // erase removes (cl_node_idx - op_node_idx - 1) elements at op_node_idx+1;
+    // insert adds 1 at op_node_idx+1 → net shift = op_node_idx + 2 - cl_node_idx.
+    {
+      int shift = static_cast<int>(op_node_idx) + 2 - static_cast<int>(cl_node_idx);
+      for (auto &d : delimiters_)
+        if (d.node_idx >= cl_node_idx)
+          d.node_idx = static_cast<std::size_t>(static_cast<int>(d.node_idx) + shift);
+      for (auto &b : brackets_)
+        if (b.node_idx >= cl_node_idx)
+          b.node_idx = static_cast<std::size_t>(static_cast<int>(b.node_idx) + shift);
+    }
+
     // Shrink delimiter counts; update literal strings.
     delimiters_[opIdx].num -= use;
-    delimiters_[opIdx].node->literal =
+    nodes_[delimiters_[opIdx].node_idx]->literal =
         std::string(static_cast<std::size_t>(delimiters_[opIdx].num), c);
 
     delimiters_[ci].num -= use;
-    delimiters_[ci].node->literal =
+    nodes_[delimiters_[ci].node_idx]->literal =
         std::string(static_cast<std::size_t>(delimiters_[ci].num), c);
 
     // Erase delimiter entries strictly between opener and closer.

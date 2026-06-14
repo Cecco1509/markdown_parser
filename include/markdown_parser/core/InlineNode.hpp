@@ -21,12 +21,13 @@ struct Delimiter {
     int         orig_num;  // length at scan time, for sum-rule
     bool        can_open;
     bool        can_close;
-    InlineNode* node = nullptr;
+    std::size_t node_idx = 0; // index into InlineParser::nodes_
 };
 
 struct BracketEntry {
     bool        is_image;
-    InlineNode* node      = nullptr;
+    std::size_t node_idx  = 0;    // index into InlineParser::nodes_
+    bool        active    = false; // false when deactivated (nested link rule)
     std::size_t delim_top = 0;
     std::size_t src_pos   = 0; // input position right after the opening '['
 };
