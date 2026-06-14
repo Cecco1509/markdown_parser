@@ -18,7 +18,7 @@
     <header>
         <span class="logo">Markdown Parser</span>
         <label id="mermaid-toggle-label">
-            <input type="checkbox" id="mermaid-toggle"> Mermaid
+            <input type="checkbox" id="mermaid-toggle" checked> Mermaid
         </label>
         <label id="math-toggle-label">
             <input type="checkbox" id="math-toggle"> Math
@@ -101,6 +101,16 @@
             '',
             '```js',
             'console.log("Hello, world!");',
+            '```',
+            '',
+            '## Mermaid Diagram',
+            '',
+            '```mermaid',
+            'graph TD',
+            '    A[Start] --> B{Is it working?}',
+            '    B -- Yes --> C[Great!]',
+            '    B -- No  --> D[Debug]',
+            '    D --> A',
             '```',
         ].join('\n');
     </script>
