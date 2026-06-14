@@ -60,7 +60,7 @@
             const flags = [];
             if (mermaidToggle.checked) flags.push('mermaid');
             if (mathToggle.checked)    flags.push('math');
-            return flags;
+            return flags.join(',');
         }
 
         function render() {
