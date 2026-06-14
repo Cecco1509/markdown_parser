@@ -18,6 +18,8 @@ public:
 
 protected:
   std::string out_;
+
+private:
   bool tight_ = false;
 
   virtual std::string renderFencedCode(const std::string &lang,
