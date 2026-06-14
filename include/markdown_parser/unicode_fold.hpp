@@ -2,6 +2,7 @@
 #include <string>
 #include <string_view>
 
+namespace markdown_parser {
 namespace unicode_fold {
 
 // Apply Unicode case folding to s (UTF-8 input/output).
@@ -9,3 +10,4 @@ namespace unicode_fold {
 std::string foldString(std::string_view s);
 
 } // namespace unicode_fold
+} // namespace markdown_parser

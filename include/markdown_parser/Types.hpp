@@ -6,6 +6,8 @@
 #include <string_view>
 #include <variant>
 
+namespace markdown_parser {
+
 enum class NodeType : uint8_t {
   Document,
   BlockQuote,
@@ -146,3 +148,5 @@ inline std::string_view inlineTypeToString(InlineType t) {
   }
   return "Unknown";
 }
+
+} // namespace markdown_parser

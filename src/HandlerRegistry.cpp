@@ -1,5 +1,7 @@
 #include "markdown_parser/HandlerRegistry.hpp"
 
+namespace markdown_parser {
+
 const std::vector<std::string> HandlerRegistry::empty_;
 
 HandlerRegistry &HandlerRegistry::instance() {
@@ -32,3 +34,5 @@ const std::vector<std::string> &HandlerRegistry::getGroup(const std::string &gro
     return it->second;
   return empty_;
 }
+
+} // namespace markdown_parser

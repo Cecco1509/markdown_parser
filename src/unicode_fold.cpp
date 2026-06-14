@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <cstdint>
 
+namespace markdown_parser {
 namespace unicode_fold {
 
 struct SimpleFold { uint32_t from; uint32_t to; };
@@ -1345,3 +1346,4 @@ std::string foldString(std::string_view s) {
 }
 
 } // namespace unicode_fold
+} // namespace markdown_parser

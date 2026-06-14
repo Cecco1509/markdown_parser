@@ -7,6 +7,8 @@
 #include <cctype>
 #include <iostream>
 
+namespace markdown_parser {
+
 // ── file-local helpers
 // ────────────────────────────────────────────────────────
 
@@ -1211,3 +1213,5 @@ std::unique_ptr<InlineNode> InlineParser::makeNode(InlineType type) {
   node->type = type;
   return node;
 }
+
+} // namespace markdown_parser

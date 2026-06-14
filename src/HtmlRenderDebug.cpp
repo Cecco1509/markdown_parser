@@ -1,6 +1,8 @@
 #include "markdown_parser/BlockNode.hpp"
 #include "markdown_parser/HtmlRendererDebug.hpp"
 
+namespace markdown_parser {
+
 const char DEBUGWHITE_SPACE = '#';
 
 std::string HtmlRendererDebug::render(const BlockNode &root) {
@@ -17,3 +19,5 @@ std::string HtmlRendererDebug::render(const BlockNode &root) {
 
   return out_;
 }
+
+} // namespace markdown_parser

@@ -1,6 +1,8 @@
 #include "markdown_parser/HtmlRendererFactory.hpp"
 #include "markdown_parser/HandlerRegistry.hpp"
 
+namespace markdown_parser {
+
 HtmlRenderer HtmlRendererFactory::create(const std::vector<std::string> &flags) {
   HtmlRenderer hr;
   for (const auto &flag : flags)
@@ -9,3 +11,5 @@ HtmlRenderer HtmlRendererFactory::create(const std::vector<std::string> &flags) 
         hr.registerHandler(alias, fn);
   return hr;
 }
+
+} // namespace markdown_parser

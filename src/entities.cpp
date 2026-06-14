@@ -345,6 +345,7 @@ static uint32_t lookupNamedCp(std::string_view name) {
 // ── Public API
 // ────────────────────────────────────────────────────────────────
 
+namespace markdown_parser {
 namespace entities {
 
 std::string decode(std::string_view input, std::size_t &pos) {
@@ -448,3 +449,4 @@ std::string decodeAll(std::string_view input) {
 }
 
 } // namespace entities
+} // namespace markdown_parser

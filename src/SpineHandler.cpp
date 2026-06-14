@@ -5,6 +5,8 @@
 #include "markdown_parser/entities.hpp"
 #include <algorithm>
 #include <iostream>
+
+namespace markdown_parser {
 #include <optional>
 
 static bool isAsciiPunct(char c) {
@@ -835,3 +837,5 @@ void SpineHandler::maybeScanLinkRefDefs(BlockNode *node) {
 }
 
 void SpineHandler::stripTrailingBlankLines(std::string &) {}
+
+} // namespace markdown_parser

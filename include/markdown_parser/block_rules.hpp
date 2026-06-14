@@ -5,6 +5,7 @@
 #include <optional>
 #include <string>
 
+namespace markdown_parser {
 namespace block_rules {
 
 // ── §3.1 Continuation ────────────────────────────────────────────────────────
@@ -71,3 +72,4 @@ std::optional<OpenResult> tryOpen(const ScannedLine& line,
 void onClose(BlockNode& node);
 
 } // namespace block_rules
+} // namespace markdown_parser

@@ -6,6 +6,8 @@
 #include <memory>
 #include <cstddef>
 
+namespace markdown_parser {
+
 struct InlineNode {
     InlineType   type;
     std::string  literal;
@@ -28,3 +30,5 @@ struct BracketEntry {
     std::size_t delim_top = 0;
     std::size_t src_pos   = 0; // input position right after the opening '['
 };
+
+} // namespace markdown_parser

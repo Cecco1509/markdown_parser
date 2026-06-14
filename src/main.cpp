@@ -9,6 +9,8 @@
 #include <iostream>
 #include <string>
 
+using namespace markdown_parser;
+
 int main(int argc, char *argv[]) {
   bool json_mode    = false;
   bool debug_mode   = false;

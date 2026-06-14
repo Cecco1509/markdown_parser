@@ -6,6 +6,7 @@
 #include <cstring>
 #include <iostream>
 
+namespace markdown_parser {
 namespace block_rules {
 
 namespace {
@@ -766,3 +767,4 @@ void onClose(BlockNode &node) {
 }
 
 } // namespace block_rules
+} // namespace markdown_parser

@@ -5,6 +5,8 @@
 #include <string_view>
 #include <utility>
 
+namespace markdown_parser {
+
 class ScannedLine {
 public:
   static ScannedLine from(std::string_view raw, bool strip_bom = false);
@@ -33,3 +35,5 @@ private:
   static std::pair<std::size_t, std::size_t>
   computeVirtualIndent(std::string_view content, std::size_t base_col) noexcept;
 };
+
+} // namespace markdown_parser

@@ -5,6 +5,8 @@
 #include <vector>
 #include <memory>
 
+namespace markdown_parser {
+
 struct InlineNode; // forward declaration
 
 struct BlockNode {
@@ -23,3 +25,5 @@ struct BlockNode {
     std::vector<std::unique_ptr<BlockNode>>  children;
     std::vector<std::unique_ptr<InlineNode>> inline_children;
 };
+
+} // namespace markdown_parser

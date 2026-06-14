@@ -2,6 +2,8 @@
 #include "markdown_parser/commonmark_constants.hpp"
 #include "markdown_parser/string_utils.hpp"
 
+namespace markdown_parser {
+
 ScannedLine ScannedLine::from(std::string_view raw, bool strip_bom) {
   std::string norm = string_utils::line_init(raw, strip_bom);
   std::string_view full = string_utils::stripLineEnding(norm);
@@ -82,3 +84,5 @@ ScannedLine::computeVirtualIndent(std::string_view content,
   }
   return {col - base_col, i};
 }
+
+} // namespace markdown_parser

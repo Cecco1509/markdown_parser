@@ -8,6 +8,8 @@
 #include <string>
 #include <vector>
 
+using namespace markdown_parser;
+
 static std::string runParser(const std::string &input, HtmlRenderer &hr) {
     InlineParser inline_parser;
     SpineHandler spine(inline_parser, false);

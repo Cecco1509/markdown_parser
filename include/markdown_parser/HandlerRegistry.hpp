@@ -6,6 +6,8 @@
 #include <unordered_map>
 #include <vector>
 
+namespace markdown_parser {
+
 using HandlerFn = std::function<std::string(const std::string &)>;
 
 class HandlerRegistry {
@@ -31,3 +33,5 @@ private:
 
   static const std::vector<std::string> empty_;
 };
+
+} // namespace markdown_parser

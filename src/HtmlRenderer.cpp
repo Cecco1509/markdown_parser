@@ -7,6 +7,8 @@
 #include <functional>
 #include <stdexcept>
 
+namespace markdown_parser {
+
 // ── helpers
 // ───────────────────────────────────────────────────────────────────
 
@@ -297,3 +299,5 @@ void HtmlRenderer::visit(const InlineNode &node) {
   }
   }
 }
+
+} // namespace markdown_parser

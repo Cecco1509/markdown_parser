@@ -1,5 +1,7 @@
 #pragma once
 
+namespace markdown_parser {
+
 struct BlockNode;
 struct InlineNode;
 
@@ -9,3 +11,5 @@ public:
     virtual void visit(const BlockNode&)  = 0;
     virtual void visit(const InlineNode&) = 0;
 };
+
+} // namespace markdown_parser

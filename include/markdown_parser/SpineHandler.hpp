@@ -9,6 +9,8 @@
 #include <unordered_map>
 #include <vector>
 
+namespace markdown_parser {
+
 class InlineParser;
 
 struct SpineMatchResult {
@@ -62,3 +64,5 @@ private:
   void parseInlineContent(BlockNode *node);
   void printSpineStatus() const;
 };
+
+} // namespace markdown_parser

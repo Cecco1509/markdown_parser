@@ -3,6 +3,7 @@
 #include <string>
 #include <string_view>
 
+namespace markdown_parser {
 namespace string_utils {
 
 // Process backslash escapes (\X where X is ASCII punctuation → X) and HTML
@@ -62,3 +63,4 @@ inline std::string_view trimRight(std::string_view s) {
 
 
 } // namespace string_utils
+} // namespace markdown_parser

@@ -5,6 +5,8 @@
 
 #include <variant>
 
+namespace markdown_parser {
+
 // ── helpers ───────────────────────────────────────────────────────────────────
 
 // Produce a JSON-encoded string literal (with surrounding quotes).
@@ -232,3 +234,5 @@ void JsonRenderer::visit(const InlineNode& node) {
     }
     }
 }
+
+} // namespace markdown_parser

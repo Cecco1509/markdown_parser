@@ -10,6 +10,8 @@
 #include <optional>
 #include <unordered_map>
 
+namespace markdown_parser {
+
 class InlineParser {
 public:
     void parse(BlockNode*                                       block,
@@ -48,3 +50,5 @@ public:
     // whitespace, and applies Unicode simple case folding.
     static std::string normaliseLabel(std::string_view label);
 };
+
+} // namespace markdown_parser

@@ -3,6 +3,7 @@
 #include <string>
 #include <string_view>
 
+namespace markdown_parser {
 namespace entities {
 
 // Try to decode a single HTML entity reference starting at input[pos] (which
@@ -15,3 +16,4 @@ std::string decode(std::string_view input, std::size_t &pos);
 std::string decodeAll(std::string_view input);
 
 } // namespace entities
+} // namespace markdown_parser

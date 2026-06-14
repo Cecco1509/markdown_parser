@@ -2,6 +2,7 @@
 
 #include <cstddef>
 
+namespace markdown_parser {
 namespace commonmark {
 
 // Tab stops are every 4 columns (CommonMark spec §2.1).
@@ -14,3 +15,4 @@ constexpr std::size_t kCodeBlockIndent = 4;
 constexpr std::size_t kMaxBlockIndent = 3;
 
 } // namespace commonmark
+} // namespace markdown_parser

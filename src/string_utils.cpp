@@ -1,6 +1,7 @@
 #include "markdown_parser/string_utils.hpp"
 #include "markdown_parser/entities.hpp"
 
+namespace markdown_parser {
 namespace string_utils {
 
 std::string processEscapesAndEntities(std::string_view s) {
@@ -32,3 +33,4 @@ std::string processEscapesAndEntities(std::string_view s) {
 }
 
 } // namespace string_utils
+} // namespace markdown_parser

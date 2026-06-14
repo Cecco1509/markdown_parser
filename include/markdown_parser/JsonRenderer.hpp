@@ -3,6 +3,8 @@
 #include "NodeVisitor.hpp"
 #include <string>
 
+namespace markdown_parser {
+
 // Serialises the AST to mdast-compatible JSON (https://github.com/syntax-tree/mdast).
 class JsonRenderer : public NodeVisitor {
 public:
@@ -20,3 +22,5 @@ private:
     void emitBlockChildren(const BlockNode& node);
     void emitInlineChildren(const InlineNode& node);
 };
+
+} // namespace markdown_parser

@@ -3,8 +3,11 @@
 #include "HtmlRenderer.hpp"
 #include <string>
 
+namespace markdown_parser {
+
 class HtmlRendererDebug : public HtmlRenderer {
 public:
-  // Render the Document BlockNode to a complete HTML string.
   std::string render(const BlockNode &root);
 };
+
+} // namespace markdown_parser
