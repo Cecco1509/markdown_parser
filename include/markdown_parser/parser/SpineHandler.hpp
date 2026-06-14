@@ -1,8 +1,8 @@
 #pragma once
 
-#include "BlockNode.hpp"
-#include "ScannedLine.hpp"
-#include "Types.hpp"
+#include "markdown_parser/core/BlockNode.hpp"
+#include "markdown_parser/parser/ScannedLine.hpp"
+#include "markdown_parser/core/Types.hpp"
 #include <cstddef>
 #include <memory>
 #include <string_view>

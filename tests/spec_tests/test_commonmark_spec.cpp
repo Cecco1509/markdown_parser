@@ -1,5 +1,6 @@
 #include "commonmark_spec_case.hpp"
-#include "markdown_parser/parser.hpp"
+#include "markdown_parser/renderer/HtmlRenderer.hpp"
+#include "markdown_parser/parser/parser.hpp"
 #include <gtest/gtest.h>
 #include <set>
 
@@ -22,7 +23,8 @@ TEST_P(CommonMarkSpecTest, MatchesExpectedHtml) {
                  << " lines " << tc.start_line << "-" << tc.end_line << ")";
   }
 
-  const std::string actual = markdown_parser::parse(tc.markdown);
+  markdown_parser::HtmlRenderer hr;
+  const std::string actual = markdown_parser::parse(tc.markdown, hr);
 
   EXPECT_EQ(tc.html, actual)
       << "\n"

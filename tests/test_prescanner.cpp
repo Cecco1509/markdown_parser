@@ -1,4 +1,4 @@
-#include "markdown_parser/ScannedLine.hpp"
+#include "markdown_parser/parser/ScannedLine.hpp"
 #include <gtest/gtest.h>
 
 using namespace markdown_parser;

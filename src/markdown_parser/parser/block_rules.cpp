@@ -1,7 +1,7 @@
-#include "markdown_parser/block_rules.hpp"
-#include "markdown_parser/commonmark_constants.hpp"
-#include "markdown_parser/entities.hpp"
-#include "markdown_parser/string_utils.hpp"
+#include "markdown_parser/parser/block_rules.hpp"
+#include "markdown_parser/parser/commonmark_constants.hpp"
+#include "markdown_parser/utils/entities.hpp"
+#include "markdown_parser/utils/string_utils.hpp"
 #include <cctype>
 #include <cstring>
 #include <iostream>

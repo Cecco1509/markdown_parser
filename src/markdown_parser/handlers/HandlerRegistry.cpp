@@ -1,4 +1,4 @@
-#include "markdown_parser/HandlerRegistry.hpp"
+#include "markdown_parser/handlers/HandlerRegistry.hpp"
 
 namespace markdown_parser {
 

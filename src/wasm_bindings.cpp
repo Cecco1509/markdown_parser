@@ -1,7 +1,6 @@
-#include "markdown_parser/HtmlRenderer.hpp"
-#include "markdown_parser/HtmlRendererFactory.hpp"
-#include "markdown_parser/InlineParser.hpp"
-#include "markdown_parser/SpineHandler.hpp"
+#include "markdown_parser/renderer/HtmlRenderer.hpp"
+#include "markdown_parser/renderer/HtmlRendererFactory.hpp"
+#include "markdown_parser/parser/parser.hpp"
 
 #include <emscripten/bind.h>
 #include <sstream>
@@ -10,25 +9,9 @@
 
 using namespace markdown_parser;
 
-static std::string runParser(const std::string &input, HtmlRenderer &hr) {
-    InlineParser inline_parser;
-    SpineHandler spine(inline_parser, false);
-
-    std::istringstream stream(input);
-    std::string line;
-    while (std::getline(stream, line)) {
-        line += '\n';
-        spine.processLine(line);
-    }
-    spine.finalize();
-
-    auto doc = spine.releaseDocument();
-    return hr.render(*doc);
-}
-
 std::string parseMarkdown(const std::string &input) {
     HtmlRenderer hr;
-    return runParser(input, hr);
+    return parse(input, hr);
 }
 
 // flags_csv: comma-separated flag names, e.g. "mermaid,math"
@@ -42,7 +25,7 @@ std::string parseMarkdownWithFlags(const std::string &input,
             flags.push_back(token);
 
     HtmlRenderer hr = HtmlRendererFactory::create(flags);
-    return runParser(input, hr);
+    return parse(input, hr);
 }
 
 EMSCRIPTEN_BINDINGS(markdown_parser) {

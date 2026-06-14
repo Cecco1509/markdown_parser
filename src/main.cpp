@@ -1,9 +1,8 @@
-#include "markdown_parser/HtmlRenderer.hpp"
-#include "markdown_parser/HtmlRendererDebug.hpp"
-#include "markdown_parser/HtmlRendererFactory.hpp"
-#include "markdown_parser/InlineParser.hpp"
-#include "markdown_parser/JsonRenderer.hpp"
-#include "markdown_parser/SpineHandler.hpp"
+#include "markdown_parser/renderer/HtmlRenderer.hpp"
+#include "markdown_parser/renderer/HtmlRendererDebug.hpp"
+#include "markdown_parser/renderer/HtmlRendererFactory.hpp"
+#include "markdown_parser/renderer/JsonRenderer.hpp"
+#include "markdown_parser/parser/parser.hpp"
 
 #include <fstream>
 #include <iostream>
@@ -45,27 +44,18 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  InlineParser inline_parser;
-  SpineHandler spine(inline_parser, /*debug=*/debug_mode);
-
-  std::string line;
-  while (std::getline(file, line)) {
-    line += '\n';
-    spine.processLine(line);
-  }
-  spine.finalize();
-
-  auto doc = spine.releaseDocument();
+  std::string source((std::istreambuf_iterator<char>(file)),
+                      std::istreambuf_iterator<char>());
 
   if (json_mode) {
     JsonRenderer jr;
-    std::cout << jr.render(*doc) << '\n';
+    std::cout << parse(source, jr, debug_mode) << '\n';
   } else if (debug_mode) {
     HtmlRendererDebug hr;
-    std::cout << hr.render(*doc);
+    std::cout << parse(source, hr, debug_mode);
   } else {
     HtmlRenderer hr = HtmlRendererFactory::create(active_flags);
-    std::cout << hr.render(*doc);
+    std::cout << parse(source, hr);
   }
 
   return 0;

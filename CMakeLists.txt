@@ -14,26 +14,26 @@ if(NOT EMSCRIPTEN)
 endif()
 
 add_library(md_parser
-    src/ScannedLine.cpp
-    src/SpineHandler.cpp
-    src/InlineParser.cpp
-    src/block_rules.cpp
-    src/HtmlRenderer.cpp
-    src/HtmlRenderDebug.cpp
-    src/HtmlRendererFactory.cpp
-    src/HandlerRegistry.cpp
-    src/JsonRenderer.cpp
-    src/entities.cpp
-    src/string_utils.cpp
-    src/unicode_fold.cpp
+    src/markdown_parser/parser/ScannedLine.cpp
+    src/markdown_parser/parser/SpineHandler.cpp
+    src/markdown_parser/parser/InlineParser.cpp
+    src/markdown_parser/parser/block_rules.cpp
+    src/markdown_parser/renderer/HtmlRenderer.cpp
+    src/markdown_parser/renderer/HtmlRenderDebug.cpp
+    src/markdown_parser/renderer/HtmlRendererFactory.cpp
+    src/markdown_parser/handlers/HandlerRegistry.cpp
+    src/markdown_parser/renderer/JsonRenderer.cpp
+    src/markdown_parser/utils/entities.cpp
+    src/markdown_parser/utils/string_utils.cpp
+    src/markdown_parser/utils/unicode_fold.cpp
 )
 target_include_directories(md_parser PUBLIC include)
 
 if(NOT EMSCRIPTEN)
     add_executable(md_parser_bin
         src/main.cpp
-        src/handlers/MermaidHandler.cpp
-        src/handlers/MathHandler.cpp
+        src/markdown_parser/handlers/MermaidHandler.cpp
+        src/markdown_parser/handlers/MathHandler.cpp
     )
     target_link_libraries(md_parser_bin PRIVATE md_parser)
 
@@ -44,20 +44,20 @@ endif()
 # WebAssembly build target (only when using Emscripten)
 if(EMSCRIPTEN)
     add_executable(markdown_parser_wasm
-        src/ScannedLine.cpp
-        src/SpineHandler.cpp
-        src/InlineParser.cpp
-        src/block_rules.cpp
-        src/HtmlRenderer.cpp
-        src/HtmlRenderDebug.cpp
-        src/HtmlRendererFactory.cpp
-        src/HandlerRegistry.cpp
-        src/JsonRenderer.cpp
-        src/entities.cpp
-        src/string_utils.cpp
-        src/unicode_fold.cpp
-        src/handlers/MermaidHandler.cpp
-        src/handlers/MathHandler.cpp
+        src/markdown_parser/parser/ScannedLine.cpp
+        src/markdown_parser/parser/SpineHandler.cpp
+        src/markdown_parser/parser/InlineParser.cpp
+        src/markdown_parser/parser/block_rules.cpp
+        src/markdown_parser/renderer/HtmlRenderer.cpp
+        src/markdown_parser/renderer/HtmlRenderDebug.cpp
+        src/markdown_parser/renderer/HtmlRendererFactory.cpp
+        src/markdown_parser/handlers/HandlerRegistry.cpp
+        src/markdown_parser/renderer/JsonRenderer.cpp
+        src/markdown_parser/utils/entities.cpp
+        src/markdown_parser/utils/string_utils.cpp
+        src/markdown_parser/utils/unicode_fold.cpp
+        src/markdown_parser/handlers/MermaidHandler.cpp
+        src/markdown_parser/handlers/MathHandler.cpp
         src/wasm_bindings.cpp
     )
     # Handler sources are linked directly into the executable (not via the

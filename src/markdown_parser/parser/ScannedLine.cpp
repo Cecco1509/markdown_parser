@@ -1,6 +1,6 @@
-#include "markdown_parser/ScannedLine.hpp"
-#include "markdown_parser/commonmark_constants.hpp"
-#include "markdown_parser/string_utils.hpp"
+#include "markdown_parser/parser/ScannedLine.hpp"
+#include "markdown_parser/parser/commonmark_constants.hpp"
+#include "markdown_parser/utils/string_utils.hpp"
 
 namespace markdown_parser {
 

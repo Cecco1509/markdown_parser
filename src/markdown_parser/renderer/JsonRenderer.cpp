@@ -1,7 +1,7 @@
-#include "markdown_parser/JsonRenderer.hpp"
-#include "markdown_parser/BlockNode.hpp"
-#include "markdown_parser/InlineNode.hpp"
-#include "markdown_parser/Types.hpp"
+#include "markdown_parser/renderer/JsonRenderer.hpp"
+#include "markdown_parser/core/BlockNode.hpp"
+#include "markdown_parser/core/InlineNode.hpp"
+#include "markdown_parser/core/Types.hpp"
 
 #include <variant>
 

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "BlockNode.hpp"
-#include "ScannedLine.hpp"
+#include "markdown_parser/core/BlockNode.hpp"
+#include "markdown_parser/parser/ScannedLine.hpp"
 #include <optional>
 #include <string>
 

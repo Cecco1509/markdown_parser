@@ -1,4 +1,4 @@
-#include "markdown_parser/HandlerRegistry.hpp"
+#include "markdown_parser/handlers/HandlerRegistry.hpp"
 
 static bool registered = markdown_parser::HandlerRegistry::add(
     "mermaid", {"mermaid"}, [](const std::string &src) {

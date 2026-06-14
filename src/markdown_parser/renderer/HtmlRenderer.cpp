@@ -1,8 +1,8 @@
-#include "markdown_parser/HtmlRenderer.hpp"
-#include "markdown_parser/BlockNode.hpp"
-#include "markdown_parser/InlineNode.hpp"
-#include "markdown_parser/Types.hpp"
-#include "markdown_parser/string_utils.hpp"
+#include "markdown_parser/renderer/HtmlRenderer.hpp"
+#include "markdown_parser/core/BlockNode.hpp"
+#include "markdown_parser/core/InlineNode.hpp"
+#include "markdown_parser/core/Types.hpp"
+#include "markdown_parser/utils/string_utils.hpp"
 
 #include <cassert>
 #include <stdexcept>

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "BlockNode.hpp"
-#include "InlineNode.hpp"
-#include "Types.hpp"
+#include "markdown_parser/core/BlockNode.hpp"
+#include "markdown_parser/core/InlineNode.hpp"
+#include "markdown_parser/core/Types.hpp"
 #include <string>
 #include <string_view>
 #include <vector>

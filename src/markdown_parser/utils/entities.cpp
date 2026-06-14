@@ -1,4 +1,4 @@
-#include "markdown_parser/entities.hpp"
+#include "markdown_parser/utils/entities.hpp"
 #include <cctype>
 #include <cstdint>
 #include <cstring>

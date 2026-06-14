@@ -1,7 +1,7 @@
-#include "markdown_parser/InlineParser.hpp"
-#include "markdown_parser/entities.hpp"
-#include "markdown_parser/string_utils.hpp"
-#include "markdown_parser/unicode_fold.hpp"
+#include "markdown_parser/parser/InlineParser.hpp"
+#include "markdown_parser/utils/entities.hpp"
+#include "markdown_parser/utils/string_utils.hpp"
+#include "markdown_parser/utils/unicode_fold.hpp"
 #include <algorithm>
 #include <cassert>
 #include <cctype>

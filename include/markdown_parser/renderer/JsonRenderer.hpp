@@ -1,6 +1,6 @@
 #pragma once
 
-#include "NodeVisitor.hpp"
+#include "markdown_parser/core/NodeVisitor.hpp"
 #include <string>
 
 namespace markdown_parser {

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "HtmlRenderer.hpp"
+#include "markdown_parser/renderer/HtmlRenderer.hpp"
 #include <string>
 
 namespace markdown_parser {

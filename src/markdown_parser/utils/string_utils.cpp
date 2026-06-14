@@ -1,5 +1,5 @@
-#include "markdown_parser/string_utils.hpp"
-#include "markdown_parser/entities.hpp"
+#include "markdown_parser/utils/string_utils.hpp"
+#include "markdown_parser/utils/entities.hpp"
 
 namespace markdown_parser {
 namespace string_utils {

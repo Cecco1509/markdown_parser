@@ -1,5 +1,5 @@
-#include "markdown_parser/HtmlRendererFactory.hpp"
-#include "markdown_parser/HandlerRegistry.hpp"
+#include "markdown_parser/renderer/HtmlRendererFactory.hpp"
+#include "markdown_parser/handlers/HandlerRegistry.hpp"
 
 namespace markdown_parser {
 

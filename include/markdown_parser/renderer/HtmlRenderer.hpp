@@ -1,7 +1,7 @@
 #pragma once
 
-#include "HandlerRegistry.hpp"
-#include "NodeVisitor.hpp"
+#include "markdown_parser/handlers/HandlerRegistry.hpp"
+#include "markdown_parser/core/NodeVisitor.hpp"
 #include <string>
 #include <unordered_map>
 

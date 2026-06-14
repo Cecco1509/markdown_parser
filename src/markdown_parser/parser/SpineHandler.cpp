@@ -1,8 +1,8 @@
-#include "markdown_parser/SpineHandler.hpp"
-#include "markdown_parser/InlineParser.hpp"
-#include "markdown_parser/block_rules.hpp"
-#include "markdown_parser/commonmark_constants.hpp"
-#include "markdown_parser/entities.hpp"
+#include "markdown_parser/parser/SpineHandler.hpp"
+#include "markdown_parser/parser/InlineParser.hpp"
+#include "markdown_parser/parser/block_rules.hpp"
+#include "markdown_parser/parser/commonmark_constants.hpp"
+#include "markdown_parser/utils/entities.hpp"
 #include <algorithm>
 #include <iostream>
 

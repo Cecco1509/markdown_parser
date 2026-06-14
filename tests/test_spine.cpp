@@ -1,5 +1,5 @@
-#include "markdown_parser/InlineParser.hpp"
-#include "markdown_parser/SpineHandler.hpp"
+#include "markdown_parser/parser/InlineParser.hpp"
+#include "markdown_parser/parser/SpineHandler.hpp"
 #include <gtest/gtest.h>
 
 using namespace markdown_parser;
