@@ -26,13 +26,15 @@ add_library(md_parser
     src/entities.cpp
     src/string_utils.cpp
     src/unicode_fold.cpp
-    src/handlers/MermaidHandler.cpp
-    src/handlers/MathHandler.cpp
 )
 target_include_directories(md_parser PUBLIC include)
 
 if(NOT EMSCRIPTEN)
-    add_executable(md_parser_bin src/main.cpp)
+    add_executable(md_parser_bin
+        src/main.cpp
+        src/handlers/MermaidHandler.cpp
+        src/handlers/MathHandler.cpp
+    )
     target_link_libraries(md_parser_bin PRIVATE md_parser)
 
     enable_testing()
@@ -58,6 +60,9 @@ if(EMSCRIPTEN)
         src/handlers/MathHandler.cpp
         src/wasm_bindings.cpp
     )
+    # Handler sources are linked directly into the executable (not via the
+    # static library) so their static-initializer self-registration is not
+    # dropped by the linker.
     target_include_directories(markdown_parser_wasm PRIVATE include)
     set_target_properties(markdown_parser_wasm PROPERTIES
         OUTPUT_NAME "markdown_parser"
