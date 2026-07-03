@@ -1,0 +1,104 @@
+# mermaid flowchart grammar — target: mermaid 11.0.0
+#
+# Consumed by tools/lalrgen (build-time LALR(1) table generator). Terminals here
+# must match TokenKind in include/mermaid/Token.hpp. The lexer resolves all
+# lexical ambiguity (delimited raw-text runs, greedy edge operators) before
+# parsing, so this grammar is conflict-free LR(1)/LALR(1).
+#
+# Notation:  A : B C | D ;      lowercase = nonterminal, UPPERCASE = terminal.
+
+%start document
+
+%terminals
+  NEWLINE AMP PIPE COMMA TRIPLECOLON
+  GRAPH SUBGRAPH END DIRECTION STYLE CLASSDEF CLASS LINKSTYLE CLICK DEFAULT
+  DIR NUM NODEID SHAPE LINK STR STYLEBODY
+
+%%
+
+document      : header stmts ;
+
+header        : GRAPH NEWLINE
+              | GRAPH DIR NEWLINE
+              ;
+
+# stmts is left-recursive (LR's natural form) and tolerates blank lines.
+stmts         : /* empty */
+              | stmts stmt NEWLINE
+              | stmts NEWLINE
+              ;
+
+stmt          : edgeStmt
+              | subgraph
+              | directionStmt
+              | styleStmt
+              | classDefStmt
+              | classStmt
+              | linkStyleStmt
+              | clickStmt
+              ;
+
+# ── edges & nodes ─────────────────────────────────────────────────────────
+# A bare node declaration is an edgeStmt with an empty tail. Whether a line is a
+# node or an edge is decided by one token of lookahead (LINK vs NEWLINE) — the
+# canonical LR(1) win.
+edgeStmt      : nodeGroup
+              | edgeStmt edge nodeGroup
+              ;
+
+edge          : LINK
+              | LINK PIPE STR PIPE
+              ;
+
+nodeGroup     : node
+              | nodeGroup AMP node
+              ;
+
+node          : NODEID
+              | NODEID SHAPE
+              | NODEID TRIPLECOLON NODEID
+              | NODEID SHAPE TRIPLECOLON NODEID
+              ;
+
+# ── subgraphs ─────────────────────────────────────────────────────────────
+subgraph      : SUBGRAPH subgraphHead NEWLINE stmts END ;
+
+subgraphHead  : /* empty */
+              | NODEID
+              | NODEID SHAPE
+              | STR
+              ;
+
+# ── styling & interaction ─────────────────────────────────────────────────
+directionStmt : DIRECTION DIR ;
+
+styleStmt     : STYLE NODEID STYLEBODY ;
+
+classDefStmt  : CLASSDEF NODEID STYLEBODY
+              | CLASSDEF DEFAULT STYLEBODY
+              ;
+
+classStmt     : CLASS idList NODEID ;
+
+idList        : NODEID
+              | idList COMMA NODEID
+              ;
+
+linkStyleStmt : LINKSTYLE numList STYLEBODY
+              | LINKSTYLE DEFAULT STYLEBODY
+              ;
+
+numList       : NUM
+              | numList COMMA NUM
+              ;
+
+# click A "url" "tooltip" _target   — trailing target optional.
+# The lexer emits url/tooltip/target as STR/NODEID; kept permissive here.
+clickStmt     : CLICK NODEID clickBody ;
+
+clickBody     : STR
+              | STR STR
+              | STR STR NODEID
+              | NODEID STR
+              | NODEID STR STR
+              ;

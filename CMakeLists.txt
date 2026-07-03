@@ -29,6 +29,13 @@ add_library(md_parser
 )
 target_include_directories(md_parser PUBLIC include)
 
+# Standalone mermaid flowchart module (parse -> layout -> SVG). Independent of
+# markdown; the markdown fence handler is the only coupling point.
+add_library(mermaid
+    src/mermaid/Lexer.cpp
+)
+target_include_directories(mermaid PUBLIC include)
+
 if(NOT EMSCRIPTEN)
     add_executable(md_parser_bin
         src/main.cpp
