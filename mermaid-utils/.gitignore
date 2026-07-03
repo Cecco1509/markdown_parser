@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+
+# Puppeteer / mermaid-cli downloads a Chromium binary here
+.cache/
+.local-chromium/
+
+# Generated output files — these are the golden fixtures, commit them
+# intentionally by removing the patterns below if you want them tracked.
+# By default we ignore them so you can regenerate freely without noise.
+*.ast.json
+*.svg
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Lock files — uncomment the one you don't use
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo

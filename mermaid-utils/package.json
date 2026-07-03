@@ -1,0 +1,19 @@
+{
+  "name": "mermaid-extractor",
+  "version": "1.0.0",
+  "description": "Extracts AST JSON and SVG from .mmd files using the mermaid library directly",
+  "type": "module",
+  "scripts": {
+    "extract": "node extract.mjs"
+  },
+  "dependencies": {
+    "@mermaid-js/mermaid-cli": "^11.0.0",
+    "dompurify": "^3.0.0",
+    "jsdom": "^24.0.0",
+    "mermaid": "^11.0.0",
+    "svgdom": "^0.1.19"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
