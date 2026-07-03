@@ -116,8 +116,18 @@ if (!MMDC) {
 // 5.  AST extraction helpers
 // ---------------------------------------------------------------------------
 
+// mermaid v11 changed several flowDb getters to return `Map` instead of a
+// plain object. `Object.values(aMap)` silently yields [], which is why an
+// earlier version of this script produced empty `vertices`. Normalise here.
+function toArray(collection) {
+  if (collection == null)          return [];
+  if (collection instanceof Map)   return [...collection.values()];
+  if (Array.isArray(collection))   return collection;
+  return Object.values(collection);
+}
+
 function serializeVertices(vertices) {
-  return Object.values(vertices).map(v => ({
+  return toArray(vertices).map(v => ({
     id:      v.id,
     label:   v.text    ?? v.id,
     shape:   v.type    ?? 'rect',
@@ -130,7 +140,7 @@ function serializeVertices(vertices) {
 }
 
 function serializeEdges(edges) {
-  return edges.map((e, i) => ({
+  return toArray(edges).map((e, i) => ({
     index:     i,
     id:        e.id     ?? null,
     start:     e.start,
@@ -143,12 +153,26 @@ function serializeEdges(edges) {
 }
 
 function serializeSubgraphs(subgraphs) {
-  return subgraphs.map(sg => ({
+  return toArray(subgraphs).map(sg => ({
     id:        sg.id,
     label:     sg.title ?? sg.id,
     nodes:     sg.nodes ? [...sg.nodes] : [],
     direction: sg.dir   ?? null,
   }));
+}
+
+function serializeClasses(classes) {
+  if (classes == null) return {};
+  const entries = classes instanceof Map ? [...classes.entries()] : Object.entries(classes);
+  const out = {};
+  for (const [name, def] of entries) {
+    out[name] = {
+      id:      def.id      ?? name,
+      styles:  def.styles  ? [...def.styles]  : [],
+      classes: def.classes ? [...def.classes] : [],
+    };
+  }
+  return out;
 }
 
 async function extractAST(diagramText) {
@@ -162,7 +186,7 @@ async function extractAST(diagramText) {
     vertices:    serializeVertices(db.getVertices()),
     edges:       serializeEdges(db.getEdges()),
     subgraphs:   serializeSubgraphs(db.getSubGraphs()),
-    classes:     db.getClasses?.()      ?? {},
+    classes:     serializeClasses(db.getClasses?.()),
   };
 }
 
