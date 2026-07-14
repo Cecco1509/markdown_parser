@@ -10,10 +10,6 @@
 
     <!-- Editor UI styles -->
     <link rel="stylesheet" href="style.css">
-
-    <!-- Mermaid -->
-    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
-</head>
 <body>
     <header>
         <span class="logo">Markdown Parser</span>
@@ -48,8 +44,6 @@
         const mermaidToggle = document.getElementById('mermaid-toggle');
         const mathToggle    = document.getElementById('math-toggle');
 
-        mermaid.initialize({ startOnLoad: false });
-
         Module.onRuntimeInitialized = () => {
             status.textContent = 'Ready';
             status.className = 'status ready';
@@ -78,8 +72,6 @@
 
             preview.innerHTML = html;
 
-            if (mermaidToggle.checked)
-                mermaid.run({ nodes: preview.querySelectorAll('.mermaid') });
         }
 
         editor.addEventListener('input', render);
@@ -106,7 +98,7 @@
             '## Mermaid Diagram',
             '',
             '```mermaid',
-            'graph TD',
+            'graph TB',
             '    A[Start] --> B{Is it working?}',
             '    B -- Yes --> C[Great!]',
             '    B -- No  --> D[Debug]',
