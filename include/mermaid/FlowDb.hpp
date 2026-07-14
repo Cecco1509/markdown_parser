@@ -48,6 +48,10 @@ struct Vertex {
   std::string id;
   std::string label;
   ShapeKind shape = ShapeKind::Rect;
+  // A bare node (no brackets) is mermaid shape "rect"; an explicit [text] is
+  // "square". Both are ShapeKind::Rect here, so this flag preserves whether a
+  // shape was ever written explicitly.
+  bool explicit_shape = false;
   std::vector<std::string> classes; // :::name and `class` assignments
   std::vector<std::string> styles;  // inline `style` declarations
 };

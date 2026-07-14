@@ -1,104 +1,146 @@
 # mermaid flowchart grammar — target: mermaid 11.0.0
+# =============================================================================
+# Consumed by tools/lrgen (build-time canonical LR(1) parser generator).
 #
-# Consumed by tools/lalrgen (build-time LALR(1) table generator). Terminals here
-# must match TokenKind in include/mermaid/Token.hpp. The lexer resolves all
-# lexical ambiguity (delimited raw-text runs, greedy edge operators) before
-# parsing, so this grammar is conflict-free LR(1)/LALR(1).
+# SYNTAX OF THIS FILE (Yacc/Bison-derived, cleaned):
+#   # ...               line comment (the only comment style)
+#   %include "path"     emitted as #include at the top of the generated file
+#   %namespace ns       generated parser lives in `ns`; also emits
+#                       `using namespace ns;` and `using namespace ns::ast;`
+#   %start NT           start symbol
+#   %token <Type> A B   value-carrying terminals (Type is real C++)
+#   %token A B          value-less terminals (punctuation / keywords)
+#   %type  <Type> nt    semantic type of a nonterminal (real C++)
+#   %%                  separates declarations from rules
+#   lhs : sym sym { action } | %empty { action } ;
 #
-# Notation:  A : B C | D ;      lowercase = nonterminal, UPPERCASE = terminal.
+# ACTION MODEL (Menhir-lite):
+#   An action is an OPAQUE C++ expression with $k placeholders. The generator
+#   substitutes $k -> std::get<Tk>(slot_k) using the declared type Tk of RHS
+#   symbol k, then emits  Value{ <expr> }.  It never parses the expression, so
+#   there must be no { } inside an action. All type checking is done by the C++
+#   compiler when it compiles the generated reduce routine. Referencing a $k on
+#   a value-less terminal is a generator error.
+#
+# Terminal-ness is decided by %token membership, not casing. A symbol used in a
+# rule but never declared is an error (catches typos).
+# =============================================================================
+
+%include "mermaid/Token.hpp"
+%include "mermaid/ast/FlowAst.hpp"
+%namespace mermaid
 
 %start document
 
-%terminals
-  NEWLINE AMP PIPE COMMA TRIPLECOLON
-  GRAPH SUBGRAPH END DIRECTION STYLE CLASSDEF CLASS LINKSTYLE CLICK DEFAULT
-  DIR NUM NODEID SHAPE LINK STR STYLEBODY
+# ── terminals ───────────────────────────────────────────────────────────────
+%token <std::string> NODEID STR NUM STYLEBODY
+%token <ShapeTok>    SHAPE
+%token <LinkTok>     LINK
+%token <Direction>   DIR
+
+%token NEWLINE AMP PIPE COMMA TRIPLECOLON
+%token GRAPH SUBGRAPH END DIRECTION STYLE CLASSDEF CLASS LINKSTYLE CLICK DEFAULT
+
+# ── nonterminal semantic types (types live in namespace mermaid::ast) ────────
+%type <Document>                  document
+%type <std::optional<Direction>>  header
+%type <std::vector<Stmt>>         stmts
+%type <Stmt>                      stmt
+%type <EdgeStmt>                  edgeStmt
+%type <EdgeOp>                    edge
+%type <NodeGroup>                 nodeGroup
+%type <Node>                      node
+%type <SubgraphPtr>               subgraph
+%type <SubgraphHead>              subgraphHead
+%type <DirectionStmt>             directionStmt
+%type <StyleStmt>                 styleStmt
+%type <ClassDefStmt>              classDefStmt
+%type <ClassStmt>                 classStmt
+%type <LinkStyleStmt>             linkStyleStmt
+%type <ClickStmt>                 clickStmt
+%type <std::vector<std::string>>  idList numList clickBody
 
 %%
 
-document      : header stmts ;
+document : header stmts                   { document($1, $2) } ;
 
-header        : GRAPH NEWLINE
-              | GRAPH DIR NEWLINE
+header : GRAPH NEWLINE                     { no_dir() }
+       | GRAPH DIR NEWLINE                 { some_dir($2) }
+       ;
+
+# left-recursive list; tolerates blank lines (the `stmts NEWLINE` alt)
+stmts : %empty                            { nil_stmts() }
+      | stmts stmt NEWLINE                { push($1, $2) }
+      | stmts NEWLINE                     { $1 }
+      ;
+
+stmt : edgeStmt                           { stmt($1) }
+     | subgraph                           { stmt($1) }
+     | directionStmt                      { stmt($1) }
+     | styleStmt                          { stmt($1) }
+     | classDefStmt                       { stmt($1) }
+     | classStmt                          { stmt($1) }
+     | linkStyleStmt                      { stmt($1) }
+     | clickStmt                          { stmt($1) }
+     ;
+
+# ── edges & nodes ────────────────────────────────────────────────────────────
+# A bare node group is a length-0 chain; node-vs-edge is one token of lookahead.
+edgeStmt : nodeGroup                      { chain($1) }
+         | edgeStmt edge nodeGroup        { chain($1, $2, $3) }
+         ;
+
+edge : LINK                               { edge_op($1) }
+     | LINK PIPE STR PIPE                 { edge_op($1, $3) }
+     ;
+
+nodeGroup : node                          { one($1) }
+          | nodeGroup AMP node            { push($1, $3) }
+          ;
+
+node : NODEID                             { node($1) }
+     | NODEID SHAPE                       { node($1, $2) }
+     | NODEID TRIPLECOLON NODEID          { node_cls($1, $3) }
+     | NODEID SHAPE TRIPLECOLON NODEID    { node_cls($1, $2, $4) }
+     ;
+
+# ── subgraphs ────────────────────────────────────────────────────────────────
+subgraph : SUBGRAPH subgraphHead NEWLINE stmts END  { subgraph($2, $4) } ;
+
+subgraphHead : %empty                     { sg_head() }
+             | NODEID                      { sg_head_id($1) }
+             | NODEID SHAPE                { sg_head_id($1, $2) }
+             | STR                         { sg_head_title($1) }
+             ;
+
+# ── styling & interaction ────────────────────────────────────────────────────
+directionStmt : DIRECTION DIR             { direction_stmt($2) } ;
+
+styleStmt : STYLE NODEID STYLEBODY        { style_stmt($2, $3) } ;
+
+classDefStmt : CLASSDEF NODEID STYLEBODY  { classdef_stmt($2, $3) }
+             | CLASSDEF DEFAULT STYLEBODY { classdef_default($3) }
+             ;
+
+classStmt : CLASS idList NODEID           { class_stmt($2, $3) } ;
+
+idList : NODEID                           { one($1) }
+       | idList COMMA NODEID              { push($1, $3) }
+       ;
+
+linkStyleStmt : LINKSTYLE numList STYLEBODY   { linkstyle_stmt($2, $3) }
+              | LINKSTYLE DEFAULT STYLEBODY   { linkstyle_default($3) }
               ;
 
-# stmts is left-recursive (LR's natural form) and tolerates blank lines.
-stmts         : /* empty */
-              | stmts stmt NEWLINE
-              | stmts NEWLINE
-              ;
+numList : NUM                             { one($1) }
+        | numList COMMA NUM               { push($1, $3) }
+        ;
 
-stmt          : edgeStmt
-              | subgraph
-              | directionStmt
-              | styleStmt
-              | classDefStmt
-              | classStmt
-              | linkStyleStmt
-              | clickStmt
-              ;
+clickStmt : CLICK NODEID clickBody        { click_stmt($2, $3) } ;
 
-# ── edges & nodes ─────────────────────────────────────────────────────────
-# A bare node declaration is an edgeStmt with an empty tail. Whether a line is a
-# node or an edge is decided by one token of lookahead (LINK vs NEWLINE) — the
-# canonical LR(1) win.
-edgeStmt      : nodeGroup
-              | edgeStmt edge nodeGroup
-              ;
-
-edge          : LINK
-              | LINK PIPE STR PIPE
-              ;
-
-nodeGroup     : node
-              | nodeGroup AMP node
-              ;
-
-node          : NODEID
-              | NODEID SHAPE
-              | NODEID TRIPLECOLON NODEID
-              | NODEID SHAPE TRIPLECOLON NODEID
-              ;
-
-# ── subgraphs ─────────────────────────────────────────────────────────────
-subgraph      : SUBGRAPH subgraphHead NEWLINE stmts END ;
-
-subgraphHead  : /* empty */
-              | NODEID
-              | NODEID SHAPE
-              | STR
-              ;
-
-# ── styling & interaction ─────────────────────────────────────────────────
-directionStmt : DIRECTION DIR ;
-
-styleStmt     : STYLE NODEID STYLEBODY ;
-
-classDefStmt  : CLASSDEF NODEID STYLEBODY
-              | CLASSDEF DEFAULT STYLEBODY
-              ;
-
-classStmt     : CLASS idList NODEID ;
-
-idList        : NODEID
-              | idList COMMA NODEID
-              ;
-
-linkStyleStmt : LINKSTYLE numList STYLEBODY
-              | LINKSTYLE DEFAULT STYLEBODY
-              ;
-
-numList       : NUM
-              | numList COMMA NUM
-              ;
-
-# click A "url" "tooltip" _target   — trailing target optional.
-# The lexer emits url/tooltip/target as STR/NODEID; kept permissive here.
-clickStmt     : CLICK NODEID clickBody ;
-
-clickBody     : STR
-              | STR STR
-              | STR STR NODEID
-              | NODEID STR
-              | NODEID STR STR
-              ;
+clickBody : STR                           { one($1) }
+          | STR STR                       { pair($1, $2) }
+          | STR STR NODEID                { triple($1, $2, $3) }
+          | NODEID STR                    { pair($1, $2) }
+          | NODEID STR STR                { triple($1, $2, $3) }
+          ;
