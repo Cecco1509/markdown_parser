@@ -1,0 +1,121 @@
+{
+  "diagramType": "flowchart-v2",
+  "title": "",
+  "direction": "LR",
+  "vertices": [
+    {
+      "id": "A",
+      "label": "A",
+      "shape": "rect",
+      "classes": [],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-A-0"
+    },
+    {
+      "id": "B",
+      "label": "B",
+      "shape": "rect",
+      "classes": [],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-B-1"
+    },
+    {
+      "id": "C",
+      "label": "C",
+      "shape": "rect",
+      "classes": [],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-C-2"
+    },
+    {
+      "id": "X",
+      "label": "X",
+      "shape": "rect",
+      "classes": [],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-X-3"
+    },
+    {
+      "id": "Y",
+      "label": "Y",
+      "shape": "rect",
+      "classes": [],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-Y-4"
+    },
+    {
+      "id": "P",
+      "label": "P",
+      "shape": "rect",
+      "classes": [],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-P-5"
+    },
+    {
+      "id": "Q",
+      "label": "Q",
+      "shape": "rect",
+      "classes": [],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-Q-6"
+    }
+  ],
+  "edges": [
+    {
+      "index": 0,
+      "id": "L_A_B_0",
+      "start": "A",
+      "end": "B",
+      "label": "one",
+      "stroke": "normal",
+      "arrowHead": "arrow_point",
+      "length": 1
+    },
+    {
+      "index": 1,
+      "id": "L_B_C_0",
+      "start": "B",
+      "end": "C",
+      "label": "two",
+      "stroke": "normal",
+      "arrowHead": "arrow_point",
+      "length": 1
+    },
+    {
+      "index": 2,
+      "id": "L_X_Y_0",
+      "start": "X",
+      "end": "Y",
+      "label": "pipe label",
+      "stroke": "normal",
+      "arrowHead": "arrow_point",
+      "length": 1
+    },
+    {
+      "index": 3,
+      "id": "L_P_Q_0",
+      "start": "P",
+      "end": "Q",
+      "label": "thick label",
+      "stroke": "thick",
+      "arrowHead": "arrow_point",
+      "length": 1
+    }
+  ],
+  "subgraphs": [],
+  "classes": {}
+}

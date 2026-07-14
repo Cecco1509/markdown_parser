@@ -1,0 +1,71 @@
+{
+  "diagramType": "flowchart-v2",
+  "title": "",
+  "direction": "TB",
+  "vertices": [
+    {
+      "id": "bare_node",
+      "label": "bare_node",
+      "shape": "rect",
+      "classes": [],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-bare_node-0"
+    },
+    {
+      "id": "id1",
+      "label": "Second label wins",
+      "shape": "square",
+      "classes": [],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-id1-1"
+    },
+    {
+      "id": "id2",
+      "label": "Label with spaces: a and b",
+      "shape": "square",
+      "classes": [],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-id2-2"
+    },
+    {
+      "id": "id4",
+      "label": "Ünïcödé テスト 中文",
+      "shape": "square",
+      "classes": [],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-id4-3"
+    }
+  ],
+  "edges": [
+    {
+      "index": 0,
+      "id": "L_id1_id2_0",
+      "start": "id1",
+      "end": "id2",
+      "label": "",
+      "stroke": "normal",
+      "arrowHead": "arrow_point",
+      "length": 1
+    },
+    {
+      "index": 1,
+      "id": "L_id2_id4_0",
+      "start": "id2",
+      "end": "id4",
+      "label": "",
+      "stroke": "normal",
+      "arrowHead": "arrow_point",
+      "length": 1
+    }
+  ],
+  "subgraphs": [],
+  "classes": {}
+}

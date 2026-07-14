@@ -1,0 +1,90 @@
+{
+  "diagramType": "flowchart-v2",
+  "title": "",
+  "direction": "TB",
+  "vertices": [
+    {
+      "id": "E",
+      "label": "E",
+      "shape": "rect",
+      "classes": [],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-E-0"
+    },
+    {
+      "id": "F",
+      "label": "F",
+      "shape": "rect",
+      "classes": [],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-F-1"
+    },
+    {
+      "id": "G",
+      "label": "G",
+      "shape": "rect",
+      "classes": [],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-G-2"
+    },
+    {
+      "id": "inner",
+      "label": "inner",
+      "shape": "rect",
+      "classes": [],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-inner-3"
+    }
+  ],
+  "edges": [
+    {
+      "index": 0,
+      "id": "L_E_F_0",
+      "start": "E",
+      "end": "F",
+      "label": "",
+      "stroke": "normal",
+      "arrowHead": "arrow_point",
+      "length": 1
+    },
+    {
+      "index": 1,
+      "id": "L_G_inner_0",
+      "start": "G",
+      "end": "inner",
+      "label": "",
+      "stroke": "normal",
+      "arrowHead": "arrow_point",
+      "length": 1
+    }
+  ],
+  "subgraphs": [
+    {
+      "id": "inner",
+      "label": "Inner",
+      "nodes": [
+        "F",
+        "E"
+      ],
+      "direction": null
+    },
+    {
+      "id": "outer",
+      "label": "Outer",
+      "nodes": [
+        "inner",
+        "G"
+      ],
+      "direction": null
+    }
+  ],
+  "classes": {}
+}

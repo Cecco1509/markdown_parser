@@ -1,0 +1,150 @@
+{
+  "diagramType": "flowchart-v2",
+  "title": "",
+  "direction": "LR",
+  "vertices": [
+    {
+      "id": "n_rect",
+      "label": "Rectangle",
+      "shape": "square",
+      "classes": [],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-n_rect-0"
+    },
+    {
+      "id": "n_round",
+      "label": "Round edges",
+      "shape": "round",
+      "classes": [],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-n_round-1"
+    },
+    {
+      "id": "n_stadium",
+      "label": "Stadium",
+      "shape": "stadium",
+      "classes": [],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-n_stadium-2"
+    },
+    {
+      "id": "n_sub",
+      "label": "Subroutine",
+      "shape": "subroutine",
+      "classes": [],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-n_sub-3"
+    },
+    {
+      "id": "n_cyl",
+      "label": "Cylinder",
+      "shape": "cylinder",
+      "classes": [],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-n_cyl-4"
+    },
+    {
+      "id": "n_circle",
+      "label": "Circle",
+      "shape": "circle",
+      "classes": [],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-n_circle-5"
+    },
+    {
+      "id": "n_asym",
+      "label": "Asymmetric",
+      "shape": "odd",
+      "classes": [],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-n_asym-6"
+    },
+    {
+      "id": "n_diamond",
+      "label": "Diamond",
+      "shape": "diamond",
+      "classes": [],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-n_diamond-7"
+    },
+    {
+      "id": "n_hex",
+      "label": "Hexagon",
+      "shape": "hexagon",
+      "classes": [],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-n_hex-8"
+    },
+    {
+      "id": "n_lean_r",
+      "label": "Lean right",
+      "shape": "lean_right",
+      "classes": [],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-n_lean_r-9"
+    },
+    {
+      "id": "n_lean_l",
+      "label": "Lean left",
+      "shape": "lean_left",
+      "classes": [],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-n_lean_l-10"
+    },
+    {
+      "id": "n_trap",
+      "label": "Trapezoid",
+      "shape": "trapezoid",
+      "classes": [],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-n_trap-11"
+    },
+    {
+      "id": "n_trap_alt",
+      "label": "Trapezoid alt",
+      "shape": "inv_trapezoid",
+      "classes": [],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-n_trap_alt-12"
+    },
+    {
+      "id": "n_dbl",
+      "label": "Double circle",
+      "shape": "doublecircle",
+      "classes": [],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-n_dbl-13"
+    }
+  ],
+  "edges": [],
+  "subgraphs": [],
+  "classes": {}
+}

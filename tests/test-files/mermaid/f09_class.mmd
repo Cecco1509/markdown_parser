@@ -1,0 +1,9 @@
+flowchart TD
+    classDef primary fill:#4a90d9,stroke:#2c6fa8,color:#fff,stroke-width:2px
+    classDef danger fill:#e74c3c,stroke:#c0392b,color:#fff
+    classDef default fill:#eee,stroke:#999
+    A[Start]:::primary --> B{Decision}:::primary
+    B -->|yes| C[OK]:::primary
+    B -->|no| D[Fail]:::danger
+    class C primary
+    class D,B danger

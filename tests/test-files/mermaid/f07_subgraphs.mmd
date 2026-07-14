@@ -1,0 +1,13 @@
+flowchart TB
+    subgraph sg1[First group]
+        A --> B
+    end
+    subgraph sg2_id[Second group]
+        C --> D
+    end
+    subgraph sideways[Sideways]
+        direction LR
+        H --> I --> J
+    end
+    sg1 --> sg2_id
+    B --> sideways

@@ -1,0 +1,169 @@
+{
+  "diagramType": "flowchart-v2",
+  "title": "",
+  "direction": "TB",
+  "vertices": [
+    {
+      "id": "START",
+      "label": "Start",
+      "shape": "stadium",
+      "classes": [
+        "ok"
+      ],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-START-0"
+    },
+    {
+      "id": "LINT",
+      "label": "Lint",
+      "shape": "square",
+      "classes": [],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-LINT-1"
+    },
+    {
+      "id": "TEST",
+      "label": "Unit tests",
+      "shape": "square",
+      "classes": [],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-TEST-2"
+    },
+    {
+      "id": "BUILD",
+      "label": "Build",
+      "shape": "square",
+      "classes": [],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-BUILD-3"
+    },
+    {
+      "id": "DONE",
+      "label": "Done",
+      "shape": "stadium",
+      "classes": [
+        "ok"
+      ],
+      "styles": [
+        "stroke-width:3px"
+      ],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-DONE-4"
+    },
+    {
+      "id": "FAIL",
+      "label": "Failed",
+      "shape": "stadium",
+      "classes": [
+        "fail"
+      ],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-FAIL-5"
+    },
+    {
+      "id": "ci",
+      "label": "ci",
+      "shape": "rect",
+      "classes": [],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-ci-7"
+    }
+  ],
+  "edges": [
+    {
+      "index": 0,
+      "id": "L_LINT_TEST_0",
+      "start": "LINT",
+      "end": "TEST",
+      "label": "",
+      "stroke": "normal",
+      "arrowHead": "arrow_point",
+      "length": 1
+    },
+    {
+      "index": 1,
+      "id": "L_TEST_BUILD_0",
+      "start": "TEST",
+      "end": "BUILD",
+      "label": "",
+      "stroke": "normal",
+      "arrowHead": "arrow_point",
+      "length": 1
+    },
+    {
+      "index": 2,
+      "id": "L_START_ci_0",
+      "start": "START",
+      "end": "ci",
+      "label": "",
+      "stroke": "normal",
+      "arrowHead": "arrow_point",
+      "length": 1
+    },
+    {
+      "index": 3,
+      "id": "L_BUILD_DONE_0",
+      "start": "BUILD",
+      "end": "DONE",
+      "label": "",
+      "stroke": "normal",
+      "arrowHead": "arrow_point",
+      "length": 1
+    },
+    {
+      "index": 4,
+      "id": "L_TEST_FAIL_0",
+      "start": "TEST",
+      "end": "FAIL",
+      "label": "",
+      "stroke": "normal",
+      "arrowHead": "arrow_cross",
+      "length": 1
+    }
+  ],
+  "subgraphs": [
+    {
+      "id": "ci",
+      "label": "CI",
+      "nodes": [
+        "BUILD",
+        "TEST",
+        "LINT"
+      ],
+      "direction": "LR"
+    }
+  ],
+  "classes": {
+    "ok": {
+      "id": "ok",
+      "styles": [
+        "fill:#2ecc71",
+        "stroke:#27ae60",
+        "color:#fff"
+      ],
+      "classes": []
+    },
+    "fail": {
+      "id": "fail",
+      "styles": [
+        "fill:#e74c3c",
+        "stroke:#c0392b",
+        "color:#fff"
+      ],
+      "classes": []
+    }
+  }
+}

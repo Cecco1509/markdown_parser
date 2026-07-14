@@ -1,0 +1,120 @@
+{
+  "diagramType": "flowchart-v2",
+  "title": "",
+  "direction": "TB",
+  "vertices": [
+    {
+      "id": "A",
+      "label": "Start",
+      "shape": "square",
+      "classes": [
+        "primary"
+      ],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-A-0"
+    },
+    {
+      "id": "B",
+      "label": "Decision",
+      "shape": "diamond",
+      "classes": [
+        "primary",
+        "danger"
+      ],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-B-1"
+    },
+    {
+      "id": "C",
+      "label": "OK",
+      "shape": "square",
+      "classes": [
+        "primary",
+        "primary"
+      ],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-C-3"
+    },
+    {
+      "id": "D",
+      "label": "Fail",
+      "shape": "square",
+      "classes": [
+        "danger",
+        "danger"
+      ],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-D-5"
+    }
+  ],
+  "edges": [
+    {
+      "index": 0,
+      "id": "L_A_B_0",
+      "start": "A",
+      "end": "B",
+      "label": "",
+      "stroke": "normal",
+      "arrowHead": "arrow_point",
+      "length": 1
+    },
+    {
+      "index": 1,
+      "id": "L_B_C_0",
+      "start": "B",
+      "end": "C",
+      "label": "yes",
+      "stroke": "normal",
+      "arrowHead": "arrow_point",
+      "length": 1
+    },
+    {
+      "index": 2,
+      "id": "L_B_D_0",
+      "start": "B",
+      "end": "D",
+      "label": "no",
+      "stroke": "normal",
+      "arrowHead": "arrow_point",
+      "length": 1
+    }
+  ],
+  "subgraphs": [],
+  "classes": {
+    "primary": {
+      "id": "primary",
+      "styles": [
+        "fill:#4a90d9",
+        "stroke:#2c6fa8",
+        "color:#fff",
+        "stroke-width:2px"
+      ],
+      "classes": []
+    },
+    "danger": {
+      "id": "danger",
+      "styles": [
+        "fill:#e74c3c",
+        "stroke:#c0392b",
+        "color:#fff"
+      ],
+      "classes": []
+    },
+    "default": {
+      "id": "default",
+      "styles": [
+        "fill:#eee",
+        "stroke:#999"
+      ],
+      "classes": []
+    }
+  }
+}

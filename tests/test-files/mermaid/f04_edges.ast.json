@@ -1,0 +1,221 @@
+{
+  "diagramType": "flowchart-v2",
+  "title": "",
+  "direction": "LR",
+  "vertices": [
+    {
+      "id": "A",
+      "label": "A",
+      "shape": "rect",
+      "classes": [],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-A-0"
+    },
+    {
+      "id": "B",
+      "label": "B",
+      "shape": "rect",
+      "classes": [],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-B-1"
+    },
+    {
+      "id": "C",
+      "label": "C",
+      "shape": "rect",
+      "classes": [],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-C-2"
+    },
+    {
+      "id": "D",
+      "label": "D",
+      "shape": "rect",
+      "classes": [],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-D-3"
+    },
+    {
+      "id": "E",
+      "label": "E",
+      "shape": "rect",
+      "classes": [],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-E-4"
+    },
+    {
+      "id": "F",
+      "label": "F",
+      "shape": "rect",
+      "classes": [],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-F-5"
+    },
+    {
+      "id": "G",
+      "label": "G",
+      "shape": "rect",
+      "classes": [],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-G-6"
+    },
+    {
+      "id": "H",
+      "label": "H",
+      "shape": "rect",
+      "classes": [],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-H-7"
+    },
+    {
+      "id": "I",
+      "label": "I",
+      "shape": "rect",
+      "classes": [],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-I-8"
+    },
+    {
+      "id": "J",
+      "label": "J",
+      "shape": "rect",
+      "classes": [],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-J-9"
+    },
+    {
+      "id": "P",
+      "label": "P",
+      "shape": "rect",
+      "classes": [],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-P-10"
+    },
+    {
+      "id": "Q",
+      "label": "Q",
+      "shape": "rect",
+      "classes": [],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-Q-11"
+    },
+    {
+      "id": "T",
+      "label": "T",
+      "shape": "rect",
+      "classes": [],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-T-12"
+    },
+    {
+      "id": "U",
+      "label": "U",
+      "shape": "rect",
+      "classes": [],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-U-13"
+    }
+  ],
+  "edges": [
+    {
+      "index": 0,
+      "id": "L_A_B_0",
+      "start": "A",
+      "end": "B",
+      "label": "",
+      "stroke": "normal",
+      "arrowHead": "arrow_point",
+      "length": 1
+    },
+    {
+      "index": 1,
+      "id": "L_C_D_0",
+      "start": "C",
+      "end": "D",
+      "label": "",
+      "stroke": "normal",
+      "arrowHead": "arrow_open",
+      "length": 1
+    },
+    {
+      "index": 2,
+      "id": "L_E_F_0",
+      "start": "E",
+      "end": "F",
+      "label": "",
+      "stroke": "normal",
+      "arrowHead": "arrow_circle",
+      "length": 1
+    },
+    {
+      "index": 3,
+      "id": "L_G_H_0",
+      "start": "G",
+      "end": "H",
+      "label": "",
+      "stroke": "normal",
+      "arrowHead": "arrow_cross",
+      "length": 1
+    },
+    {
+      "index": 4,
+      "id": "L_I_J_0",
+      "start": "I",
+      "end": "J",
+      "label": "",
+      "stroke": "normal",
+      "arrowHead": "double_arrow_point",
+      "length": 1
+    },
+    {
+      "index": 5,
+      "id": "L_P_Q_0",
+      "start": "P",
+      "end": "Q",
+      "label": "",
+      "stroke": "dotted",
+      "arrowHead": "arrow_point",
+      "length": 1
+    },
+    {
+      "index": 6,
+      "id": "L_T_U_0",
+      "start": "T",
+      "end": "U",
+      "label": "",
+      "stroke": "thick",
+      "arrowHead": "arrow_point",
+      "length": 1
+    }
+  ],
+  "subgraphs": [],
+  "classes": {}
+}

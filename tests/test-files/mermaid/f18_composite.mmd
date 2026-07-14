@@ -1,0 +1,14 @@
+flowchart TD
+    classDef ok fill:#2ecc71,stroke:#27ae60,color:#fff
+    classDef fail fill:#e74c3c,stroke:#c0392b,color:#fff
+    START([Start]):::ok
+    subgraph ci[CI]
+        direction LR
+        LINT[Lint] --> TEST[Unit tests] --> BUILD[Build]
+    end
+    DONE([Done]):::ok
+    FAIL([Failed]):::fail
+    START --> ci
+    BUILD --> DONE
+    TEST --x FAIL
+    style DONE stroke-width:3px

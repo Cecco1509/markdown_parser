@@ -1,0 +1,74 @@
+{
+  "diagramType": "flowchart-v2",
+  "title": "",
+  "direction": "LR",
+  "vertices": [
+    {
+      "id": "A",
+      "label": "Styled node",
+      "shape": "square",
+      "classes": [],
+      "styles": [
+        "fill:#ff9",
+        "stroke:#333",
+        "stroke-width:3px"
+      ],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-A-0"
+    },
+    {
+      "id": "B",
+      "label": "Another",
+      "shape": "square",
+      "classes": [],
+      "styles": [
+        "fill:#9bf",
+        "stroke:#06f",
+        "stroke-width:1px",
+        "color:#000"
+      ],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-B-1"
+    },
+    {
+      "id": "C",
+      "label": "Third",
+      "shape": "square",
+      "classes": [],
+      "styles": [
+        "fill:#fff",
+        "stroke:#f00",
+        "stroke-dasharray:5 5"
+      ],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-C-2"
+    }
+  ],
+  "edges": [
+    {
+      "index": 0,
+      "id": "L_A_B_0",
+      "start": "A",
+      "end": "B",
+      "label": "",
+      "stroke": "normal",
+      "arrowHead": "arrow_point",
+      "length": 1
+    },
+    {
+      "index": 1,
+      "id": "L_B_C_0",
+      "start": "B",
+      "end": "C",
+      "label": "",
+      "stroke": "normal",
+      "arrowHead": "arrow_point",
+      "length": 1
+    }
+  ],
+  "subgraphs": [],
+  "classes": {}
+}
