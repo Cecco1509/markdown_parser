@@ -101,6 +101,28 @@ std::string shape_svg(ShapeKind shape, double w, double h) {
   }
 }
 
+// A polyline as an SVG path with rounded corners: straight runs stay straight,
+// and each bend is replaced by a quadratic bezier tangent to both segments. A
+// 2-point edge has no corner, so it comes out as a plain straight line.
+std::string edge_path(const std::vector<Point> &pts, double radius) {
+  std::string d = "M" + num(pts[0].x) + "," + num(pts[0].y);
+  for (size_t i = 1; i + 1 < pts.size(); ++i) {
+    const Point &a = pts[i - 1], &v = pts[i], &b = pts[i + 1];
+    const double d1 = std::hypot(v.x - a.x, v.y - a.y);
+    const double d2 = std::hypot(b.x - v.x, b.y - v.y);
+    if (d1 < 1e-6 || d2 < 1e-6)
+      continue;
+    // Never eat more than half of either neighbouring segment.
+    const double r = std::min({radius, d1 / 2, d2 / 2});
+    const Point in{v.x + (a.x - v.x) * r / d1, v.y + (a.y - v.y) * r / d1};
+    const Point out{v.x + (b.x - v.x) * r / d2, v.y + (b.y - v.y) * r / d2};
+    d += " L" + num(in.x) + "," + num(in.y);
+    d += " Q" + num(v.x) + "," + num(v.y) + " " + num(out.x) + "," + num(out.y);
+  }
+  d += " L" + num(pts.back().x) + "," + num(pts.back().y);
+  return d;
+}
+
 const char *marker_id(ArrowHead h) {
   switch (h) {
   case ArrowHead::Arrow: return "arrowPoint";
@@ -128,7 +150,8 @@ std::string style(const RenderOptions &o) {
   std::ostringstream s;
   s << "<style>"
     << ".nodes .shape{fill:#ECECFF;stroke:#9370DB;stroke-width:1px;}"
-    << ".edgePaths .flowchart-link{fill:none;stroke:#333;stroke-width:1px;}"
+    << ".edgePaths .flowchart-link{fill:none;stroke:#333;stroke-width:1px;"
+       "stroke-linejoin:round;stroke-linecap:round;}"
     << ".flowchart-link.thick{stroke-width:3px;}"
     << ".flowchart-link.dotted{stroke-dasharray:3;}"
     << ".flowchart-link.invisible{stroke:none;}"
@@ -169,10 +192,8 @@ std::string render_svg(const Layout &layout, const RenderOptions &opts) {
   // Edges first (drawn under nodes).
   s << "<g class=\"edgePaths\">";
   for (const LaidEdge &e : layout.edges) {
-    s << "<path class=\"flowchart-link" << stroke_class(e.stroke) << "\" d=\"M";
-    for (size_t i = 0; i < e.points.size(); ++i)
-      s << (i ? " L" : "") << num(e.points[i].x) << "," << num(e.points[i].y);
-    s << "\"";
+    s << "<path class=\"flowchart-link" << stroke_class(e.stroke) << "\" d=\""
+      << edge_path(e.points, opts.edge_corner_radius) << "\"";
     if (const char *m = marker_id(e.head_end)) s << " marker-end=\"url(#" << m << ")\"";
     if (e.head_start)
       if (const char *m = marker_id(ArrowHead::Arrow)) s << " marker-start=\"url(#" << m << ")\"";

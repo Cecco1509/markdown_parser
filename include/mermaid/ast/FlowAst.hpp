@@ -83,6 +83,9 @@ template <class T> std::vector<T> push(std::vector<T> v, T x) {
 }
 template <class T> Stmt stmt(T x) { return Stmt{std::move(x)}; }
 
+// Filler for productions that carry no value (e.g. leading blank lines).
+inline std::monostate nothing() { return {}; }
+
 // document / header
 inline Document document(std::optional<Direction> dir, std::vector<Stmt> stmts) {
   return Document{std::move(dir), std::move(stmts)};
