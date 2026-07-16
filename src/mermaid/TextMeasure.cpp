@@ -13,11 +13,13 @@ static size_t codepoints(const std::string &s) {
 
 std::vector<LabelBox> ApproxMeasurer::measure(const std::vector<std::string> &labels,
                                               const FontSpec &font) {
-  // Rough average glyph advance for a proportional sans-serif font, plus a
-  // single-line height. These constants only need to be in the right ballpark;
-  // real fidelity comes from a BrowserMeasurer/metrics table later.
-  const double char_w = 0.60 * font.size_px;
-  const double line_h = 1.20 * font.size_px;
+  // Calibrated against mermaid's own measurements (see tests/test-files/mermaid
+  // goldens): its labels average ~0.5em per glyph, and its line box is 1.5em
+  // (exactly 24px at the default 16px font). The old 0.6em/1.2em over-estimated
+  // width — which inflates shapes derived from it, like the rhombus — while
+  // under-estimating height, which squashed every box.
+  const double char_w = 0.50 * font.size_px;
+  const double line_h = 1.50 * font.size_px;
 
   std::vector<LabelBox> out;
   out.reserve(labels.size());

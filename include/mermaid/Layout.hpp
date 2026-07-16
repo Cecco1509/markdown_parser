@@ -15,6 +15,11 @@ namespace mermaid {
 struct Point { double x = 0, y = 0; };
 struct Size { double w = 0, h = 0; };
 
+// Radius of a cylinder's cap ellipse, derived from its width (mermaid's rule).
+// Sizing must leave room for the caps and the renderer must draw them at the
+// same radius, so the formula lives here to keep the two in agreement.
+inline double cylinder_ry(double w) { return (w / 2) / (2.5 + w / 50); }
+
 struct LaidNode {
   std::string id;
   std::string label;
@@ -31,6 +36,7 @@ struct LaidEdge {
   ArrowHead head_end = ArrowHead::Arrow;
   bool head_start = false;
   Point label_pos;
+  Size label_size; // measured box the layout reserved; {0,0} when unlabelled
 };
 
 struct LaidSubgraph { // unused in v1 (subgraphs are collapsed); here for later
@@ -50,7 +56,10 @@ struct Layout {
 struct LayoutOptions {
   FontSpec font;
   double node_sep = 40; // gap between nodes within a rank
-  double rank_sep = 50; // gap between ranks
+  // Gap between adjacent ranks. Ranks are DOUBLED (an edge of mermaid length L
+  // spans 2*L ranks) so every edge has an intermediate rank to host its label
+  // block, so the gap between two connected nodes is 2*rank_sep.
+  double rank_sep = 25;
   double margin = 16;   // diagram padding
   bool collapse_subgraphs = true; // v1: collapse subgraphs into single nodes
 };
