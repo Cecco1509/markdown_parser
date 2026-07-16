@@ -733,41 +733,28 @@ private:
       if (chains_[i].empty())
         continue; // self-loop / dangling
       const Edge &e = db_.edges[i];
-      // Waypoints. Every edge gets AT MOST ONE bend:
-      //  * FORWARD edges are drawn straight, endpoints only.
-      //  * A REVERSED (back) edge bends once, at its label block if it has one.
-      //  * A REVERSED edge with no label bends at the single routing dummy that
-      //    deviates most from the straight line. That one point is what actually
-      //    carries the edge around the diagram (drawn straight it would clip the
-      //    shapes it is detouring past); the rest of the corridor only adds
-      //    kinks, so it is dropped.
-      // Routing dummies still reserve their ranks/lanes either way.
-      const bool routed = reversed_[i];
+      // Waypoints: the endpoints, the FIRST and LAST routing dummy, and any
+      // label block. An edge spanning many ranks therefore leaves its source and
+      // enters its target through the reserved corridor, but runs dead straight
+      // in between instead of tracing every intermediate lane. The label block is
+      // always kept: it is the spot the layout reserved for the label, so
+      // following it is what keeps labels on the line and out of the nodes (and
+      // what separates parallel edges). For a normal span-2 edge the single
+      // dummy is both first and last, so nothing changes.
+      const auto &chain = chains_[i];
+      std::vector<Point> pts;
+      for (size_t k = 0; k < chain.size(); ++k) {
+        const Cell &cc = cells_[chain[k]];
+        const bool endpoint = (k == 0 || k + 1 == chain.size());
+        const bool first_dummy = (k == 1);
+        const bool last_dummy = (k + 2 == chain.size());
+        if (endpoint || first_dummy || last_dummy || cc.is_label)
+          pts.push_back({cc.a, cc.b});
+      }
+
       const Cell &sc = cells_[chains_[i].front()];
       const Cell &ec = cells_[chains_[i].back()];
       const Point p0{sc.a, sc.b}, p1{ec.a, ec.b};
-
-      std::vector<Point> pts;
-      pts.push_back(p0);
-      if (routed) {
-        if (label_cell_[i] >= 0) {
-          pts.push_back({cells_[label_cell_[i]].a, cells_[label_cell_[i]].b});
-        } else {
-          int best = -1;
-          double best_d = 0;
-          for (size_t k = 1; k + 1 < chains_[i].size(); ++k) {
-            const Cell &d = cells_[chains_[i][k]];
-            const double dist = perp_dist({d.a, d.b}, p0, p1);
-            if (dist > best_d) {
-              best_d = dist;
-              best = chains_[i][k];
-            }
-          }
-          if (best >= 0 && best_d > 1.0)
-            pts.push_back({cells_[best].a, cells_[best].b});
-        }
-      }
-      pts.push_back(p1);
       // Clip the endpoints to the real node borders (chain ends are always real
       // nodes, so their index lines up with db_.vertices).
       pts.front() = clip(p0, db_.vertices[chains_[i].front()].shape, sc.w, sc.h,
@@ -784,12 +771,11 @@ private:
       le.head_start = e.head_start;
       le.points = pts;
       le.label_size = edge_label_[i];
-      // Centre the label ON the drawn arrow: the midpoint of the polyline. The
-      // label block reserved the space, but its cell can be nudged sideways by
-      // its rank neighbours, so drawing at the reservation would leave the label
-      // sitting beside the line instead of on it. For a labelled back edge the
-      // block IS the middle waypoint, so this resolves to the same point.
-      {
+      // The label block is itself a waypoint now, so drawing at the block puts
+      // the label on the line AND on the space reserved for it.
+      if (label_cell_[i] >= 0) {
+        le.label_pos = {cells_[label_cell_[i]].a, cells_[label_cell_[i]].b};
+      } else {
         const size_t mid = pts.size() / 2;
         le.label_pos = pts.size() % 2
                            ? pts[mid]
