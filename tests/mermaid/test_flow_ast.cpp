@@ -28,7 +28,8 @@ const std::vector<std::string> kFixtures = {
     "f01_directions",   "f02_shapes",   "f03_labels",    "f04_edges",
     "f04b_chainlabels", "f05_length",   "f06_chaining",  "f07_subgraphs",
     "f07b_nested",      "f08_style",    "f09_class",     "f10_linkstyle",
-    "f14_comments",     "f18_composite", "simple-mermaid",
+    "f14_comments",     "f18_composite", "f19_pipeline",
+    "simple-mermaid",
 };
 
 std::string read_file(const std::string &path) {

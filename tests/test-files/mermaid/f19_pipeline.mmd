@@ -1,0 +1,25 @@
+%% ── How this diagram drew itself ─────────────────────────────────────
+%% Every box is a phase of our minimal Sugiyama layout, and every
+%% construct used here is one the parser and renderer support.
+%% The loop at the bottom is a real cycle: watch the back-edge.
+flowchart TD
+    SRC[(mermaid source)] --> LEX([lexer])
+    LEX -- tokens --> PAR[[generated LR parser]]
+    PAR -- AST --> LOW[/lower/]
+    LOW -- FlowDb --> MEAS[[measure every label at once]]
+
+    MEAS --> CYC{cycle?}
+    CYC -- no --> RANK[rank assignment]
+    CYC -- yes --> REV[reverse the edge]
+    REV --> RANK
+
+    RANK -- a longer arrow sinks deeper ---> DUM[insert dummies]
+    DUM --> ORD[order each rank]
+    ORD -- barycenter sweeps --> XY[assign coordinates]
+    XY -- pull toward neighbours --> SEP[separate components]
+    SEP ==> ROUTE{{route the edges}}
+
+    ROUTE -- forward stays straight --> OUT((SVG))
+    ROUTE -- a back-edge bends once --> OUT
+
+    OUT -.-> SRC

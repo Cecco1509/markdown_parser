@@ -1,0 +1,311 @@
+{
+  "diagramType": "flowchart-v2",
+  "title": "",
+  "direction": "TB",
+  "vertices": [
+    {
+      "id": "SRC",
+      "label": "mermaid source",
+      "shape": "cylinder",
+      "classes": [],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-SRC-0"
+    },
+    {
+      "id": "LEX",
+      "label": "lexer",
+      "shape": "stadium",
+      "classes": [],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-LEX-1"
+    },
+    {
+      "id": "PAR",
+      "label": "generated LR parser",
+      "shape": "subroutine",
+      "classes": [],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-PAR-3"
+    },
+    {
+      "id": "LOW",
+      "label": "lower",
+      "shape": "lean_right",
+      "classes": [],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-LOW-5"
+    },
+    {
+      "id": "MEAS",
+      "label": "measure every label at once",
+      "shape": "subroutine",
+      "classes": [],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-MEAS-7"
+    },
+    {
+      "id": "CYC",
+      "label": "cycle?",
+      "shape": "diamond",
+      "classes": [],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-CYC-9"
+    },
+    {
+      "id": "RANK",
+      "label": "rank assignment",
+      "shape": "square",
+      "classes": [],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-RANK-11"
+    },
+    {
+      "id": "REV",
+      "label": "reverse the edge",
+      "shape": "square",
+      "classes": [],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-REV-13"
+    },
+    {
+      "id": "DUM",
+      "label": "insert dummies",
+      "shape": "square",
+      "classes": [],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-DUM-17"
+    },
+    {
+      "id": "ORD",
+      "label": "order each rank",
+      "shape": "square",
+      "classes": [],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-ORD-19"
+    },
+    {
+      "id": "XY",
+      "label": "assign coordinates",
+      "shape": "square",
+      "classes": [],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-XY-21"
+    },
+    {
+      "id": "SEP",
+      "label": "separate components",
+      "shape": "square",
+      "classes": [],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-SEP-23"
+    },
+    {
+      "id": "ROUTE",
+      "label": "route the edges",
+      "shape": "hexagon",
+      "classes": [],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-ROUTE-25"
+    },
+    {
+      "id": "OUT",
+      "label": "SVG",
+      "shape": "circle",
+      "classes": [],
+      "styles": [],
+      "tooltip": null,
+      "link": null,
+      "domId": "flowchart-OUT-27"
+    }
+  ],
+  "edges": [
+    {
+      "index": 0,
+      "id": "L_SRC_LEX_0",
+      "start": "SRC",
+      "end": "LEX",
+      "label": "",
+      "stroke": "normal",
+      "arrowHead": "arrow_point",
+      "length": 1
+    },
+    {
+      "index": 1,
+      "id": "L_LEX_PAR_0",
+      "start": "LEX",
+      "end": "PAR",
+      "label": "tokens",
+      "stroke": "normal",
+      "arrowHead": "arrow_point",
+      "length": 1
+    },
+    {
+      "index": 2,
+      "id": "L_PAR_LOW_0",
+      "start": "PAR",
+      "end": "LOW",
+      "label": "AST",
+      "stroke": "normal",
+      "arrowHead": "arrow_point",
+      "length": 1
+    },
+    {
+      "index": 3,
+      "id": "L_LOW_MEAS_0",
+      "start": "LOW",
+      "end": "MEAS",
+      "label": "FlowDb",
+      "stroke": "normal",
+      "arrowHead": "arrow_point",
+      "length": 1
+    },
+    {
+      "index": 4,
+      "id": "L_MEAS_CYC_0",
+      "start": "MEAS",
+      "end": "CYC",
+      "label": "",
+      "stroke": "normal",
+      "arrowHead": "arrow_point",
+      "length": 1
+    },
+    {
+      "index": 5,
+      "id": "L_CYC_RANK_0",
+      "start": "CYC",
+      "end": "RANK",
+      "label": "no",
+      "stroke": "normal",
+      "arrowHead": "arrow_point",
+      "length": 1
+    },
+    {
+      "index": 6,
+      "id": "L_CYC_REV_0",
+      "start": "CYC",
+      "end": "REV",
+      "label": "yes",
+      "stroke": "normal",
+      "arrowHead": "arrow_point",
+      "length": 1
+    },
+    {
+      "index": 7,
+      "id": "L_REV_RANK_0",
+      "start": "REV",
+      "end": "RANK",
+      "label": "",
+      "stroke": "normal",
+      "arrowHead": "arrow_point",
+      "length": 1
+    },
+    {
+      "index": 8,
+      "id": "L_RANK_DUM_0",
+      "start": "RANK",
+      "end": "DUM",
+      "label": "a longer arrow sinks deeper",
+      "stroke": "normal",
+      "arrowHead": "arrow_point",
+      "length": 2
+    },
+    {
+      "index": 9,
+      "id": "L_DUM_ORD_0",
+      "start": "DUM",
+      "end": "ORD",
+      "label": "",
+      "stroke": "normal",
+      "arrowHead": "arrow_point",
+      "length": 1
+    },
+    {
+      "index": 10,
+      "id": "L_ORD_XY_0",
+      "start": "ORD",
+      "end": "XY",
+      "label": "barycenter sweeps",
+      "stroke": "normal",
+      "arrowHead": "arrow_point",
+      "length": 1
+    },
+    {
+      "index": 11,
+      "id": "L_XY_SEP_0",
+      "start": "XY",
+      "end": "SEP",
+      "label": "pull toward neighbours",
+      "stroke": "normal",
+      "arrowHead": "arrow_point",
+      "length": 1
+    },
+    {
+      "index": 12,
+      "id": "L_SEP_ROUTE_0",
+      "start": "SEP",
+      "end": "ROUTE",
+      "label": "",
+      "stroke": "thick",
+      "arrowHead": "arrow_point",
+      "length": 1
+    },
+    {
+      "index": 13,
+      "id": "L_ROUTE_OUT_0",
+      "start": "ROUTE",
+      "end": "OUT",
+      "label": "forward stays straight",
+      "stroke": "normal",
+      "arrowHead": "arrow_point",
+      "length": 1
+    },
+    {
+      "index": 14,
+      "id": "L_ROUTE_OUT_2",
+      "start": "ROUTE",
+      "end": "OUT",
+      "label": "a back-edge bends once",
+      "stroke": "normal",
+      "arrowHead": "arrow_point",
+      "length": 1
+    },
+    {
+      "index": 15,
+      "id": "L_OUT_SRC_0",
+      "start": "OUT",
+      "end": "SRC",
+      "label": "",
+      "stroke": "dotted",
+      "arrowHead": "arrow_point",
+      "length": 1
+    }
+  ],
+  "subgraphs": [],
+  "classes": {}
+}
