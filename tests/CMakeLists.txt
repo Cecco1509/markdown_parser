@@ -25,7 +25,7 @@ add_executable(mermaid_tests
 )
 target_link_libraries(mermaid_tests PRIVATE mermaid GTest::gtest_main nlohmann_json::nlohmann_json)
 target_compile_definitions(mermaid_tests PRIVATE
-    FIXTURE_DIR="${CMAKE_SOURCE_DIR}/tests/test-files"
+    FIXTURE_DIR="${CMAKE_SOURCE_DIR}/tests/test-files/mermaid"
 )
 gtest_discover_tests(mermaid_tests)
 
