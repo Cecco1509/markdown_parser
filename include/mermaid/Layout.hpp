@@ -20,6 +20,14 @@ struct Size { double w = 0, h = 0; };
 // same radius, so the formula lives here to keep the two in agreement.
 inline double cylinder_ry(double w) { return (w / 2) / (2.5 + w / 50); }
 
+// A shape's outline, centred on the origin, as a polygon. The layout clips edge
+// endpoints to this so arrows land on the real border (a diamond's bounding box
+// corners are empty — clipping to the box leaves the arrow floating), and the
+// renderer draws the polygonal shapes from it, so the two cannot disagree.
+// Curved shapes (rounded rect, stadium, cylinder) approximate to their box;
+// circles to a fine polygon.
+std::vector<Point> shape_outline(ShapeKind shape, double w, double h);
+
 struct LaidNode {
   std::string id;
   std::string label;

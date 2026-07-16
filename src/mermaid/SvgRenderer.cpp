@@ -82,26 +82,19 @@ std::string shape_svg(ShapeKind shape, double w, double h) {
            "<circle class=\"shape\" r=\"" + num(r - 5) + "\"/>";
   }
   case ShapeKind::Asymmetric:
-    // mermaid's "odd" shape is a rectangle with a V-notch CUT INTO its left
-    // side (the vertex sits inside the box), not a point sticking out of it.
-    return poly({{-hw, hh}, {hw, hh}, {hw, -hh}, {-hw, -hh}, {-hw + hh, 0}});
   case ShapeKind::Rhombus:
-    return poly({{0, -hh}, {hw, 0}, {0, hh}, {-hw, 0}});
   case ShapeKind::Hexagon:
-    return poly({{-hw + hexlean, -hh},
-                 {hw - hexlean, -hh},
-                 {hw, 0},
-                 {hw - hexlean, hh},
-                 {-hw + hexlean, hh},
-                 {-hw, 0}});
   case ShapeKind::LeanRight:
-    return poly({{-hw + lean, -hh}, {hw, -hh}, {hw - lean, hh}, {-hw, hh}});
   case ShapeKind::LeanLeft:
-    return poly({{-hw, -hh}, {hw - lean, -hh}, {hw, hh}, {-hw + lean, hh}});
   case ShapeKind::Trapezoid:
-    return poly({{-hw + lean, -hh}, {hw - lean, -hh}, {hw, hh}, {-hw, hh}});
-  case ShapeKind::TrapezoidAlt:
-    return poly({{-hw, -hh}, {hw, -hh}, {hw - lean, hh}, {-hw + lean, hh}});
+  case ShapeKind::TrapezoidAlt: {
+    // Drawn from the SAME outline the layout clips arrows to, so an arrow can
+    // never stop short of (or inside) the border it is pointing at.
+    std::string s = "<polygon class=\"shape\" points=\"";
+    for (const Point &p : shape_outline(shape, w, h))
+      s += num(p.x) + "," + num(p.y) + " ";
+    return s + "\"/>";
+  }
   case ShapeKind::Rect:
   default:
     return rect(0);

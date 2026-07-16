@@ -98,6 +98,42 @@ FlowDb collapse_subgraphs(const FlowDb &db) {
   return out;
 }
 
+std::vector<Point> shape_outline(ShapeKind shape, double w, double h) {
+  const double hw = w / 2, hh = h / 2;
+  const double lean = hh;       // leans/trapezoids slant by h/2
+  const double hexlean = hh / 2; // hexagon ends are h/4 deep
+  switch (shape) {
+  case ShapeKind::Rhombus:
+    return {{0, -hh}, {hw, 0}, {0, hh}, {-hw, 0}};
+  case ShapeKind::Hexagon:
+    return {{-hw + hexlean, -hh}, {hw - hexlean, -hh}, {hw, 0},
+            {hw - hexlean, hh},   {-hw + hexlean, hh}, {-hw, 0}};
+  case ShapeKind::Asymmetric:
+    return {{-hw, hh}, {hw, hh}, {hw, -hh}, {-hw, -hh}, {-hw + hh, 0}};
+  case ShapeKind::LeanRight:
+    return {{-hw + lean, -hh}, {hw, -hh}, {hw - lean, hh}, {-hw, hh}};
+  case ShapeKind::LeanLeft:
+    return {{-hw, -hh}, {hw - lean, -hh}, {hw, hh}, {-hw + lean, hh}};
+  case ShapeKind::Trapezoid:
+    return {{-hw + lean, -hh}, {hw - lean, -hh}, {hw, hh}, {-hw, hh}};
+  case ShapeKind::TrapezoidAlt:
+    return {{-hw, -hh}, {hw, -hh}, {hw - lean, hh}, {-hw + lean, hh}};
+  case ShapeKind::Circle:
+  case ShapeKind::DoubleCircle: {
+    std::vector<Point> p;
+    const double r = std::max(hw, hh);
+    const int n = 32;
+    for (int i = 0; i < n; ++i) {
+      const double a = 2 * 3.14159265358979323846 * i / n;
+      p.push_back({r * std::cos(a), r * std::sin(a)});
+    }
+    return p;
+  }
+  default: // Rect, RoundEdges, Stadium, Subroutine, Cylinder -> their box
+    return {{-hw, -hh}, {hw, -hh}, {hw, hh}, {-hw, hh}};
+  }
+}
+
 namespace {
 
 // A layout cell: a real node or a routing dummy. Coordinates are computed in
@@ -628,17 +664,35 @@ private:
   }
 
   // ── phase 4: routing + emit ───────────────────────────────────────────
-  // Clip a segment from a node centre to its bounding-box border toward `t`.
-  static Point clip(Point center, double w, double h, Point t) {
-    double dx = t.x - center.x, dy = t.y - center.y;
+  // Where the ray from a node's centre toward `t` crosses the node's OUTLINE.
+  // Clipping to the bounding box instead would leave arrows floating in the
+  // empty corners of shapes like the rhombus.
+  static Point clip(Point center, ShapeKind shape, double w, double h, Point t) {
+    const double dx = t.x - center.x, dy = t.y - center.y;
     if (dx == 0 && dy == 0)
       return center;
-    double tx = dx != 0 ? (w / 2) / std::abs(dx)
-                        : std::numeric_limits<double>::infinity();
-    double ty = dy != 0 ? (h / 2) / std::abs(dy)
-                        : std::numeric_limits<double>::infinity();
-    double s = std::min({tx, ty, 1.0});
-    return {center.x + dx * s, center.y + dy * s};
+    const auto poly = shape_outline(shape, w, h);
+    auto cross = [](double ax, double ay, double bx, double by) {
+      return ax * by - ay * bx;
+    };
+    double best = 1.0; // never overshoot the target
+    bool hit = false;
+    for (size_t i = 0; i < poly.size(); ++i) {
+      const Point a = poly[i], b = poly[(i + 1) % poly.size()];
+      const double ex = b.x - a.x, ey = b.y - a.y;
+      const double den = cross(dx, dy, ex, ey);
+      if (std::abs(den) < 1e-9)
+        continue; // parallel
+      const double tt = cross(a.x, a.y, ex, ey) / den; // along the ray
+      const double u = cross(a.x, a.y, dx, dy) / den;  // along the edge
+      if (tt > 0 && tt <= 1.0 && u >= 0 && u <= 1) {
+        if (!hit || tt < best) {
+          best = tt;
+          hit = true;
+        }
+      }
+    }
+    return {center.x + dx * best, center.y + dy * best};
   }
 
   // Perpendicular distance from p to the infinite line a-b.
@@ -714,9 +768,12 @@ private:
         }
       }
       pts.push_back(p1);
-      // Clip first/last endpoints to the node borders.
-      pts.front() = clip(p0, sc.w, sc.h, pts[1]);
-      pts.back() = clip(p1, ec.w, ec.h, pts[pts.size() - 2]);
+      // Clip the endpoints to the real node borders (chain ends are always real
+      // nodes, so their index lines up with db_.vertices).
+      pts.front() = clip(p0, db_.vertices[chains_[i].front()].shape, sc.w, sc.h,
+                         pts[1]);
+      pts.back() = clip(p1, db_.vertices[chains_[i].back()].shape, ec.w, ec.h,
+                        pts[pts.size() - 2]);
 
       LaidEdge le;
       le.start = e.start;
