@@ -62,7 +62,13 @@
 
 %%
 
-document : header stmts                   { document($1, $2) } ;
+# A diagram may open with comment lines or blank lines; the lexer turns each of
+# those into a NEWLINE, so the header is not necessarily the first token.
+document : blanks header stmts            { document($2, $3) } ;
+
+blanks : %empty                           { nothing() }
+       | blanks NEWLINE                   { nothing() }
+       ;
 
 header : GRAPH NEWLINE                     { no_dir() }
        | GRAPH DIR NEWLINE                 { some_dir($2) }
