@@ -178,7 +178,7 @@ that re-parses on every keystroke, with a toggle for Mermaid rendering.
 Build with [Emscripten](https://emscripten.org/) (`emsdk` activated):
 
 ```bash
-emcmake cmake -S . -B build-wasm
+emcmake cmake -S . -B build-wasm -DCMAKE_BUILD_TYPE=Release
 cmake --build build-wasm -j
 ```
 
