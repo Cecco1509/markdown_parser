@@ -2,6 +2,8 @@
 #include "markdown_parser/parser/commonmark_constants.hpp"
 #include "markdown_parser/utils/string_utils.hpp"
 
+#include <algorithm>
+
 namespace markdown_parser {
 
 ScannedLine ScannedLine::from(std::string_view raw, bool strip_bom) {

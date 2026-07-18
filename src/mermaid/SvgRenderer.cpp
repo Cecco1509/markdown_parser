@@ -1,5 +1,6 @@
 #include "mermaid/SvgRenderer.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <sstream>
 #include <string>
