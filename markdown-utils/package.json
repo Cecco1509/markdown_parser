@@ -1,0 +1,14 @@
+{
+  "name": "markdown-utils",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Generates golden mdast JSON from the CommonMark spec cases using remark (the reference mdast implementation), for the C++ JSON-renderer verification suite.",
+  "scripts": {
+    "generate": "node generate-golden.mjs"
+  },
+  "dependencies": {
+    "remark-parse": "^11.0.0",
+    "unified": "^11.0.5"
+  }
+}
