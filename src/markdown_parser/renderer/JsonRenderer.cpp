@@ -49,28 +49,52 @@ void JsonRenderer::emitBlockChildren(const BlockNode& node) {
     out_ += ']';
 }
 
-void JsonRenderer::emitInlineChildren(const InlineNode& node) {
+// Emits a phrasing-content "children" array, normalizing to mdast shape:
+//   * soft line breaks fold into a literal "\n" (mdast has no softBreak node),
+//   * adjacent text runs coalesce into a single text node,
+//   * empty text nodes (left behind by delimiter splitting) are dropped.
+void JsonRenderer::emitPhrasing(
+    const std::vector<std::unique_ptr<InlineNode>>& children) {
     out_ += "\"children\":[";
-    bool first = true;
-    for (const auto& child : node.children) {
-        if (!first) out_ += ',';
-        first = false;
-        visit(*child);
+    std::string text_run;
+    bool emitted = false; // any node already written to this array
+
+    auto flush_text = [&]() {
+        if (text_run.empty()) return;
+        if (emitted) out_ += ',';
+        out_ += "{\"type\":\"text\",\"value\":" + jsonStr(text_run) + '}';
+        emitted = true;
+        text_run.clear();
+    };
+
+    for (const auto& child : children) {
+        switch (child->type) {
+        case InlineType::Text:      text_run += child->literal; break;
+        case InlineType::SoftBreak: text_run += '\n';           break;
+        default:
+            flush_text();
+            if (emitted) out_ += ',';
+            visit(*child);
+            emitted = true;
+        }
     }
+    flush_text();
     out_ += ']';
 }
 
-// Inline children stored on a BlockNode (paragraph, heading).
-static void emitInlineChildrenOfBlock(JsonRenderer& v, std::string& out,
-                                       const BlockNode& node) {
-    out += "\"children\":[";
-    bool first = true;
-    for (const auto& child : node.inline_children) {
-        if (!first) out += ',';
-        first = false;
-        v.visit(*child);
-    }
-    out += ']';
+// Drop the single trailing newline mdast omits from code/html block values.
+static std::string stripTrailingNewline(std::string s) {
+    if (!s.empty() && s.back() == '\n') s.pop_back();
+    return s;
+}
+
+// Concatenates the literal text of a node and all its descendants (used for
+// image alt text, mirroring mdast-util-to-string).
+static void collectDescendantText(const InlineNode& node, std::string& out) {
+    if (node.type == InlineType::Text || node.type == InlineType::Code)
+        out += node.literal;
+    for (const auto& child : node.children)
+        collectDescendantText(*child, out);
 }
 
 // ── public API ────────────────────────────────────────────────────────────────
@@ -94,14 +118,14 @@ void JsonRenderer::visit(const BlockNode& node) {
 
     case NodeType::Paragraph:
         out_ += "{\"type\":\"paragraph\",";
-        emitInlineChildrenOfBlock(*this, out_, node);
+        emitPhrasing(node.inline_children);
         out_ += '}';
         break;
 
     case NodeType::Heading: {
         const auto& hd = std::get<HeadingData>(node.data);
         out_ += "{\"type\":\"heading\",\"depth\":" + std::to_string(hd.level) + ',';
-        emitInlineChildrenOfBlock(*this, out_, node);
+        emitPhrasing(node.inline_children);
         out_ += '}';
         break;
     }
@@ -121,8 +145,9 @@ void JsonRenderer::visit(const BlockNode& node) {
         bool ordered   = (ld.list_type == ListType::Ordered);
         out_ += "{\"type\":\"list\"";
         out_ += ",\"ordered\":" + std::string(ordered ? "true" : "false");
-        if (ordered)
-            out_ += ",\"start\":" + std::to_string(ld.start);
+        // mdast always carries `start` (null for bullet lists).
+        out_ += ",\"start\":" + (ordered ? std::to_string(ld.start)
+                                          : std::string("null"));
         out_ += ",\"spread\":" + std::string(ld.tight ? "false" : "true");
         out_ += ',';
         emitBlockChildren(node);
@@ -135,7 +160,8 @@ void JsonRenderer::visit(const BlockNode& node) {
         // surrounding blank lines — approximated here by !tight on the parent.
         // We don't have parent context here, so we conservatively use false;
         // the List node already carries the tight/spread information.
-        out_ += "{\"type\":\"listItem\",\"spread\":false,";
+        // `checked` is null unless this is a GFM task-list item (unsupported).
+        out_ += "{\"type\":\"listItem\",\"spread\":false,\"checked\":null,";
         emitBlockChildren(node);
         out_ += '}';
         break;
@@ -144,28 +170,31 @@ void JsonRenderer::visit(const BlockNode& node) {
     case NodeType::CodeBlock: {
         const auto& cd = std::get<CodeBlockData>(node.data);
         out_ += "{\"type\":\"code\"";
+        // mdast always carries `lang` and `meta` (null when absent).
         if (!cd.info_string.empty()) {
             // lang is first word; meta is the rest (may be absent).
             auto sep  = cd.info_string.find_first_of(" \t");
             std::string lang = cd.info_string.substr(0, sep);
             out_ += ",\"lang\":" + jsonStr(lang);
+            std::string meta;
             if (sep != std::string::npos) {
-                std::string meta = cd.info_string.substr(sep + 1);
-                // Strip leading whitespace from meta.
-                auto start = meta.find_first_not_of(" \t");
-                if (start != std::string::npos)
-                    out_ += ",\"meta\":" + jsonStr(meta.substr(start));
+                std::string rest = cd.info_string.substr(sep + 1);
+                auto start = rest.find_first_not_of(" \t");
+                if (start != std::string::npos) meta = rest.substr(start);
             }
+            out_ += ",\"meta\":" + (meta.empty() ? std::string("null")
+                                                 : jsonStr(meta));
         } else {
-            out_ += ",\"lang\":null";
+            out_ += ",\"lang\":null,\"meta\":null";
         }
-        out_ += ",\"value\":" + jsonStr(node.string_content);
+        out_ += ",\"value\":" + jsonStr(stripTrailingNewline(node.string_content));
         out_ += '}';
         break;
     }
 
     case NodeType::HtmlBlock:
-        out_ += "{\"type\":\"html\",\"value\":" + jsonStr(node.string_content) + '}';
+        out_ += "{\"type\":\"html\",\"value\":"
+                + jsonStr(stripTrailingNewline(node.string_content)) + '}';
         break;
     }
 }
@@ -197,13 +226,13 @@ void JsonRenderer::visit(const InlineNode& node) {
 
     case InlineType::Emph:
         out_ += "{\"type\":\"emphasis\",";
-        emitInlineChildren(node);
+        emitPhrasing(node.children);
         out_ += '}';
         break;
 
     case InlineType::Strong:
         out_ += "{\"type\":\"strong\",";
-        emitInlineChildren(node);
+        emitPhrasing(node.children);
         out_ += '}';
         break;
 
@@ -213,18 +242,17 @@ void JsonRenderer::visit(const InlineNode& node) {
         out_ += ",\"url\":" + jsonStr(ld.destination);
         out_ += ",\"title\":" + (ld.title ? jsonStr(*ld.title) : std::string("null"));
         out_ += ',';
-        emitInlineChildren(node);
+        emitPhrasing(node.children);
         out_ += '}';
         break;
     }
 
     case InlineType::Image: {
         const auto& ld = std::get<LinkData>(node.data);
-        // Alt text: plain text concatenation of all descendant Text nodes.
+        // Alt text is the concatenated text of ALL descendants (mdast computes
+        // it like mdast-util-to-string), not just the direct Text children.
         std::string alt;
-        for (const auto& child : node.children)
-            if (child->type == InlineType::Text)
-                alt += child->literal;
+        collectDescendantText(node, alt);
         out_ += "{\"type\":\"image\"";
         out_ += ",\"url\":" + jsonStr(ld.destination);
         out_ += ",\"title\":" + (ld.title ? jsonStr(*ld.title) : std::string("null"));
