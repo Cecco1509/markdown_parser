@@ -189,9 +189,15 @@ void HtmlRenderer::visit(const InlineNode &node) {
     out_ += "<br />\n";
     break;
 
-  case InlineType::Code:
-    out_ += "<code>"; out_ += string_utils::escapeHtml(node.literal); out_ += "</code>";
+  case InlineType::Code: {
+    // Spec §6.1: line endings in a code span render as spaces. The AST keeps
+    // them raw, so convert here.
+    std::string code = node.literal;
+    for (char &ch : code)
+      if (ch == '\n') ch = ' ';
+    out_ += "<code>"; out_ += string_utils::escapeHtml(code); out_ += "</code>";
     break;
+  }
 
   case InlineType::HtmlInline:
     out_ += node.literal;

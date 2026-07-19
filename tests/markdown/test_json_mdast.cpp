@@ -69,10 +69,9 @@ TEST_P(JsonMdastTest, MatchesRemark) {
       4, 5, 108, 109, 254, 256, 258, 259, 262, 263, 264, 270, 271, 273, 274,
       277, 286, 287, 288, 290, 307, 309, 316, 319, 324, 325,
 
-      // (3) Verbatim source we normalize at parse time and cannot recover:
-      // code-span line endings folded to spaces (335, 337, 640, 641), and one
-      // HTML block whose trailing newline mdast keeps but we strip (173).
-      173, 335, 337, 640, 641,
+      // (3) One HTML block (a <style> block running to EOF) whose trailing
+      // newline mdast keeps but our uniform trailing-newline strip removes.
+      173,
   };
   if (kKnownFailures.count(tc.example))
     GTEST_SKIP() << "Example #" << tc.example << " diverges from remark"

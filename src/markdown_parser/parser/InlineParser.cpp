@@ -575,14 +575,18 @@ std::unique_ptr<InlineNode> InlineParser::parseBacktickString() {
       while (search < input_.size() && input_[search] == '`')
         ++search;
       if (search - cs == tick_len) {
-        // Found. Normalise content.
+        // Found. Apply the spec §6.1 boundary strip only: if the content both
+        // begins and ends with a whitespace character (space or line ending)
+        // and is not all whitespace, remove one from each end. Interior line
+        // endings are preserved raw in the AST (mdast keeps them); the
+        // line-ending -> space conversion is a rendering concern handled by the
+        // HTML renderer.
         std::string content(input_.substr(pos_, cs - pos_));
-        for (char &ch : content)
-          if (ch == '\n')
-            ch = ' ';
-        bool all_spaces = content.find_first_not_of(' ') == std::string::npos;
-        if (!all_spaces && content.size() >= 2 && content.front() == ' ' &&
-            content.back() == ' ')
+        auto is_ws = [](char c) { return c == ' ' || c == '\n'; };
+        bool all_ws =
+            content.find_first_not_of(" \n") == std::string::npos;
+        if (!all_ws && content.size() >= 2 && is_ws(content.front()) &&
+            is_ws(content.back()))
           content = content.substr(1, content.size() - 2);
         pos_ = search;
         auto node = makeNode(InlineType::Code);
