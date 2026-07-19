@@ -12,6 +12,7 @@ include(GoogleTest)
 # the JSON fixture and run as an individual parameterized test case.
 add_executable(markdown_tests
     markdown/test_commonmark_spec.cpp
+    markdown/test_json_mdast.cpp
 )
 target_include_directories(markdown_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/markdown)
 target_link_libraries(markdown_tests PRIVATE
@@ -21,6 +22,7 @@ target_link_libraries(markdown_tests PRIVATE
 )
 target_compile_definitions(markdown_tests PRIVATE
     SPEC_FILE_PATH="${CMAKE_CURRENT_SOURCE_DIR}/test-files/markdown/commonmark_spec.json"
+    SPEC_MDAST_FILE_PATH="${CMAKE_CURRENT_SOURCE_DIR}/test-files/markdown/commonmark_spec_mdast.json"
 )
 gtest_discover_tests(markdown_tests PROPERTIES LABELS "spec")
 
