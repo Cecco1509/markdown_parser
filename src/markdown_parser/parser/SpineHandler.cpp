@@ -206,10 +206,14 @@ SpineHandler::tryOpenNewBlock(ScannedLine &cur, const SpineMatchResult &match) {
         openBlock(NodeType::List, new_ld);
       } else {
         // Same list: if the previous item ended with a blank line the list is
-        // loose (blank between two consecutive items).
+        // loose (blank between two consecutive items). This is mdast's
+        // list-level `spread`.
         const auto &ch = tip().children;
-        if (!ch.empty() && ch.back()->last_line_blank)
-          std::get<ListData>(tip().data).tight = false;
+        if (!ch.empty() && ch.back()->last_line_blank) {
+          auto &ld = std::get<ListData>(tip().data);
+          ld.tight = false;
+          ld.spread = true;
+        }
       }
     }
 
@@ -369,6 +373,10 @@ BlockNode &SpineHandler::openBlock(NodeType type, BlockData data) {
   if (!spine_.empty() && tip().type == NodeType::Item) {
     BlockNode &item = tip();
     if (!item.children.empty() && item.last_line_blank) {
+      // This item has a blank line between two of its own children: mdast's
+      // item-level `spread`.
+      if (auto *id = std::get_if<ItemData>(&item.data))
+        id->spread = true;
       for (int k = static_cast<int>(spine_.size()) - 2; k >= 0; --k) {
         if (spine_[k]->type == NodeType::List) {
           std::get<ListData>(spine_[k]->data).tight = false;
@@ -415,6 +423,11 @@ void SpineHandler::closeBlock() {
     if (!spine_.empty() && spine_.back()->type == NodeType::List &&
         node->children.size() >= 2)
       std::get<ListData>(spine_.back()->data).tight = false;
+    // Note: item-level `spread` is NOT set here. A trailing blank after the
+    // item's last child (e.g. a blank separating it from the next item) makes
+    // the list loose but is not an internal blank between the item's children.
+    // True internal blanks are caught at openBlock (site 2) when the next child
+    // opens after a blank.
   }
 
   // When a List closes, propagate its last item's trailing-blank to the

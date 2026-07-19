@@ -148,7 +148,7 @@ void JsonRenderer::visit(const BlockNode& node) {
         // mdast always carries `start` (null for bullet lists).
         out_ += ",\"start\":" + (ordered ? std::to_string(ld.start)
                                           : std::string("null"));
-        out_ += ",\"spread\":" + std::string(ld.tight ? "false" : "true");
+        out_ += ",\"spread\":" + std::string(ld.spread ? "true" : "false");
         out_ += ',';
         emitBlockChildren(node);
         out_ += '}';
@@ -156,12 +156,13 @@ void JsonRenderer::visit(const BlockNode& node) {
     }
 
     case NodeType::Item: {
-        // Determine spread: item is spread if any child is a paragraph with
-        // surrounding blank lines — approximated here by !tight on the parent.
-        // We don't have parent context here, so we conservatively use false;
-        // the List node already carries the tight/spread information.
-        // `checked` is null unless this is a GFM task-list item (unsupported).
-        out_ += "{\"type\":\"listItem\",\"spread\":false,\"checked\":null,";
+        // mdast item-level spread: a blank line between this item's own
+        // children (computed by the spine handler). `checked` is null unless
+        // this is a GFM task-list item (unsupported).
+        const auto& id = std::get<ItemData>(node.data);
+        out_ += "{\"type\":\"listItem\",\"spread\":"
+                + std::string(id.spread ? "true" : "false")
+                + ",\"checked\":null,";
         emitBlockChildren(node);
         out_ += '}';
         break;

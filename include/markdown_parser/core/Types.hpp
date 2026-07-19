@@ -58,11 +58,16 @@ struct ListData {
   ListDelim delimiter;
   bool tight;
   int padding;
+  // mdast `spread`: sibling items separated by a blank line. Distinct from
+  // `tight` (the HTML loose/tight flag = spread OR any item spread).
+  bool spread = false;
 };
 
 struct ItemData {
   int marker_offset;
   int padding;
+  // mdast `spread`: this item has a blank line between two of its own children.
+  bool spread = false;
 };
 
 enum class HtmlBlockType : int {

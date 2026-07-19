@@ -62,14 +62,7 @@ TEST_P(JsonMdastTest, MatchesRemark) {
       569, 570, 571, 573, 576, 577, 582, 583, 584, 585, 586, 587, 588, 589, 591,
       592, 593,
 
-      // (2) List `spread`: mdast's per-item spread reflects blank-line spacing
-      // between an item's own children; our AST tracks tightness only at the
-      // list level, so listItem.spread is approximated (and a few list.spread
-      // edge cases differ). Computing it exactly needs per-item blank-line data.
-      4, 5, 108, 109, 254, 256, 258, 259, 262, 263, 264, 270, 271, 273, 274,
-      277, 286, 287, 288, 290, 307, 309, 316, 319, 324, 325,
-
-      // (3) One HTML block (a <style> block running to EOF) whose trailing
+      // (2) One HTML block (a <style> block running to EOF) whose trailing
       // newline mdast keeps but our uniform trailing-newline strip removes.
       173,
   };
