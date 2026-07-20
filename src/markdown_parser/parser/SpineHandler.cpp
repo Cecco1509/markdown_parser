@@ -3,6 +3,7 @@
 #include "markdown_parser/parser/block_rules.hpp"
 #include "markdown_parser/parser/commonmark_constants.hpp"
 #include "markdown_parser/utils/entities.hpp"
+#include "markdown_parser/utils/string_utils.hpp"
 #include <algorithm>
 #include <iostream>
 
@@ -397,6 +398,15 @@ BlockNode &SpineHandler::openBlock(NodeType type, BlockData data) {
   return node;
 }
 
+// Builds a closed `definition` block node from scanned definition data.
+static std::unique_ptr<BlockNode> makeDefinitionNode(DefinitionData d) {
+  auto n = std::make_unique<BlockNode>();
+  n->type = NodeType::Definition;
+  n->data = std::move(d);
+  n->is_open = false;
+  return n;
+}
+
 void SpineHandler::closeBlock() {
   if (debug_)
     std::cerr << "CLOSE  " << nodeTypeToString(spine_.back()->type)
@@ -405,7 +415,13 @@ void SpineHandler::closeBlock() {
   spine_.pop_back();
 
   if (node->type == NodeType::Paragraph) {
-    maybeScanLinkRefDefs(*node);
+    std::vector<DefinitionData> defs;
+    maybeScanLinkRefDefs(*node, defs);
+    // Emit each definition as a positioned `definition` node into the parent,
+    // ahead of any surviving paragraph content.
+    if (!spine_.empty())
+      for (auto &d : defs)
+        spine_.back()->children.push_back(makeDefinitionNode(std::move(d)));
     // Paragraph carried only link reference definitions: discard it.
     const auto &sc = node->string_content;
     const bool blank = std::all_of(sc.begin(), sc.end(), [](char c) {
@@ -518,8 +534,16 @@ bool SpineHandler::tryPromoteSetextHeading(const ScannedLine &line,
   if (spine_.size() >= 2 && (spine_.size() - 2) >= match.first_unmatched)
     return false;
 
-  // compute links definitions before promoting the paragraph to a heading
-  maybeScanLinkRefDefs(t);
+  // compute links definitions before promoting the paragraph to a heading.
+  // The paragraph is still `tip()`, so its parent is spine_[size-2]; the
+  // definitions belong there, ahead of the heading that `t` becomes.
+  std::vector<DefinitionData> defs;
+  maybeScanLinkRefDefs(t, defs);
+  if (!defs.empty() && spine_.size() >= 2) {
+    BlockNode &parent = *spine_[spine_.size() - 2];
+    for (auto &d : defs)
+      parent.children.push_back(makeDefinitionNode(std::move(d)));
+  }
   if (debug_)
     std::cerr << "SETEXT?  para content=\"" << t.string_content << "\"\n";
   if (t.string_content.empty())
@@ -576,7 +600,8 @@ void SpineHandler::parseInlineContent(BlockNode &node) {
 // Returns false (pos unchanged) if no valid definition starts at pos.
 // Inserts into ref_map_ on success (first-definition-wins: skips duplicates).
 bool SpineHandler::tryScanOneLinkRefDef(std::string_view content,
-                                        std::size_t &pos) {
+                                        std::size_t &pos,
+                                        std::vector<DefinitionData> &out) {
   if (debug_)
     std::cerr << "REFDEF? pos=" << pos << " \"" << content.substr(pos)
               << "\"\n";
@@ -832,19 +857,26 @@ bool SpineHandler::tryScanOneLinkRefDef(std::string_view content,
   if (p < len)
     ++p;
 
-  ref_map_.try_emplace(std::move(norm_key), std::move(destination), std::move(title));
+  // Keep a `definition` node for EVERY scanned def (mdast preserves duplicates),
+  // even though the resolver map is first-definition-wins.
+  out.push_back(DefinitionData{
+      norm_key, string_utils::processEscapesAndEntities(raw_label), destination,
+      title});
+  ref_map_.try_emplace(std::move(norm_key), std::move(destination),
+                       std::move(title));
 
   pos = p;
   return true;
 }
 
-void SpineHandler::maybeScanLinkRefDefs(BlockNode &node) {
+void SpineHandler::maybeScanLinkRefDefs(BlockNode &node,
+                                        std::vector<DefinitionData> &out) {
   if (debug_)
     std::cerr << "REFDEF  \"" << node.string_content << "\"\n";
   std::string_view content = node.string_content;
   std::size_t pos = 0;
   while (pos < content.size()) {
-    if (!tryScanOneLinkRefDef(content, pos))
+    if (!tryScanOneLinkRefDef(content, pos, out))
       break;
   }
   node.string_content = std::string(content.substr(pos));

@@ -1107,6 +1107,7 @@ std::unique_ptr<InlineNode> InlineParser::handleBracketCloser(
   std::optional<std::string> dest, title, label;
   bool resolved = false;
   bool tried_full_ref = false;
+  ReferenceType ref_type = ReferenceType::None;
 
   // 1. Inline link: ](destination title?)
   if (!resolved && pos_ < input_.size() && input_[pos_] == '(') {
@@ -1176,6 +1177,7 @@ std::unique_ptr<InlineNode> InlineParser::handleBracketCloser(
         dest = it->second.destination;
         title = it->second.title;
         label = raw;
+        ref_type = ReferenceType::Full;
         resolved = true;
       }
     }
@@ -1202,6 +1204,7 @@ std::unique_ptr<InlineNode> InlineParser::handleBracketCloser(
       dest = it->second.destination;
       title = it->second.title;
       label = raw;
+      ref_type = ReferenceType::Collapsed;
       resolved = true;
     }
   }
@@ -1214,6 +1217,7 @@ std::unique_ptr<InlineNode> InlineParser::handleBracketCloser(
       dest = it->second.destination;
       title = it->second.title;
       label = raw;
+      ref_type = ReferenceType::Shortcut;
       resolved = true;
     }
   }
@@ -1223,7 +1227,15 @@ std::unique_ptr<InlineNode> InlineParser::handleBracketCloser(
 
     auto link =
         makeNode(bracket.is_image ? InlineType::Image : InlineType::Link);
-    link->data = LinkData{dest.value(), title, label};
+    LinkData ldata{dest.value(), title, label};
+    if (ref_type != ReferenceType::None && label) {
+      // identifier normalizes the RAW label (case-fold + whitespace collapse);
+      // the stored label resolves escapes/entities but keeps case/whitespace.
+      ldata.identifier = normaliseLabel(*label);
+      ldata.label = string_utils::processEscapesAndEntities(*label);
+      ldata.reference_type = ref_type;
+    }
+    link->data = std::move(ldata);
 
     auto op_it = nodes_.begin() + bracket.node_idx;
 

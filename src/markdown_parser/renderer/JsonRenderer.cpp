@@ -88,6 +88,17 @@ static std::string stripTrailingNewline(std::string s) {
     return s;
 }
 
+// mdast referenceType spelling for a resolved reference link/image.
+static const char* referenceTypeStr(ReferenceType t) {
+    switch (t) {
+    case ReferenceType::Shortcut:  return "shortcut";
+    case ReferenceType::Collapsed: return "collapsed";
+    case ReferenceType::Full:      return "full";
+    case ReferenceType::None:      return "";
+    }
+    return "";
+}
+
 // Concatenates the literal text of a node and all its descendants (used for
 // image alt text, mirroring mdast-util-to-string).
 static void collectDescendantText(const InlineNode& node, std::string& out) {
@@ -197,6 +208,18 @@ void JsonRenderer::visit(const BlockNode& node) {
         out_ += "{\"type\":\"html\",\"value\":"
                 + jsonStr(stripTrailingNewline(node.string_content)) + '}';
         break;
+
+    case NodeType::Definition: {
+        const auto& d = std::get<DefinitionData>(node.data);
+        out_ += "{\"type\":\"definition\"";
+        out_ += ",\"identifier\":" + jsonStr(d.identifier);
+        out_ += ",\"label\":" + jsonStr(d.label);
+        out_ += ",\"url\":" + jsonStr(d.destination);
+        out_ += ",\"title\":" + (d.title ? jsonStr(*d.title)
+                                          : std::string("null"));
+        out_ += '}';
+        break;
+    }
     }
 }
 
@@ -239,12 +262,24 @@ void JsonRenderer::visit(const InlineNode& node) {
 
     case InlineType::Link: {
         const auto& ld = std::get<LinkData>(node.data);
-        out_ += "{\"type\":\"link\"";
-        out_ += ",\"url\":" + jsonStr(ld.destination);
-        out_ += ",\"title\":" + (ld.title ? jsonStr(*ld.title) : std::string("null"));
-        out_ += ',';
-        emitPhrasing(node.children);
-        out_ += '}';
+        if (ld.reference_type != ReferenceType::None) {
+            // Reference link: preserve the reference (mdast `linkReference`)
+            // instead of the resolved url/title.
+            out_ += "{\"type\":\"linkReference\"";
+            out_ += ",\"identifier\":" + jsonStr(ld.identifier);
+            out_ += ",\"label\":" + jsonStr(ld.label.value_or(""));
+            out_ += ",\"referenceType\":\""
+                    + std::string(referenceTypeStr(ld.reference_type)) + "\",";
+            emitPhrasing(node.children);
+            out_ += '}';
+        } else {
+            out_ += "{\"type\":\"link\"";
+            out_ += ",\"url\":" + jsonStr(ld.destination);
+            out_ += ",\"title\":" + (ld.title ? jsonStr(*ld.title) : std::string("null"));
+            out_ += ',';
+            emitPhrasing(node.children);
+            out_ += '}';
+        }
         break;
     }
 
@@ -254,11 +289,22 @@ void JsonRenderer::visit(const InlineNode& node) {
         // it like mdast-util-to-string), not just the direct Text children.
         std::string alt;
         collectDescendantText(node, alt);
-        out_ += "{\"type\":\"image\"";
-        out_ += ",\"url\":" + jsonStr(ld.destination);
-        out_ += ",\"title\":" + (ld.title ? jsonStr(*ld.title) : std::string("null"));
-        out_ += ",\"alt\":" + jsonStr(alt);
-        out_ += '}';
+        if (ld.reference_type != ReferenceType::None) {
+            // mdast `imageReference`: alt + reference, no url/title, no children.
+            out_ += "{\"type\":\"imageReference\"";
+            out_ += ",\"identifier\":" + jsonStr(ld.identifier);
+            out_ += ",\"label\":" + jsonStr(ld.label.value_or(""));
+            out_ += ",\"referenceType\":\""
+                    + std::string(referenceTypeStr(ld.reference_type)) + "\"";
+            out_ += ",\"alt\":" + jsonStr(alt);
+            out_ += '}';
+        } else {
+            out_ += "{\"type\":\"image\"";
+            out_ += ",\"url\":" + jsonStr(ld.destination);
+            out_ += ",\"title\":" + (ld.title ? jsonStr(*ld.title) : std::string("null"));
+            out_ += ",\"alt\":" + jsonStr(alt);
+            out_ += '}';
+        }
         break;
     }
     }

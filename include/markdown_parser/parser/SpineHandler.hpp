@@ -65,8 +65,13 @@ private:
                                const SpineMatchResult &match);
   void checkHtmlBlockEnd(std::string_view orig_content);
 
-  void maybeScanLinkRefDefs(BlockNode &node);
-  bool tryScanOneLinkRefDef(std::string_view content, std::size_t &pos);
+  // Scans leading link reference definitions out of `node.string_content`
+  // (trimming them), appending one DefinitionData per definition (in source
+  // order) to `out` for the caller to splice into the tree as `definition`
+  // nodes. Also populates the resolver map (first-definition-wins).
+  void maybeScanLinkRefDefs(BlockNode &node, std::vector<DefinitionData> &out);
+  bool tryScanOneLinkRefDef(std::string_view content, std::size_t &pos,
+                            std::vector<DefinitionData> &out);
   void stripTrailingBlankLines(std::string &content);
   void parseInlineContent(BlockNode &node);
   void printSpineStatus() const;

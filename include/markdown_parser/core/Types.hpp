@@ -17,7 +17,8 @@ enum class NodeType : uint8_t {
   HtmlBlock,
   Paragraph,
   Heading,
-  ThematicBreak
+  ThematicBreak,
+  Definition // mdast link/image reference definition (`[foo]: /url "title"`)
 };
 
 enum class InlineType : uint8_t {
@@ -89,16 +90,32 @@ struct LinkDef {
   std::optional<std::string> title;
 };
 
+// mdast `definition` node payload: a link reference definition kept in the tree
+// at its source position (in addition to feeding the resolver map).
+struct DefinitionData {
+  std::string identifier;             // normalized label
+  std::string label;                  // raw label as written
+  std::string destination;            // url
+  std::optional<std::string> title;
+};
+
 using BlockData = std::variant<std::monostate, HeadingData, CodeBlockData,
-                               ListData, ItemData, HtmlBlockData>;
+                               ListData, ItemData, HtmlBlockData, DefinitionData>;
 
 // ── InlineData
 // ────────────────────────────────────────────────────────────────
 
+// mdast reference kind for a link/image that resolved via a reference
+// definition. `None` means an inline link/image (`[text](url)`), which stays a
+// `link`/`image`; the others make it a `linkReference`/`imageReference`.
+enum class ReferenceType : uint8_t { None, Shortcut, Collapsed, Full };
+
 struct LinkData {
   std::string destination;
   std::optional<std::string> title;
-  std::optional<std::string> label;
+  std::optional<std::string> label;      // raw label (reference links/images)
+  std::string identifier;                // normalized label (reference only)
+  ReferenceType reference_type = ReferenceType::None;
 };
 
 using InlineData = std::variant<std::monostate, LinkData>;
@@ -126,6 +143,8 @@ inline std::string_view nodeTypeToString(NodeType t) {
     return "Heading";
   case NodeType::ThematicBreak:
     return "ThematicBreak";
+  case NodeType::Definition:
+    return "Definition";
   }
   return "Unknown";
 }

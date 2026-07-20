@@ -51,20 +51,14 @@ TEST_P(JsonMdastTest, MatchesRemark) {
   // representational choice or a parse-time normalization we don't undo — not a
   // rendering bug. See docs and the AI verification report for the rationale.
   static const std::set<int> kKnownFailures = {
-      // (1) Reference resolution: our parser resolves link/image reference
-      // definitions (`[foo]: /url`) and reference uses (`[foo]`) into concrete
-      // `link`/`image` nodes. remark preserves `definition` +
-      // `linkReference`/`imageReference` nodes with identifier/label/type.
-      23, 33, 192, 193, 194, 195, 196, 198, 200, 202, 203, 204, 205, 206, 207,
-      208, 210, 214, 215, 216, 217, 218, 317, 527, 528, 529, 530, 531, 532, 533,
-      534, 535, 536, 537, 538, 539, 540, 541, 542, 543, 544, 545, 549, 550, 553,
-      554, 555, 556, 557, 558, 559, 560, 561, 562, 563, 564, 565, 566, 567, 568,
-      569, 570, 571, 573, 576, 577, 582, 583, 584, 585, 586, 587, 588, 589, 591,
-      592, 593,
-
-      // (2) One HTML block (a <style> block running to EOF) whose trailing
+      // One HTML block (a <style> block running to EOF) whose trailing
       // newline mdast keeps but our uniform trailing-newline strip removes.
       173,
+      // A multi-line reference-definition label whose internal indentation
+      // mdast preserves in `definition.label` (`"Foo\n  bar"`). Our paragraph
+      // line-accumulation strips that indentation before the label is scanned,
+      // so the raw whitespace is no longer recoverable at render time.
+      541,
   };
   if (kKnownFailures.count(tc.example))
     GTEST_SKIP() << "Example #" << tc.example << " diverges from remark"
