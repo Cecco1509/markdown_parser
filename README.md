@@ -10,6 +10,12 @@ standalone **SVG** — no browser or JavaScript required.
 The project produces a structured AST that can be emitted as **HTML** or as a
 **JSON AST**, and ships with a live in-browser demo compiled to **WebAssembly**.
 
+### ▶ [Try it live](https://cecco1509.github.io/markdown_parser/web/)
+
+A two-pane Markdown editor running the parser **entirely client-side** as
+WebAssembly — type Markdown on the left, see rendered HTML (with live Mermaid
+diagrams) on the right. Source in [`web/`](web/).
+
 > *AP course project B02 — AI-Assisted Markdown Parser with Mermaid Diagram Support.*
 
 ---
@@ -25,11 +31,17 @@ The project produces a structured AST that can be emitted as **HTML** or as a
 - **Native Mermaid rendering** — a self-contained flowchart pipeline
   (lex → parse → lower → layout → SVG) produces inline SVG for each diagram,
   targeting the Mermaid 11 flowchart subset.
-- **Two output formats** — HTML or a JSON AST (`mdast`-style).
+- **Two output formats** — HTML, or a JSON AST conforming to
+  [mdast](https://github.com/syntax-tree/mdast) (the remark/unified standard).
+  The JSON tree is *reference-preserving*: link reference definitions stay as
+  `definition` nodes and their uses as `linkReference`/`imageReference`, so the
+  AST faithfully records the source rather than only the rendered result.
 - **WebAssembly demo** — a live, two-pane Markdown editor running the parser
   entirely client-side.
-- **Extensive test suite** — ~595 tests, including the complete CommonMark spec
-  conformance suite plus Mermaid golden-file verification.
+- **Dual conformance testing** — every CommonMark spec example is checked twice:
+  HTML against the spec's expected output, and JSON against the reference mdast
+  produced by **remark**. ~1340 cases in total, plus Mermaid golden-file
+  verification against the official Mermaid library.
 
 ---
 
@@ -38,9 +50,14 @@ The project produces a structured AST that can be emitted as **HTML** or as a
 The parser runs in two phases (per the CommonMark reference algorithm):
 
 ```
-source ──▶ PreScanner ──▶ SpineHandler ──▶ InlineParser ──▶ Renderer ──▶ HTML / JSON
-           (line scan)    (block tree)      (inline tree)    (Html/Json)
+source ──▶ ScannedLine ──▶ SpineHandler ──▶ InlineParser ──▶ Renderer ──▶ HTML / JSON
+           (line scan)     (block tree)      (inline tree)   (Html/Json)
 ```
+
+The AST is deliberately **render-neutral**: normalization that is specific to an
+output format (e.g. code-span line endings becoming spaces, or resolving a
+reference link to a URL) happens in the renderer, not the parser. This is what
+lets the same tree produce both spec-exact HTML and reference-preserving mdast.
 
 The Mermaid engine is an independent module; the only coupling point is the
 Markdown fence handler that dispatches `` ```mermaid `` blocks into it:
@@ -132,12 +149,17 @@ A--&gt;B
 ```json
 {"type":"root","children":[
   {"type":"heading","depth":1,"children":[{"type":"text","value":"Hi"}]},
-  {"type":"paragraph","children":[/* … */{"type":"strong","children":[{"type":"text","value":"bold"}]}/* … */]},
-  {"type":"code","lang":"mermaid","value":"graph TD\nA-->B\n"}]}
+  {"type":"paragraph","children":[
+    {"type":"text","value":"Some "},
+    {"type":"strong","children":[{"type":"text","value":"bold"}]},
+    {"type":"text","value":" text."}]},
+  {"type":"code","lang":"mermaid","meta":null,"value":"graph TD\nA-->B"}]}
 ```
 
-With `--parse-mermaid`, the third node is emitted as a rendered
-`<div class="mermaid"><svg …>…</svg></div>`.
+The Mermaid block surfaces as a `code` node tagged `"lang":"mermaid"` — the
+spec-correct mdast representation — so downstream tools can pick diagrams out of
+the tree. With `--parse-mermaid`, that same node is instead rendered to an inline
+`<div class="mermaid"><svg …>…</svg></div>` in the HTML output.
 
 ---
 
@@ -193,10 +215,15 @@ A single example is addressable by its generated name, e.g.
 
 ## Web demo (WebAssembly)
 
-The parser compiles to WebAssembly for a live browser demo — a two-pane editor
-that re-parses on every keystroke, with a toggle for Mermaid rendering.
+**Live at → https://cecco1509.github.io/markdown_parser/web/**
 
-Build with [Emscripten](https://emscripten.org/) (`emsdk` activated):
+The parser compiles to WebAssembly for a live browser demo — a two-pane editor
+that re-parses on every keystroke, with toggles for Mermaid and math rendering.
+The page is served from [`web/`](web/); CI rebuilds the `.wasm` on every push to
+`main` and commits it to [`web/dist/`](web/dist/), so the live demo always tracks
+the latest parser.
+
+To build it yourself, use [Emscripten](https://emscripten.org/) (`emsdk` activated):
 
 ```bash
 emcmake cmake -S . -B build-wasm -DCMAKE_BUILD_TYPE=Release
