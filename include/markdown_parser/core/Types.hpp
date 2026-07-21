@@ -83,6 +83,10 @@ enum class HtmlBlockType : int {
 
 struct HtmlBlockData {
   HtmlBlockType html_type;
+  // True once the block's explicit end condition (types 1-5) was matched. When
+  // a type 1-5 block instead runs to EOF, mdast keeps the trailing newline in
+  // its value; every other case strips it.
+  bool end_matched = false;
 };
 
 struct LinkDef {

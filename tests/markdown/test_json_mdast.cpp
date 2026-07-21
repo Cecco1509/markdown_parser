@@ -51,9 +51,6 @@ TEST_P(JsonMdastTest, MatchesRemark) {
   // representational choice or a parse-time normalization we don't undo — not a
   // rendering bug. See docs and the AI verification report for the rationale.
   static const std::set<int> kKnownFailures = {
-      // One HTML block (a <style> block running to EOF) whose trailing
-      // newline mdast keeps but our uniform trailing-newline strip removes.
-      173,
       // A multi-line reference-definition label whose internal indentation
       // mdast preserves in `definition.label` (`"Foo\n  bar"`). Our paragraph
       // line-accumulation strips that indentation before the label is scanned,

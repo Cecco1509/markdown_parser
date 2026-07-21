@@ -570,8 +570,10 @@ void SpineHandler::checkHtmlBlockEnd(std::string_view orig_content) {
   const HtmlBlockType html_type = std::get<HtmlBlockData>(t.data).html_type;
   if (html_type != HtmlBlockType::KnownTag &&
       html_type != HtmlBlockType::Complete &&
-      block_rules::htmlBlockEndMet(t, orig_content))
+      block_rules::htmlBlockEndMet(t, orig_content)) {
+    std::get<HtmlBlockData>(t.data).end_matched = true;
     closeBlock();
+  }
 }
 
 void SpineHandler::parseInlineContent(BlockNode &node) {

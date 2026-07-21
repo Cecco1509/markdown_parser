@@ -204,10 +204,20 @@ void JsonRenderer::visit(const BlockNode& node) {
         break;
     }
 
-    case NodeType::HtmlBlock:
-        out_ += "{\"type\":\"html\",\"value\":"
-                + jsonStr(stripTrailingNewline(node.string_content)) + '}';
+    case NodeType::HtmlBlock: {
+        const auto& hd = std::get<HtmlBlockData>(node.data);
+        // A type 1-5 block that ran to EOF (its end condition was never matched)
+        // keeps its trailing newline; every other html block strips it.
+        const bool has_end_condition =
+            hd.html_type != HtmlBlockType::KnownTag &&
+            hd.html_type != HtmlBlockType::Complete;
+        const std::string value =
+            (has_end_condition && !hd.end_matched)
+                ? node.string_content
+                : stripTrailingNewline(node.string_content);
+        out_ += "{\"type\":\"html\",\"value\":" + jsonStr(value) + '}';
         break;
+    }
 
     case NodeType::Definition: {
         const auto& d = std::get<DefinitionData>(node.data);
