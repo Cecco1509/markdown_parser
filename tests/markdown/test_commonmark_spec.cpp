@@ -1,3 +1,4 @@
+#include "case_report.hpp"
 #include "commonmark_spec_case.hpp"
 #include "markdown_parser/renderer/HtmlRenderer.hpp"
 #include "markdown_parser/parser/parser.hpp"
@@ -26,18 +27,10 @@ TEST_P(CommonMarkSpecTest, MatchesExpectedHtml) {
   markdown_parser::HtmlRenderer hr;
   const std::string actual = markdown_parser::parse(tc.markdown, hr);
 
-  EXPECT_EQ(tc.html, actual)
-      << "\n"
-      << "┌─ Section    : " << tc.section << "\n"
-      << "│  Example #  : " << tc.example << "\n"
-      << "│  Spec lines : " << tc.start_line << "-" << tc.end_line << "\n"
-      << "├─ Markdown input ──────────────────────────────────────────\n"
-      << tc.markdown
-      << "├─ Expected HTML ───────────────────────────────────────────\n"
-      << tc.html
-      << "├─ Actual HTML ─────────────────────────────────────────────\n"
-      << actual
-      << "└───────────────────────────────────────────────────────────\n";
+  EXPECT_EQ(tc.html, actual) << commonmark::testing::caseReport(
+      tc.section, tc.example,
+      std::to_string(tc.start_line) + "-" + std::to_string(tc.end_line),
+      tc.markdown, "Expected (spec)", tc.html, "Actual (ours)", actual);
 }
 
 INSTANTIATE_TEST_SUITE_P(

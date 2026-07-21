@@ -1,3 +1,4 @@
+#include "case_report.hpp"
 #include "markdown_parser/renderer/JsonRenderer.hpp"
 #include "markdown_parser/parser/parser.hpp"
 
@@ -16,10 +17,16 @@ namespace {
 
 struct MdastCase {
   std::string markdown;
-  json mdast; // golden tree from remark (position stripped)
+  json mdast; // golden tree from remark
   int example;
   std::string section;
 };
+
+// Matches SpecCase::PrintTo so failing JSON cases print as "#N [section]"
+// instead of a raw byte-object dump.
+inline void PrintTo(const MdastCase &tc, std::ostream *os) {
+  *os << "#" << tc.example << " [" << tc.section << "]";
+}
 
 std::vector<MdastCase> loadSpec(const std::string &path) {
   std::ifstream file(path);
@@ -68,17 +75,9 @@ TEST_P(JsonMdastTest, MatchesRemark) {
   ASSERT_NO_THROW(ours = json::parse(rendered))
       << "our renderer produced invalid JSON for example #" << tc.example;
 
-  EXPECT_EQ(ours, tc.mdast)
-      << "\n"
-      << "┌─ Section    : " << tc.section << "\n"
-      << "│  Example #  : " << tc.example << "\n"
-      << "├─ Markdown input ──────────────────────────────────────────\n"
-      << tc.markdown << "\n"
-      << "├─ Ours ────────────────────────────────────────────────────\n"
-      << ours.dump(2) << "\n"
-      << "├─ Remark (golden) ─────────────────────────────────────────\n"
-      << tc.mdast.dump(2) << "\n"
-      << "└───────────────────────────────────────────────────────────\n";
+  EXPECT_EQ(ours, tc.mdast) << commonmark::testing::caseReport(
+      tc.section, tc.example, /*lines=*/"", tc.markdown,
+      "Expected (remark)", tc.mdast.dump(2), "Actual (ours)", ours.dump(2));
 }
 
 INSTANTIATE_TEST_SUITE_P(
