@@ -1,15 +1,19 @@
+> # ⚠️ SUPERSEDED — ORIGINAL DESIGN SPEC
+>
+> This file is the **pre-implementation design specification**, kept for
+> historical reference and for the AI-usage report (it records what was
+> *planned* before the code existed). It does **not** describe the code as
+> built — names, file layout and data structures have since changed.
+>
+> **See the current documentation in [`docs/`](../index.md).**
+
+---
+
 # 11. Link reference definitions
 
 ← [10. block_rules](10_block_rules.md) | [Index](index.md)
 
 ---
-
-> **Updated design.** Definitions now serve **two** consumers: they still feed
-> the resolver map (so HTML can resolve `[foo]` to a URL), *and* they are emitted
-> as `Definition` block nodes at their source position so the JSON/mdast output
-> can carry `definition` nodes. See [§11.5](#115-definition-nodes-in-the-tree).
-> The paragraph below describes the original map-only behaviour, which still
-> applies to resolution.
 
 Link reference definitions (spec §4.7) are **not block nodes**. They are meta-data
 extracted from `Paragraph::string_content` during phase 1 finalization and stored in
@@ -215,59 +219,3 @@ tryScanOneLinkRefDef(content, pos) → bool:
 ---
 
 ← [10. block_rules](10_block_rules.md) | [Index](index.md)
-
----
-
-## 11.5 `Definition` nodes in the tree
-
-mdast represents a link reference definition as a `definition` **node**, placed
-where it was written, and its uses as `linkReference`/`imageReference` nodes that
-point back by `identifier` — it does *not* inline the URL. To satisfy both output
-formats without changing HTML behaviour, the scanner now does two things at once.
-
-### Scanner signature
-
-`tryScanOneLinkRefDef` appends a `DefinitionData` per successful scan, in source
-order, while continuing to populate `ref_map_`:
-
-```cpp
-void maybeScanLinkRefDefs(BlockNode &node, std::vector<DefinitionData> &out);
-bool tryScanOneLinkRefDef(std::string_view content, std::size_t &pos,
-                          std::vector<DefinitionData> &out);
-```
-
-Crucially, a node is produced for **every** scanned definition, whereas
-`ref_map_.try_emplace` is first-definition-wins. mdast keeps duplicate
-`definition` nodes, so the two must not be gated on the same condition.
-
-### Where the nodes are inserted
-
-The definitions belong to the **parent of the paragraph** they were scanned out
-of, ahead of any surviving paragraph content. There are two call sites:
-
-| Call site | Parent | Note |
-|---|---|---|
-| `closeBlock()` | `spine_.back()` — the paragraph was already popped | Must run **before** the `if (blank) return;` early-out, or a definition-only paragraph loses its nodes |
-| `tryPromoteSetextHeading()` | `spine_[size-2]` — the paragraph is still `tip()` | Definitions precede the heading `t` becomes |
-
-Since siblings closed earlier are already in the parent's `children`, pushing the
-definition nodes and *then* the paragraph preserves source order automatically.
-
-### Fields
-
-`DefinitionData` records both label forms, which mdast distinguishes:
-
-- `identifier` — `normaliseLabel(raw)`: whitespace-collapsed + case-folded; the
-  matching key.
-- `label` — `processEscapesAndEntities(raw)`: escapes/entities resolved, case and
-  whitespace preserved.
-
-The same split applies to reference *uses* on `LinkData`, together with
-`reference_type` (`Shortcut` / `Collapsed` / `Full`) recorded by whichever branch
-of `handleBracketCloser` matched.
-
-### Rendering
-
-`HtmlRenderer` has no case for `NodeType::Definition`, so these nodes emit
-nothing — HTML output is byte-identical to before. `JsonRenderer` emits them as
-`definition`. See [§12 Renderers](12_renderers.md).

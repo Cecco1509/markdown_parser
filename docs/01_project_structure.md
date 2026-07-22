@@ -6,76 +6,111 @@
 
 ```
 markdown_parser/
-├── CMakeLists.txt                  # top-level build config
+├── CMakeLists.txt                       # top-level build config
 ├── README.md
-├── .gitignore
 │
 ├── include/
-│   └── markdown_parser/
-│       ├── Types.hpp               # NodeType, InlineType, BlockData, InlineData
-│       ├── ScannedLine.hpp         # ScannedLine struct
-│       ├── BlockNode.hpp           # BlockNode struct
-│       ├── InlineNode.hpp          # InlineNode, Delimiter, BracketEntry
-│       ├── PreScanner.hpp          # PreScanner class
-│       ├── SpineHandler.hpp        # SpineHandler class + SpineMatchResult
-│       ├── block_rules.hpp         # ContinuationResult, OpenResult, block_rules namespace
-│       └── InlineParser.hpp        # InlineParser class
+│   ├── markdown_parser/
+│   │   ├── core/
+│   │   │   ├── Types.hpp                # NodeType, InlineType, BlockData, InlineData
+│   │   │   ├── BlockNode.hpp            # BlockNode
+│   │   │   ├── InlineNode.hpp           # InlineNode, Delimiter, BracketEntry
+│   │   │   └── NodeVisitor.hpp          # visitor interface implemented by renderers
+│   │   ├── parser/
+│   │   │   ├── ScannedLine.hpp          # per-line scan (indent, tabs, blankness)
+│   │   │   ├── SpineHandler.hpp         # phase 1: block tree
+│   │   │   ├── InlineParser.hpp         # phase 2: inline tree
+│   │   │   ├── block_rules.hpp          # continuation/open/close predicates
+│   │   │   ├── commonmark_constants.hpp
+│   │   │   └── parser.hpp               # parse(source, renderer) entry point
+│   │   ├── renderer/
+│   │   │   ├── HtmlRenderer.hpp
+│   │   │   ├── HtmlRendererDebug.hpp
+│   │   │   ├── HtmlRendererFactory.hpp
+│   │   │   ├── JsonRenderer.hpp         # mdast-conformant JSON
+│   │   │   └── renderer_concept.hpp     # `Renderer` C++20 concept
+│   │   ├── handlers/
+│   │   │   └── HandlerRegistry.hpp      # fenced-block handlers (mermaid, math)
+│   │   └── utils/
+│   │       ├── entities.hpp             # HTML entity decoding
+│   │       ├── string_utils.hpp         # escapes, HTML/URL escaping, line init
+│   │       └── unicode_fold.hpp         # case folding for reference labels
+│   └── mermaid/                         # standalone mermaid engine headers
 │
 ├── src/
-│   ├── main.cpp
-│   ├── PreScanner.cpp
-│   ├── SpineHandler.cpp
-│   ├── block_rules.cpp             # continuation/open/close predicates (§3)
-│   └── InlineParser.cpp
+│   ├── main.cpp                         # CLI: --json / --debug / --parse-mermaid
+│   ├── wasm_bindings.cpp                # Emscripten bindings for the web demo
+│   ├── markdown_parser/
+│   │   ├── parser/{ScannedLine,SpineHandler,InlineParser,block_rules}.cpp
+│   │   ├── renderer/{HtmlRenderer,HtmlRenderDebug,HtmlRendererFactory,JsonRenderer}.cpp
+│   │   ├── handlers/{HandlerRegistry,MermaidHandler,MathHandler}.cpp
+│   │   └── utils/{entities,string_utils,unicode_fold}.cpp
+│   └── mermaid/                         # mermaid engine + flowchart.grammar + CLIs
+│
+├── tools/lrgen/                         # build-time LR parser generator (mermaid)
 │
 ├── tests/
 │   ├── CMakeLists.txt
-│   ├── test_prescanner.cpp
-│   ├── test_spine.cpp
-│   ├── test_inline.cpp
-│   └── test_spec.cpp               # CommonMark spec.json conformance suite
+│   ├── markdown/
+│   │   ├── test_commonmark_spec.cpp     # HTML conformance vs the spec
+│   │   ├── test_json_mdast.cpp          # JSON conformance vs remark
+│   │   ├── commonmark_spec_case.hpp     # spec fixture loader
+│   │   └── case_report.hpp              # shared failure-report formatting
+│   ├── mermaid/                         # mermaid lexer/parse/lower/golden tests
+│   └── test-files/
+│       ├── markdown/                    # commonmark_spec.json + *_mdast.json
+│       └── mermaid/                     # .mmd + .ast.json + .svg goldens
 │
-├── third_party/
-│   ├── nlohmann/                   # JSON — spec test loading
-│   └── googletest/                 # unit test framework
-│
-├── build/                          # git-ignored generated artifacts
-└── docs/
+├── markdown-utils/                      # Node: generates mdast goldens via remark
+├── mermaid-utils/                       # Node: generates mermaid goldens
+├── web/                                 # WebAssembly live demo
+└── docs/                                # this documentation (legacy/ = old spec)
 ```
+
+## Layering
+
+```
+core/  ←  parser/  ←  renderer/
+   ↑                     ↑
+   └──── utils/ ─────────┘
+```
+
+`core/` depends on nothing else. `parser/` builds the tree from source;
+`renderer/` only consumes it. **Renderers never call into the parser** — the one
+shared dependency is `utils/`. This is what keeps the AST render-neutral (see
+[Index](index.md#design-principle-a-render-neutral-ast)).
+
+The `Renderer` concept in `renderer_concept.hpp` is the whole contract:
+
+```cpp
+template <typename T>
+concept Renderer = requires(T r, const BlockNode &node) {
+    { r.render(node) } -> std::convertible_to<std::string>;
+};
+```
+
+`parse()` is templated on it, so adding an output format means writing one class
+— no parser changes.
 
 ## CMake targets
 
-```cmake
-cmake_minimum_required(VERSION 3.20)
-project(markdown_parser CXX)
-set(CMAKE_CXX_STANDARD 20)
+| Target | Kind | Contents |
+|---|---|---|
+| `md_parser` | static lib | parser + renderers + utils |
+| `mermaid` | static lib | mermaid engine (+ generated flowchart parser) |
+| `md_parser_bin` | exe | the CLI demo |
+| `mermaid_ast`, `mermaid_svg` | exe | mermaid-only CLIs |
+| `markdown_tests` | exe | `CommonMarkSpecTest` (HTML) + `JsonMdastTest` (JSON) |
+| `mermaid_tests` | exe | mermaid unit + golden tests |
+| `markdown_parser_wasm` | exe | Emscripten build → `web/dist/` |
 
-add_library(md_parser
-    src/PreScanner.cpp
-    src/SpineHandler.cpp
-    src/block_rules.cpp
-    src/InlineParser.cpp
-)
-target_include_directories(md_parser PUBLIC include)
-target_include_directories(md_parser PRIVATE third_party)
+GoogleTest and nlohmann/json are fetched by CMake (`FetchContent`); nothing is
+vendored. The mermaid flowchart parser is **generated at build time** by
+`tools/lrgen` from `src/mermaid/flowchart.grammar` and is not committed.
 
-add_executable(md_parser_bin src/main.cpp)
-target_link_libraries(md_parser_bin PRIVATE md_parser)
-
-add_subdirectory(third_party/googletest)
-add_subdirectory(tests)
-```
-
-## Header dependency order
-
-`Types.hpp` has no internal deps. `ScannedLine.hpp` includes only `Types.hpp`.
-`BlockNode.hpp` and `InlineNode.hpp` include `Types.hpp`. `block_rules.hpp`
-includes `BlockNode.hpp` and `ScannedLine.hpp`. Component headers (`PreScanner`,
-`SpineHandler`, `InlineParser`) include the node headers they operate on.
-`SpineHandler.hpp` includes `block_rules.hpp` indirectly via its `.cpp`.
-No circular dependencies.
-
-The types defined in these headers are described in [§2 Data types and node structures](02_data_types.md).
+Handler sources (`MermaidHandler`, `MathHandler`) are linked directly into
+executables rather than through `md_parser`, so their static-initializer
+self-registration is not dropped by the linker.
 
 ---
 

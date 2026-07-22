@@ -1,3 +1,14 @@
+> # ⚠️ SUPERSEDED — ORIGINAL DESIGN SPEC
+>
+> This file is the **pre-implementation design specification**, kept for
+> historical reference and for the AI-usage report (it records what was
+> *planned* before the code existed). It does **not** describe the code as
+> built — names, file layout and data structures have since changed.
+>
+> **See the current documentation in [`docs/`](../index.md).**
+
+---
+
 # 7. Tab algorithm
 
 ← [6. InlineParser — phase 2](06_inline_parser.md) | [Index](index.md) | Next: [8. Data flow through phases](08_data_flow.md) →
@@ -11,7 +22,7 @@ to the next multiple of 4. This virtual expansion governs structural logic only;
 the raw bytes stored in `string_content` may contain literal tab characters,
 except where a tab is split across a container boundary (see [§7.2](#72-partial-tab-splitting)).
 
-This arithmetic is implemented in [`ScannedLine::from()`](04_scanned_line.md#42-scannedline-methods) and [`SpineHandler::consumeColumns()`](05_spine_handler.md#55-tab-accounting).
+This arithmetic is implemented in [`PreScanner::computeVirtualIndent()`](04_prescanner.md#42-prescanner-methods) and [`SpineHandler::consumeColumns()`](05_spine_handler.md#55-tab-accounting).
 
 ---
 

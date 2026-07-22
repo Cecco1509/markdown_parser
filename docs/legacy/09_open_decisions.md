@@ -1,12 +1,22 @@
-# 9. Design decisions — resolved and open
+> # ⚠️ SUPERSEDED — ORIGINAL DESIGN SPEC
+>
+> This file is the **pre-implementation design specification**, kept for
+> historical reference and for the AI-usage report (it records what was
+> *planned* before the code existed). It does **not** describe the code as
+> built — names, file layout and data structures have since changed.
+>
+> **See the current documentation in [`docs/`](../index.md).**
+
+---
+
+# 9. Open design decisions
 
 ← [8. Data flow through phases](08_data_flow.md) | [Index](index.md)
 
 ---
 
-Sections 9.1–9.5 were identified as ambiguous during the original specification
-review; all are now **resolved in the implementation** and are kept here with
-their reasoning. [§9.6](#96-still-open) records what remains open.
+These items were identified as ambiguous or unresolved during specification review.
+They **must** be decided before the corresponding component is implemented.
 
 ---
 
@@ -124,48 +134,6 @@ C. **Use ICU or a small Unicode library:** Adds an external dependency.
 
 **Recommendation:** Option B — embed the simple case-fold table. It covers all CommonMark
 spec test cases and avoids external dependencies.
-
-## 9.6 Still open
-
-### 9.6.1 Source positions (`position`) — not implemented
-
-mdast tags every node with `position: {start,end:{line,column,offset}}`. We do
-not emit it, so goldens are currently generated with that field stripped.
-
-Implementing it is **not** a matter of moving existing code:
-
-- `BlockNode` already carries `start_line`/`end_line`/`start_col`, but no
-  offsets and no end column.
-- `InlineNode` carries **no** position fields at all, and `InlineParser` runs on
-  the block's assembled `string_content` with `pos_` offsets that have **no
-  mapping back to source** — continuation lines are joined and their indentation
-  stripped before inline parsing begins.
-
-So inline positions require a source map (string_content offset → source
-line/column/offset) threaded through `appendText` and maintained across
-emphasis/bracket processing, which reorders and splits nodes. Matching remark
-byte-for-byte across all 652 examples is the dominant risk.
-
-### 9.6.2 Raw-source fidelity for definition labels (example 541)
-
-mdast preserves a multi-line definition label's original inner indentation
-(`"Foo\n  bar"`) because micromark re-slices the label from the **source** using
-positions. Our paragraph accumulation strips continuation-line indentation
-before the label is scanned — which is correct CommonMark behaviour, and remark
-strips it identically in `text` values.
-
-Two possible fixes, both additions rather than relocations:
-
-1. Keep a second, un-stripped copy of paragraph text for definition scanning
-   (costs a string per paragraph, plus branching in the append hot path).
-2. Implement §9.6.1 and re-slice the label from source.
-
-Currently listed in the JSON suite's `kKnownFailures` with this rationale.
-
-### 9.6.3 GFM extensions
-
-`listItem.checked` is always emitted as `null`; task lists, tables, strikethrough
-and autolink literals are out of scope (the target is plain CommonMark + mdast).
 
 ---
 

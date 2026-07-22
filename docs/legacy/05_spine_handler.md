@@ -1,6 +1,17 @@
+> # ⚠️ SUPERSEDED — ORIGINAL DESIGN SPEC
+>
+> This file is the **pre-implementation design specification**, kept for
+> historical reference and for the AI-usage report (it records what was
+> *planned* before the code existed). It does **not** describe the code as
+> built — names, file layout and data structures have since changed.
+>
+> **See the current documentation in [`docs/`](../index.md).**
+
+---
+
 # 5. SpineHandler — phase 1
 
-← [4. ScannedLine](04_scanned_line.md) | [Index](index.md) | Next: [6. InlineParser — phase 2](06_inline_parser.md) →
+← [4. PreScanner](04_prescanner.md) | [Index](index.md) | Next: [6. InlineParser — phase 2](06_inline_parser.md) →
 
 ---
 
@@ -19,11 +30,11 @@ For tab accounting details, see [§7](07_tab_algorithm.md).
 ## 5.1 State
 
 ```cpp
-// include/markdown_parser/parser/SpineHandler.hpp
+// include/markdown_parser/SpineHandler.hpp
 
 class SpineHandler {
 public:
-    explicit SpineHandler(ScannedLine& scanner, InlineParser& inline_parser);
+    explicit SpineHandler(PreScanner& scanner, InlineParser& inline_parser);
 
     // Process one raw input line. Resets per-line cursor state, then runs
     // step1WalkSpine → step2NewBlocks → step3AppendText.
@@ -93,7 +104,7 @@ private:
     bool swallow_current_line_ = false;
 
     // ── component references ──────────────────────────────────────────────
-    ScannedLine&   scanner_;
+    PreScanner&   scanner_;
     InlineParser& inline_parser_;
 };
 ```
@@ -570,42 +581,7 @@ void SpineHandler::parseInlineContent(BlockNode* node)
 ```
 
 `finalize()` marks the phase boundary. After it returns, `ref_map_` is fully populated and [`InlineParser::parse()`](06_inline_parser.md#62-inlineparser-methods) has been called on every eligible leaf. The complete data flow is described in [§8](08_data_flow.md).
----
-
-## 5.7 mdast bookkeeping added during implementation
-
-Two things the original spec did not anticipate are recorded by phase 1, because
-the information only exists while lines are being consumed.
-
-### List spread (blank-line provenance)
-
-`ListData::tight` alone is the *derived* HTML flag; mdast needs the two
-independent operands (see [§2.2](02_data_types.md#tight-vs-spread)). There are
-three blank-line detection sites, and they map onto the fields as follows:
-
-| Site | Condition | Sets |
-|---|---|---|
-| opening an Item into an existing List | previous item ended blank | `list.tight = false`, `list.spread = true` |
-| `openBlock` into an Item with children | the Item had a blank since its last child | `list.tight = false`, **that** `item.spread = true` |
-| `closeBlock` of an Item | Item ended blank and has ≥2 children | `list.tight = false` **only** |
-
-The third site deliberately does **not** set `item.spread`: a trailing blank
-after an item's last child separates it from the *next item*, it is not an
-internal blank between that item's own children.
-
-### Definition nodes
-
-`maybeScanLinkRefDefs` now also yields a `DefinitionData` per definition, which
-the caller splices into the paragraph's **parent** as `Definition` nodes ahead of
-any surviving paragraph. See [§11.5](11_link_reference_definitions.md#115-definition-nodes-in-the-tree).
-
-### HTML block termination
-
-`checkHtmlBlockEnd` sets `HtmlBlockData::end_matched` before closing, so the JSON
-renderer can tell a type 1–5 block that met its end condition from one that ran
-to EOF (the two differ in trailing-newline handling).
-
 
 ---
 
-← [4. ScannedLine](04_scanned_line.md) | [Index](index.md) | Next: [6. InlineParser — phase 2](06_inline_parser.md) →
+← [4. PreScanner](04_prescanner.md) | [Index](index.md) | Next: [6. InlineParser — phase 2](06_inline_parser.md) →

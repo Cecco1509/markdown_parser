@@ -1,3 +1,14 @@
+> # ⚠️ SUPERSEDED — ORIGINAL DESIGN SPEC
+>
+> This file is the **pre-implementation design specification**, kept for
+> historical reference and for the AI-usage report (it records what was
+> *planned* before the code existed). It does **not** describe the code as
+> built — names, file layout and data structures have since changed.
+>
+> **See the current documentation in [`docs/`](../index.md).**
+
+---
+
 # CommonMark Spec Testing — Implementation Specification
 
 ## Overview

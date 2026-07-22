@@ -1,8 +1,33 @@
-# CommonMark parser — design specification
+# Markdown parser — implementation documentation
 
-> Language: C++20  
-> Reference: CommonMark Spec v0.31.2  
-> External libs: `nlohmann/json` (spec test loading), `googletest` (unit tests)
+> Language: C++20
+> Reference: [CommonMark v0.31.2](https://spec.commonmark.org/0.31.2/) and
+> [mdast](https://github.com/syntax-tree/mdast)
+> External libs: `nlohmann/json` (test fixtures), `googletest` (tests)
+
+This documents the parser **as implemented**. For the original pre-implementation
+design specification see [`legacy/`](legacy/index.md) — it is kept for historical
+reference (and for the AI-usage report) but no longer matches the code.
+
+---
+
+## Design principle: a render-neutral AST
+
+The parser produces one tree that is **not biased toward any output format**.
+Normalization that belongs to a specific target lives in that target's renderer:
+
+| Concern | Where it lives | Why |
+|---|---|---|
+| Code-span line endings → spaces | `HtmlRenderer` | HTML-only rendering rule; mdast keeps them raw |
+| Reference link → concrete URL | `HtmlRenderer` | mdast keeps `linkReference` + `definition` |
+| HTML-escaping, URL escaping | `HtmlRenderer` | never part of the tree |
+| Entity/backslash decoding | parser | mdast stores decoded `value`s |
+| Blank-line / tightness analysis | parser | structural, shared by both renderers |
+
+Both outputs are verified against external references — HTML against the
+CommonMark spec, JSON against **remark** — which is what keeps the tree honest:
+any format-specific decision leaking into the parser shows up as a failure in the
+other suite. See [§13 Testing](13_testing.md).
 
 ---
 
@@ -11,51 +36,24 @@
 1. [Project structure](01_project_structure.md)
 2. [Data types and node structures](02_data_types.md)
    - 2.1 [Enumerations](02_data_types.md#21-enumerations)
-   - 2.2 [BlockData union](02_data_types.md#22-blockdata-union)
-   - 2.3 [InlineData union](02_data_types.md#23-inlinedata-union)
+   - 2.2 [BlockData variant](02_data_types.md#22-blockdata-variant)
+   - 2.3 [InlineData variant](02_data_types.md#23-inlinedata-variant)
    - 2.4 [BlockNode](02_data_types.md#24-blocknode)
    - 2.5 [InlineNode, Delimiter, BracketEntry](02_data_types.md#25-inlinenode-delimiter-bracketentry)
 3. [Continuation, open, and close rules](03_continuation_rules.md)
-   - 3.1 [Continuation rules per block type](03_continuation_rules.md#31-continuation-rules-per-block-type)
-   - 3.2 [Open block rules — step 2 triggers](03_continuation_rules.md#32-open-block-rules--step-2-triggers)
-   - 3.3 [Close block rules](03_continuation_rules.md#33-close-block-rules)
-4. [PreScanner](04_prescanner.md)
-   - 4.1 [ScannedLine](04_prescanner.md#41-scannedline)
-   - 4.2 [PreScanner methods](04_prescanner.md#42-prescanner-methods)
-5. [SpineHandler — phase 1](05_spine_handler.md)
-   - 5.1 [State](05_spine_handler.md#51-state)
-   - 5.2 [SpineMatchResult](05_spine_handler.md#52-spinematchresult)
-   - 5.3 [Per-line loop — three steps](05_spine_handler.md#53-per-line-loop--three-steps)
-   - 5.4 [Tree mutation primitives](05_spine_handler.md#54-tree-mutation-primitives)
-   - 5.5 [Tab accounting](05_spine_handler.md#55-tab-accounting)
-   - 5.6 [finalize and the phase boundary](05_spine_handler.md#56-finalize-and-the-phase-boundary)
-6. [InlineParser — phase 2](06_inline_parser.md)
-   - 6.1 [State](06_inline_parser.md#61-state)
-   - 6.2 [InlineParser methods](06_inline_parser.md#62-inlineparser-methods)
+4. [ScannedLine — line scanning](04_scanned_line.md)
+5. [SpineHandler — phase 1 (block tree)](05_spine_handler.md)
+6. [InlineParser — phase 2 (inline tree)](06_inline_parser.md)
 7. [Tab algorithm](07_tab_algorithm.md)
-   - 7.1 [Virtual column arithmetic](07_tab_algorithm.md#71-virtual-column-arithmetic)
-   - 7.2 [Partial tab splitting](07_tab_algorithm.md#72-partial-tab-splitting)
-   - 7.3 [Worked example — spec §2.2 example 5](07_tab_algorithm.md#73-worked-example--spec-22-example-5)
 8. [Data flow through phases](08_data_flow.md)
-   - 8.1 [End-to-end pipeline](08_data_flow.md#81-end-to-end-pipeline)
-   - 8.2 [Lifecycle summary](08_data_flow.md#82-lifecycle-summary)
-   - 8.3 [Ownership model](08_data_flow.md#83-ownership-model)
-9. [Open design decisions](09_open_decisions.md)
-   - 9.1 [Memory ownership](09_open_decisions.md#91-memory-ownership--blocknode-and-inlinenode)
-   - 9.2 [Link ref def scanning timing](09_open_decisions.md#92-maybescanlinkRefdefs--when-to-scan)
-   - 9.3 [appendText from_byte when a tab is split](09_open_decisions.md#93-appendtext-from_byte-when-a-tab-is-split)
-   - 9.4 [processEmphasis / bracket deactivation](09_open_decisions.md#94-processemphasis--bracket-deactivation-interaction)
-   - 9.5 [Unicode case folding](09_open_decisions.md#95-unicode-case-folding-for-link-reference-labels)
+9. [Design decisions — resolved and open](09_open_decisions.md)
 10. [block_rules — continuation, open, and close predicates](10_block_rules.md)
-   - 10.1 [ContinuationResult](10_block_rules.md#101-continuationresult)
-   - 10.2 [continuationMatches](10_block_rules.md#102-continuationmatches)
-   - 10.3 [htmlBlockEndMet and isSetextUnderline](10_block_rules.md#103-htmlblockendmet-and-issetextunderline)
-   - 10.4 [OpenResult](10_block_rules.md#104-openresult)
-   - 10.5 [tryOpen](10_block_rules.md#105-tryopen)
-   - 10.6 [tryOpen — container loop](10_block_rules.md#106-tryopen--container-loop)
-   - 10.7 [onClose](10_block_rules.md#107-onclose)
 11. [Link reference definitions](11_link_reference_definitions.md)
-   - 11.1 [Spec rules summary](11_link_reference_definitions.md#111-spec-rules-summary)
-   - 11.2 [Data representation](11_link_reference_definitions.md#112-data-representation)
-   - 11.3 [Implementation — scanLinkRefDefs](11_link_reference_definitions.md#113-implementation--scanlinkRefdefs)
-   - 11.4 [Integration points](11_link_reference_definitions.md#114-integration-points)
+12. [Renderers — HTML and JSON/mdast](12_renderers.md)
+13. [Testing — dual conformance](13_testing.md)
+
+### Related
+
+- [Mermaid engine](mermaid/status.md) — the standalone flowchart
+  parse → lower → layout → SVG pipeline.
+- [`legacy/`](legacy/index.md) — the original design specification (superseded).

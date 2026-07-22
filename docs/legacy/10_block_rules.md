@@ -1,3 +1,14 @@
+> # ⚠️ SUPERSEDED — ORIGINAL DESIGN SPEC
+>
+> This file is the **pre-implementation design specification**, kept for
+> historical reference and for the AI-usage report (it records what was
+> *planned* before the code existed). It does **not** describe the code as
+> built — names, file layout and data structures have since changed.
+>
+> **See the current documentation in [`docs/`](../index.md).**
+
+---
+
 # 10. block_rules — continuation, open, and close predicates
 
 ← [9. Open design decisions](09_open_decisions.md) | [Index](index.md)
@@ -12,7 +23,7 @@ references and `const ScannedLine&` values; `BlockNode` is only mutated by
 been transferred out of the spine.
 
 ```
-include/markdown_parser/parser/block_rules.hpp
+include/markdown_parser/block_rules.hpp
 src/block_rules.cpp
 ```
 
@@ -181,7 +192,7 @@ tryOpen(cur, ...) → Item
 tryOpen(cur, ...) → ATX heading   ← leaf: break loop, set swallow_current_line_
 ```
 
-`ScannedLine::scanWithOffset` recomputes `indent`, `virtual_indent`, and
+`PreScanner::scanWithOffset` recomputes `indent`, `virtual_indent`, and
 `next_non_space` from `current_col_` as the new base column, so tab expansion
 continues correctly across nested prefixes. See [§7](07_tab_algorithm.md).
 

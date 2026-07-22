@@ -1,10 +1,21 @@
-# 3. Continuation, open, and close rules
-
-← [2. Data types and node structures](02_data_types.md) | [Index](index.md) | Next: [4. ScannedLine](04_scanned_line.md) →
+> # ⚠️ SUPERSEDED — ORIGINAL DESIGN SPEC
+>
+> This file is the **pre-implementation design specification**, kept for
+> historical reference and for the AI-usage report (it records what was
+> *planned* before the code existed). It does **not** describe the code as
+> built — names, file layout and data structures have since changed.
+>
+> **See the current documentation in [`docs/`](../index.md).**
 
 ---
 
-All predicates operate on raw bytes from `ScannedLine::content` (see [§4.1](04_scanned_line.md#41-scannedline)) and the
+# 3. Continuation, open, and close rules
+
+← [2. Data types and node structures](02_data_types.md) | [Index](index.md) | Next: [4. PreScanner](04_prescanner.md) →
+
+---
+
+All predicates operate on raw bytes from `ScannedLine::content` (see [§4.1](04_prescanner.md#41-scannedline)) and the
 `virtual_indent` field. There is no pre-assigned `LineClass`; each predicate
 makes its own determination. The same raw line may satisfy different predicates
 depending on which block type's predicate is evaluated and in what order.
@@ -76,4 +87,4 @@ Closing is implemented by [`SpineHandler::closeBlock()` and `closeUnmatched()`](
 
 ---
 
-← [2. Data types and node structures](02_data_types.md) | [Index](index.md) | Next: [4. ScannedLine](04_scanned_line.md) →
+← [2. Data types and node structures](02_data_types.md) | [Index](index.md) | Next: [4. PreScanner](04_prescanner.md) →

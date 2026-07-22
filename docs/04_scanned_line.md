@@ -1,10 +1,10 @@
-# 4. PreScanner
+# 4. ScannedLine
 
 ← [3. Continuation, open, and close rules](03_continuation_rules.md) | [Index](index.md) | Next: [5. SpineHandler — phase 1](05_spine_handler.md) →
 
 ---
 
-The PreScanner's only job is to strip the line ending, replace null bytes,
+The ScannedLine's only job is to strip the line ending, replace null bytes,
 compute indent metrics, and detect blank lines. It does **not** expand tabs and
 does **not** classify the line. Classification is the responsibility of each
 block's own continuation predicate (see [§3.1](03_continuation_rules.md#31-continuation-rules-per-block-type)) and the opener checks in step 2
@@ -21,17 +21,17 @@ with `U+FFFD` (replacement character, UTF-8: `\xEF\xBF\xBD`) before any other
 processing. This is the only mandatory input transformation; all other bytes are
 passed through unmodified.
 
-**Call site:** `PreScanner::scan()` performs this replacement on `raw` before
+**Call site:** `ScannedLine::scan()` performs this replacement on `raw` before
 returning `ScannedLine::content`. Because `content` is a `std::string_view` into
 the original buffer, and the replacement character is a different byte length than
 `\0`, the implementation must either:
 
 - Copy the raw line into an owned buffer (e.g. a `std::string` member on
-  `PreScanner`), replace null bytes in place, and return a view into that buffer, or
+  `ScannedLine`), replace null bytes in place, and return a view into that buffer, or
 - Require the caller (`SpineHandler::processLine`) to pre-sanitise lines before
   passing them in.
 
-The first approach keeps null-byte handling encapsulated in the PreScanner. If the
+The first approach keeps null-byte handling encapsulated in the ScannedLine. If the
 second approach is chosen, `scan()` must document that null bytes are caller's
 responsibility.
 
@@ -40,7 +40,7 @@ responsibility.
 ## 4.1 ScannedLine
 
 ```cpp
-// include/markdown_parser/ScannedLine.hpp
+// include/markdown_parser/parser/ScannedLine.hpp
 
 struct ScannedLine {
     // Non-owning view into the input buffer. Line-ending stripped. Tabs are
@@ -68,18 +68,18 @@ struct ScannedLine {
 };
 ```
 
-`ScannedLine` is produced by [`PreScanner::scan()`](#42-prescanner-methods) and consumed by [`SpineHandler::processLine()`](05_spine_handler.md#53-per-line-loop--three-steps). The `content` view is valid only for the duration of the `processLine()` call — see [§8.3 ownership model](08_data_flow.md#83-ownership-model).
+`ScannedLine` is produced by [`ScannedLine::scan()`](#42-prescanner-methods) and consumed by [`SpineHandler::processLine()`](05_spine_handler.md#53-per-line-loop--three-steps). The `content` view is valid only for the duration of the `processLine()` call — see [§8.3 ownership model](08_data_flow.md#83-ownership-model).
 
 The `next_non_space` field interacts with tab splitting; see [§9.3](09_open_decisions.md#93-appendtext-from_byte-when-a-tab-is-split) for a known issue with passing it to `appendText()`.
 
 ---
 
-## 4.2 PreScanner methods
+## 4.2 ScannedLine methods
 
 ```cpp
-// include/markdown_parser/PreScanner.hpp
+// include/markdown_parser/parser/ScannedLine.hpp
 
-class PreScanner {
+class ScannedLine {
 public:
     // Strip line ending (\n, \r\n, or \r). Walk leading whitespace to compute
     // indent, virtual_indent (starting from base_col = 0), next_non_space,

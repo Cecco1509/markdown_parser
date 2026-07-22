@@ -1,3 +1,14 @@
+> # ⚠️ SUPERSEDED — ORIGINAL DESIGN SPEC
+>
+> This file is the **pre-implementation design specification**, kept for
+> historical reference and for the AI-usage report (it records what was
+> *planned* before the code existed). It does **not** describe the code as
+> built — names, file layout and data structures have since changed.
+>
+> **See the current documentation in [`docs/`](../index.md).**
+
+---
+
 # 2. Data types and node structures
 
 ← [1. Project structure](01_project_structure.md) | [Index](index.md) | Next: [3. Continuation, open, and close rules](03_continuation_rules.md) →
@@ -7,7 +18,7 @@
 ## 2.1 Enumerations
 
 ```cpp
-// include/markdown_parser/core/Types.hpp
+// include/markdown_parser/Types.hpp
 
 enum class NodeType : uint8_t {
     Document,       // root container — always the spine[0]
@@ -18,8 +29,7 @@ enum class NodeType : uint8_t {
     HtmlBlock,      // leaf: raw HTML, types 1–7
     Paragraph,      // leaf: fallback non-blank text
     Heading,        // leaf: ATX (# …) or Setext (underline promoted from Paragraph)
-    ThematicBreak,  // leaf: ---, ***, ___ — no string_content, no inline children
-    Definition      // leaf: link reference definition, [foo]: /url "title"
+    ThematicBreak   // leaf: ---, ***, ___ — no string_content, no inline children
 };
 
 enum class InlineType : uint8_t {
@@ -38,23 +48,11 @@ enum class ListType  : uint8_t { Bullet, Ordered };
 enum class ListDelim : uint8_t { Period, Paren };   // ordered: '.' or ')'
 ```
 
-`Definition` is a first-class block node so that link reference definitions keep
-their **source position** in the tree — mdast requires a `definition` node where
-the definition was written. It produces no HTML output. See
-[§11](11_link_reference_definitions.md).
-
-```cpp
-// Reference kind for a link/image resolved via a reference definition.
-// `None` = inline link/image, which stays a `link`/`image` in mdast; the others
-// make it a `linkReference`/`imageReference`.
-enum class ReferenceType : uint8_t { None, Shortcut, Collapsed, Full };
-```
-
 These enumerations are used throughout [`BlockNode`](#24-blocknode) and [`InlineNode`](#25-inlinenode-delimiter-bracketentry).
 
 ---
 
-## 2.2 BlockData variant
+## 2.2 BlockData union
 
 Per-type payload stored inside `BlockNode::data` as a `std::variant`.
 `std::monostate` is used for types that carry no extra fields
@@ -79,32 +77,21 @@ struct ListData {
     char      bullet_char;      // '-', '*', or '+' for bullet lists
     int       start;            // start number for ordered lists
     ListDelim delimiter;        // Period or Paren for ordered lists
-    bool      tight;            // HTML loose/tight flag (see below)
+    bool      tight;            // true if no blank lines between items
     int       padding;          // total columns consumed by marker + spacing
-    bool      spread = false;   // mdast: sibling items separated by a blank line
 };
 
 struct ItemData {
-    int  marker_offset;         // column where the marker begins
-    int  padding;               // columns to consume for continuation
-    bool spread = false;        // mdast: blank line between this item's own children
+    int        marker_offset;   // column where the marker begins
+    int        padding;         // columns to consume for continuation (marker width + spacing)
 };
 
 struct HtmlBlockData {
-    HtmlBlockType html_type;    // 1–7 per spec §4.6 (enum, not int)
-    bool end_matched = false;   // types 1-5: explicit end condition was matched
+    int html_type;              // 1–7 per spec §4.6
 };
 
-// mdast `definition` payload — a link reference definition kept in the tree at
-// its source position, *in addition* to feeding SpineHandler::ref_map_.
-struct DefinitionData {
-    std::string                identifier;   // normalized label (case-folded)
-    std::string                label;        // label with escapes/entities resolved
-    std::string                destination;  // url
-    std::optional<std::string> title;
-};
-
-// Resolver-map entry (not a node): used to resolve reference links.
+// Link reference definitions are not block nodes; they are extracted from
+// Paragraph string_content during finalization and stored in SpineHandler::ref_map_.
 struct LinkDef {
     std::string destination;
     std::optional<std::string> title;
@@ -112,70 +99,38 @@ struct LinkDef {
 
 using BlockData = std::variant<
     std::monostate,     // Document, BlockQuote, Paragraph, ThematicBreak
-    HeadingData, CodeBlockData, ListData, ItemData, HtmlBlockData, DefinitionData
+    HeadingData,
+    CodeBlockData,
+    ListData,
+    ItemData,
+    HtmlBlockData
 >;
 ```
 
-### `tight` vs `spread`
-
-These are **not** duplicates. HTML looseness is a single derived property, while
-mdast records the two independent inputs to it:
-
-| Field | Meaning | Consumer |
-|---|---|---|
-| `ListData::tight` | `false` iff the list renders loose = `list.spread OR any item.spread` | `HtmlRenderer` (`<p>` wrapping) |
-| `ListData::spread` | sibling **items** separated by a blank line | `JsonRenderer` |
-| `ItemData::spread` | blank line **between an item's own children** | `JsonRenderer` |
-
-A single-item list whose one item contains two blank-separated paragraphs has
-`list.spread == false`, `item.spread == true`, and `tight == false`. Keeping only
-`tight` (as the original design did) loses which operand was true. See
-[§5 SpineHandler](05_spine_handler.md).
-
-### `end_matched`
-
-mdast keeps the trailing newline in an `html` node's value **only** for a type
-1–5 block that ran to EOF without matching its closing condition. `end_matched`
-records whether `checkHtmlBlockEnd` fired, so the renderer can decide.
-
-`LinkDef` entries populate `SpineHandler::ref_map_` — see
-[§5.1 SpineHandler state](05_spine_handler.md#51-state) and
-[§11](11_link_reference_definitions.md).
+`LinkDef` entries are populated into `SpineHandler::ref_map_` — see [§5.1 SpineHandler state](05_spine_handler.md#51-state) and [§9.2 maybeScanLinkRefDefs](09_open_decisions.md#92-maybescanlinkRefdefs--when-to-scan).
 
 ---
 
-## 2.3 InlineData variant
+## 2.3 InlineData union
 
 ```cpp
 struct LinkData {
-    std::string                destination;  // resolved url (used by HtmlRenderer)
-    std::optional<std::string> title;
-    std::optional<std::string> label;        // reference links/images: decoded label
-    std::string                identifier;   // reference links/images: normalized
-    ReferenceType reference_type = ReferenceType::None;
+    std::string                  destination;
+    std::optional<std::string>   title;
+    std::optional<std::string>   label;  // set for reference-style links/images
 };
 
 using InlineData = std::variant<std::monostate, LinkData>;
 ```
 
-`LinkData` is used by `Link` and `Image` inline nodes. Note it carries **both**
-representations at once: the eagerly-resolved `destination`/`title` that
-`HtmlRenderer` emits, and the `identifier`/`label`/`reference_type` that
-`JsonRenderer` uses to emit `linkReference`/`imageReference`. `reference_type ==
-None` distinguishes an inline `[text](url)` from a reference. See
-[§12 Renderers](12_renderers.md) and
-[§6.2 InlineParser methods](06_inline_parser.md#62-inlineparser-methods).
-
-`label` is stored with escapes/entities **resolved** but case and whitespace
-preserved; `identifier` is the case-folded, whitespace-collapsed form used for
-matching. mdast distinguishes the two.
+`LinkData` is used by `Link` and `Image` inline nodes — see [§2.5](#25-inlinenode-delimiter-bracketentry) and [§6.2 InlineParser methods](06_inline_parser.md#62-inlineparser-methods).
 
 ---
 
 ## 2.4 BlockNode
 
 ```cpp
-// include/markdown_parser/core/BlockNode.hpp
+// include/markdown_parser/BlockNode.hpp
 
 struct BlockNode {
     // --- type and variant payload ---
@@ -219,7 +174,7 @@ struct BlockNode {
 ## 2.5 InlineNode, Delimiter, BracketEntry
 
 ```cpp
-// include/markdown_parser/core/InlineNode.hpp
+// include/markdown_parser/InlineNode.hpp
 
 struct InlineNode {
     InlineType   type;

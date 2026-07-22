@@ -1,3 +1,14 @@
+> # ⚠️ SUPERSEDED — ORIGINAL DESIGN SPEC
+>
+> This file is the **pre-implementation design specification**, kept for
+> historical reference and for the AI-usage report (it records what was
+> *planned* before the code existed). It does **not** describe the code as
+> built — names, file layout and data structures have since changed.
+>
+> **See the current documentation in [`docs/`](../index.md).**
+
+---
+
 # 6. InlineParser — phase 2
 
 ← [5. SpineHandler — phase 1](05_spine_handler.md) | [Index](index.md) | Next: [7. Tab algorithm](07_tab_algorithm.md) →
@@ -15,7 +26,7 @@ spine or the block tree structure. All state is reset between `parse()` calls.
 ## 6.1 State
 
 ```cpp
-// include/markdown_parser/parser/InlineParser.hpp
+// include/markdown_parser/InlineParser.hpp
 
 class InlineParser {
 public:
@@ -199,37 +210,6 @@ std::unique_ptr<InlineNode> InlineParser::makeNode(InlineType type);
 The `processEmphasis` / bracket deactivation interaction — `delim_top` as a stack-size snapshot, deactivation on failed brackets, and `stack_bottom` on valid links — is specified in [§9.4](09_open_decisions.md#94-processemphasis--bracket-deactivation-interaction).
 
 Link reference definitions resolved via `ref_map_` are populated by [`SpineHandler`](05_spine_handler.md#51-state) during phase 1 and stored as [`LinkDef`](02_data_types.md#22-blockdata-union) values.
----
-
-## 6.3 mdast-related behaviour
-
-### Reference kind
-
-`handleBracketCloser` records which reference form matched on `LinkData`:
-
-| Branch | `reference_type` |
-|---|---|
-| `[text](url)` inline | `None` (stays a `link`/`image`) |
-| `[text][label]` | `Full` |
-| `[label][]` | `Collapsed` |
-| `[label]` | `Shortcut` |
-
-It also stores both label forms: `identifier = normaliseLabel(raw)` (case-folded,
-whitespace-collapsed — the matching key) and
-`label = processEscapesAndEntities(raw)` (escapes resolved, case/whitespace
-preserved). mdast distinguishes them; only the renderer decides which to emit.
-
-The resolved `destination`/`title` are still filled in eagerly so `HtmlRenderer`
-needs no definition map.
-
-### Code spans keep raw line endings
-
-Spec §6.1 says line endings in a code span render as spaces. That conversion is a
-**rendering** step and now lives in `HtmlRenderer`; `parseBacktickString` applies
-only the §6.1 *boundary* strip (one leading/trailing space **or line ending**
-when the content is not all whitespace) and stores interior newlines verbatim, as
-mdast requires.
-
 
 ---
 

@@ -1,3 +1,14 @@
+> # ⚠️ SUPERSEDED — ORIGINAL DESIGN SPEC
+>
+> This file is the **pre-implementation design specification**, kept for
+> historical reference and for the AI-usage report (it records what was
+> *planned* before the code existed). It does **not** describe the code as
+> built — names, file layout and data structures have since changed.
+>
+> **See the current documentation in [`docs/`](../index.md).**
+
+---
+
 # 8. Data flow through phases
 
 ← [7. Tab algorithm](07_tab_algorithm.md) | [Index](index.md) | Next: [9. Open design decisions](09_open_decisions.md) →
@@ -9,7 +20,7 @@
 ```
 raw input line (std::string_view)
   │
-  ▼ ScannedLine::scan()
+  ▼ PreScanner::scan()
 ScannedLine  { content, indent, virtual_indent, next_non_space, is_blank }
   │           (no classification — raw bytes only)
   │
@@ -85,7 +96,7 @@ ScannedLine  { content, indent, virtual_indent, next_non_space, is_blank }
 ```
 
 Key components in this pipeline:
-- [`ScannedLine`](04_scanned_line.md) — produces `ScannedLine`
+- [`PreScanner`](04_prescanner.md) — produces `ScannedLine`
 - [`block_rules`](10_block_rules.md) — stateless predicate/descriptor module for continuation, open, and close rules
 - [`SpineHandler`](05_spine_handler.md) — orchestrates the per-line loop and the phase boundary
 - [`InlineParser`](06_inline_parser.md) — phase 2 leaf-block processing
@@ -156,26 +167,6 @@ The primitives `openBlock`, `closeBlock`, and `appendText` are implemented in [�
 > destructor or arena allocator is recommended; see [§9.1](09_open_decisions.md#91-memory-ownership--blocknode-and-inlinenode).
 
 The open design decision on memory ownership is [§9.1](09_open_decisions.md#91-memory-ownership--blocknode-and-inlinenode).
----
-
-## 8.4 Two renderers over one tree
-
-The pipeline terminates in a renderer chosen by the caller; the tree above it is
-identical either way.
-
-```
-                                    ┌── HtmlRenderer ──▶ HTML
-source ─▶ ScannedLine ─▶ SpineHandler ─▶ InlineParser ─┤
-          (line scan)    (block tree)    (inline tree) └── JsonRenderer ─▶ mdast JSON
-```
-
-`parse()` is templated on the `Renderer` concept, so the parser has no knowledge
-of the output format and renderers receive no parser state — not even the link
-definition map. Format-specific normalization therefore *must* live in the
-renderer; see [§12.2](12_renderers.md#122-the-division-of-labour) for the full
-division of labour and [§13](13_testing.md) for how the dual test suites keep the
-boundary honest.
-
 
 ---
 
