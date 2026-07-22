@@ -15,11 +15,11 @@ Target: **mermaid 11.0.0** flowchart subset. Correctness is gated by comparing
 
 ## What works (the happy path)
 
-```
+````
 markdown ```mermaid``` fence
   → lexer → LR(1) parser (generated) → AST → lower() → FlowDb   [verified vs mermaid]
   → collapse_subgraphs → measure → layout → render_svg → inline SVG
-```
+````
 
 - **Lexer + parser**: the whole supported subset; the grammar is verified
   conflict-free canonical LR(1) and the parser is generated at build time by
@@ -30,24 +30,28 @@ markdown ```mermaid``` fence
 - **Layout + SVG**: minimal Sugiyama → mermaid-classed SVG. Renders the whole
   fixture corpus to valid XML.
 - **Both builds render server-side**: native (CLI + `md_parser_bin
-  --parse-mermaid`) with `ApproxMeasurer`; web/wasm with `BrowserMeasurer`
-  (real font metrics via canvas). No client-side mermaid.js required.
+--parse-mmd`) with `ApproxMeasurer`; web/wasm with `BrowserMeasurer`
+  (real font metrics via canvas). No client-side mermaid.js required for the
+  native path; the web UI additionally offers a client-side `mermaid.js` engine
+  (handler group `mermaidjs`), usable standalone or as a fallback for the native
+  renderer. Emitting no mermaid flag leaves ` ```mermaid ` blocks as plain code
+  blocks (the standard fenced-code behavior).
 
 ---
 
 ## Deferred / missing, by stage
 
-### Parser / lower  (details: `deferred.md`)
+### Parser / lower (details: `deferred.md`)
 
-| Item | State | Effect |
-|---|---|---|
-| `click` (tooltip / link) | parsed, **not lowered** | F-11 not verifiable until `Vertex` gains `tooltip`/`link` |
-| `linkStyle` | parsed, **not lowered** | invisible to the AST gate; needed for edge styling at render |
-| Front-matter `title` / config, `%%{init}%%` | captured raw, **not parsed** | `FlowDb::title` stays empty (F-12/13) |
-| Label entity decoding (`#35;`, `&amp;`, `<br/>`) | labels kept **raw** | F-16 / entity cases would mismatch |
-| `@{ shape: }`, edge IDs `e1@-->` | **out of scope** | post-11.0.0 syntax |
+| Item                                             | State                        | Effect                                                       |
+| ------------------------------------------------ | ---------------------------- | ------------------------------------------------------------ |
+| `click` (tooltip / link)                         | parsed, **not lowered**      | F-11 not verifiable until `Vertex` gains `tooltip`/`link`    |
+| `linkStyle`                                      | parsed, **not lowered**      | invisible to the AST gate; needed for edge styling at render |
+| Front-matter `title` / config, `%%{init}%%`      | captured raw, **not parsed** | `FlowDb::title` stays empty (F-12/13)                        |
+| Label entity decoding (`#35;`, `&amp;`, `<br/>`) | labels kept **raw**          | F-16 / entity cases would mismatch                           |
+| `@{ shape: }`, edge IDs `e1@-->`                 | **out of scope**             | post-11.0.0 syntax                                           |
 
-### Layout  (v1 = simplest choice everywhere; details + roadmap: `rendering.md`)
+### Layout (v1 = simplest choice everywhere; details + roadmap: `rendering.md`)
 
 - **Subgraphs are collapsed to single nodes** — no real recursive cluster
   layout (no bounding boxes, no border-node edge routing). Nested subgraphs
@@ -65,7 +69,7 @@ markdown ```mermaid``` fence
 ### Rendering (SVG)
 
 - **Visual styling not applied** — `style` / `classDef` / `linkStyle` are parsed
-  but the SVG uses only mermaid's *default* node/edge appearance. No per-node
+  but the SVG uses only mermaid's _default_ node/edge appearance. No per-node
   fill/stroke/color, no per-edge linkStyle.
 - **Node sizing is approximate on the CLI** — `ApproxMeasurer` is a
   char-advance heuristic (the web build measures accurately). No font-metrics

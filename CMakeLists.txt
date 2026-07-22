@@ -95,6 +95,7 @@ if(NOT EMSCRIPTEN)
     add_executable(md_parser_bin
         src/main.cpp
         src/markdown_parser/handlers/MermaidHandler.cpp
+        src/markdown_parser/handlers/MermaidJsHandler.cpp
         src/markdown_parser/handlers/MathHandler.cpp
     )
     # MermaidHandler renders fenced blocks via the mermaid pipeline.
@@ -120,6 +121,7 @@ if(EMSCRIPTEN)
         src/markdown_parser/utils/string_utils.cpp
         src/markdown_parser/utils/unicode_fold.cpp
         src/markdown_parser/handlers/MermaidHandler.cpp
+        src/markdown_parser/handlers/MermaidJsHandler.cpp
         src/markdown_parser/handlers/MathHandler.cpp
         # Browser-backed label measurer (WASM only); plugs in behind TextMeasurer.
         src/mermaid/BrowserMeasure.cpp
