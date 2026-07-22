@@ -159,6 +159,11 @@ SpineHandler::tryOpenNewBlock(ScannedLine &cur, const SpineMatchResult &match) {
         break;
     }
 
+    // Refuse to nest past the depth cap: the line stays text in the current
+    // tip rather than opening another container (see kMaxNesting).
+    if (spine_.size() >= commonmark::kMaxNesting)
+      break;
+
     auto result = block_rules::tryOpen(cur, tip_para, inside_list_blank);
     // Suppress indented-code-block opening when a paragraph sits exactly at
     // the first_unmatched boundary — the line should lazily continue it.

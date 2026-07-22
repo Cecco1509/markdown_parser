@@ -13,6 +13,11 @@ struct InlineNode {
     std::string  literal;
     InlineData   data;
     std::vector<std::unique_ptr<InlineNode>> children;
+
+    // Height of the subtree rooted here (1 = leaf). Maintained as the tree is
+    // built so InlineParser can enforce commonmark::kMaxNesting in O(1) per
+    // node instead of re-walking the subtree at every wrap.
+    int depth = 1;
 };
 
 struct Delimiter {

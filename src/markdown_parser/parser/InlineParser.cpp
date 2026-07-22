@@ -1,4 +1,5 @@
 #include "markdown_parser/parser/InlineParser.hpp"
+#include "markdown_parser/parser/commonmark_constants.hpp"
 #include "markdown_parser/utils/entities.hpp"
 #include "markdown_parser/utils/string_utils.hpp"
 #include "markdown_parser/utils/unicode_fold.hpp"
@@ -15,6 +16,28 @@ static bool isAsciiPunct(char c) {
   auto u = static_cast<unsigned char>(c);
   return (u >= '!' && u <= '/') || (u >= ':' && u <= '@') ||
          (u >= '[' && u <= '`') || (u >= '{' && u <= '~');
+}
+
+// Height a parent would have if it wrapped [begin, end): one more than its
+// tallest child. Each child already carries its own height, so this stays
+// O(children) rather than walking the whole subtree.
+template <class It> static int wrappedDepth(It begin, It end) {
+  int tallest = 0;
+  for (auto it = begin; it != end; ++it)
+    tallest = std::max(tallest, (*it)->depth);
+  return tallest + 1;
+}
+
+// Whether wrapping [begin, end) would breach commonmark::kMaxNesting. Since
+// the parent's height is (tallest child + 1), one child at the cap is enough
+// to decide, so this returns on the first offender instead of measuring the
+// whole range. That early exit is what keeps a refused wrap O(1) instead of
+// rescanning the pending nodes once per closer, which would be O(n^2).
+template <class It> static bool wouldExceedNesting(It begin, It end) {
+  for (auto it = begin; it != end; ++it)
+    if ((*it)->depth >= static_cast<int>(commonmark::kMaxNesting))
+      return true;
+  return false;
 }
 
 // ── Unicode helpers for flanking rules ───────────────────────────────────────
@@ -487,7 +510,11 @@ InlineParser::parseInline(const std::unordered_map<std::string, LinkDef> &ref_ma
       handleBracketOpener(true);
       if (!brackets_.empty()) {
         brackets_.back().node_idx = nodes_.size();
-        brackets_.back().active = true;
+        // Past the nesting cap the opener starts deactivated, so its closer
+        // takes the existing "inactive bracket" path and stays literal text.
+        // Depth is decided here, where it is just the open-bracket count;
+        // deciding at close time would mean scanning the pending nodes.
+        brackets_.back().active = brackets_.size() <= commonmark::kMaxNesting;
       }
       return node;
     }
@@ -506,7 +533,8 @@ InlineParser::parseInline(const std::unordered_map<std::string, LinkDef> &ref_ma
     handleBracketOpener(false);
     if (!brackets_.empty()) {
       brackets_.back().node_idx = nodes_.size();
-      brackets_.back().active = true;
+      // See the image-opener case above: cap decided at open time, O(1).
+      brackets_.back().active = brackets_.size() <= commonmark::kMaxNesting;
     }
     return node;
   }
@@ -1237,6 +1265,7 @@ std::unique_ptr<InlineNode> InlineParser::handleBracketCloser(
 
     auto op_it = nodes_.begin() + bracket.node_idx;
 
+    link->depth = wrappedDepth(op_it + 1, nodes_.end());
     for (auto it = op_it + 1; it != nodes_.end(); ++it)
       link->children.push_back(std::move(*it));
     nodes_.erase(op_it + 1, nodes_.end());
@@ -1349,6 +1378,16 @@ void InlineParser::processEmphasis(std::optional<std::size_t> stack_bottom) {
       break;
     }
 
+    // Refuse to wrap past the nesting cap by pretending no opener matched, so
+    // the delimiters stay literal text. Reusing the not-found path below also
+    // reuses its progress guarantee (it either erases the closer or advances).
+    if (found) {
+      auto ob_it = nodes_.begin() + delimiters_[opIdx].node_idx;
+      auto cb_it = nodes_.begin() + delimiters_[ci].node_idx;
+      if (wouldExceedNesting(ob_it + 1, cb_it))
+        found = false;
+    }
+
     if (!found) {
       ob[oi(c)][cm3][ckey] = ci; // update lower bound for this bucket only
       if (!delimiters_[ci].can_open)
@@ -1369,6 +1408,7 @@ void InlineParser::processEmphasis(std::optional<std::size_t> stack_bottom) {
     auto cl_it = nodes_.begin() + cl_node_idx;
 
     auto emph = makeNode(type);
+    emph->depth = wrappedDepth(op_it + 1, cl_it);
     for (auto it = op_it + 1; it != cl_it; ++it)
       emph->children.push_back(std::move(*it));
 

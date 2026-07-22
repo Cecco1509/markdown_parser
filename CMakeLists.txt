@@ -139,5 +139,13 @@ if(EMSCRIPTEN)
     target_link_options(markdown_parser_wasm PRIVATE
         --bind
         -O2
+        # Emscripten defaults to a 64 KB stack, which at the ~600 bytes per
+        # nesting level that parsing, rendering and node destruction each cost
+        # would overflow at roughly 100 levels — right at commonmark::kMaxNesting.
+        # The block, bracket and emphasis caps compose, so the measured deepest
+        # tree is ~300 levels — about 180 KB of stack at native frame sizes.
+        # 1 MB is ~5x that, which covers the rest of the call graph and some
+        # slack for wasm frames without reserving linear memory we never touch.
+        -sSTACK_SIZE=1048576
     )
 endif()
