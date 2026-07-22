@@ -2,7 +2,7 @@
 
 A Markdown parser written in **C++20** that implements the
 [CommonMark v0.31.2](https://spec.commonmark.org/0.31.2/) specification and adds
-first-class support for **Mermaid** flowchart code blocks. `` ```mermaid `` fences
+first-class support for **Mermaid** flowchart code blocks. ` ```mermaid ` fences
 are detected during parsing and tagged as distinct diagram nodes in the output,
 and an integrated Mermaid engine can parse, lay out, and render those diagrams to
 standalone **SVG** — no browser or JavaScript required.
@@ -16,7 +16,7 @@ A two-pane Markdown editor running the parser **entirely client-side** as
 WebAssembly — type Markdown on the left, see rendered HTML (with live Mermaid
 diagrams) on the right. Source in [`web/`](web/).
 
-> *AP course project B02 — AI-Assisted Markdown Parser with Mermaid Diagram Support.*
+> _AP course project B02 — AI-Assisted Markdown Parser with Mermaid Diagram Support._
 
 ---
 
@@ -26,14 +26,14 @@ diagrams) on the right. Source in [`web/`](web/).
   ordered/bullet lists, fenced & indented code blocks, blockquotes, thematic
   breaks, links & images (inline, reference, autolinks), emphasis/strong, code
   spans, HTML blocks, entities, and the tab-expansion rules.
-- **Mermaid detection & tagging** — `` ```mermaid `` blocks become dedicated
+- **Mermaid detection & tagging** — ` ```mermaid ` blocks become dedicated
   diagram nodes rather than plain code blocks.
 - **Native Mermaid rendering** — a self-contained flowchart pipeline
   (lex → parse → lower → layout → SVG) produces inline SVG for each diagram,
   targeting the Mermaid 11 flowchart subset.
 - **Two output formats** — HTML, or a JSON AST conforming to
   [mdast](https://github.com/syntax-tree/mdast) (the remark/unified standard).
-  The JSON tree is *reference-preserving*: link reference definitions stay as
+  The JSON tree is _reference-preserving_: link reference definitions stay as
   `definition` nodes and their uses as `linkReference`/`imageReference`, so the
   AST faithfully records the source rather than only the rendered result.
 - **WebAssembly demo** — a live, two-pane Markdown editor running the parser
@@ -60,7 +60,7 @@ reference link to a URL) happens in the renderer, not the parser. This is what
 lets the same tree produce both spec-exact HTML and reference-preserving mdast.
 
 The Mermaid engine is an independent module; the only coupling point is the
-Markdown fence handler that dispatches `` ```mermaid `` blocks into it:
+Markdown fence handler that dispatches ` ```mermaid ` blocks into it:
 
 ```
 mermaid src ──▶ Lexer ──▶ FlowParse ──▶ Lower ──▶ Layout ──▶ SvgRenderer ──▶ SVG
@@ -87,12 +87,12 @@ cmake --build build -j
 
 This produces:
 
-| Target                  | Description                                        |
-|-------------------------|----------------------------------------------------|
-| `md_parser_bin`         | Markdown → HTML/JSON CLI (the main demo program)   |
-| `mermaid_ast`           | Parse a `.mmd` file and print its AST              |
-| `mermaid_svg`           | Parse + layout + render a `.mmd` file to SVG       |
-| `md_parser` / `mermaid` | Static libraries                                   |
+| Target                  | Description                                      |
+| ----------------------- | ------------------------------------------------ |
+| `md_parser_bin`         | Markdown → HTML/JSON CLI (the main demo program) |
+| `mermaid_ast`           | Parse a `.mmd` file and print its AST            |
+| `mermaid_svg`           | Parse + layout + render a `.mmd` file to SVG     |
+| `md_parser` / `mermaid` | Static libraries                                 |
 
 ---
 
@@ -106,18 +106,18 @@ This produces:
 ./build/md_parser_bin --json input.md
 
 # Render Markdown to HTML, rendering mermaid blocks to inline SVG
-./build/md_parser_bin --parse-mermaid input.md
+./build/md_parser_bin --parse-mmd input.md
 ```
 
 Options:
 
-| Flag              | Effect                                                       |
-|-------------------|--------------------------------------------------------------|
-| *(none)*          | Emit HTML; mermaid blocks stay as `<pre><code>` code blocks  |
-| `--json`          | Emit the JSON AST instead of HTML                            |
-| `--parse-mermaid` | Render `` ```mermaid `` blocks to inline `<svg>`             |
-| `--parse-math`    | Render math blocks                                           |
-| `--debug`         | Emit annotated/debug HTML                                    |
+| Flag           | Effect                                                                                |
+| -------------- | ------------------------------------------------------------------------------------- |
+| _(none)_       | Emit HTML; mermaid blocks stay as `<pre><code>` code blocks                           |
+| `--json`       | Emit the JSON AST instead of HTML                                                     |
+| `--parse-mmd`  | Render ` ```mermaid ` blocks to inline `<svg>`                                        |
+| `--parse-math` | Render math blocks                                                                    |
+| `--debug`      | Emit annotated/debug HTML                                                             |
 
 ### Example
 
@@ -147,18 +147,35 @@ A--&gt;B
 `./build/md_parser_bin --json demo.md`:
 
 ```json
-{"type":"root","children":[
-  {"type":"heading","depth":1,"children":[{"type":"text","value":"Hi"}]},
-  {"type":"paragraph","children":[
-    {"type":"text","value":"Some "},
-    {"type":"strong","children":[{"type":"text","value":"bold"}]},
-    {"type":"text","value":" text."}]},
-  {"type":"code","lang":"mermaid","meta":null,"value":"graph TD\nA-->B"}]}
+{
+  "type": "root",
+  "children": [
+    {
+      "type": "heading",
+      "depth": 1,
+      "children": [{ "type": "text", "value": "Hi" }]
+    },
+    {
+      "type": "paragraph",
+      "children": [
+        { "type": "text", "value": "Some " },
+        { "type": "strong", "children": [{ "type": "text", "value": "bold" }] },
+        { "type": "text", "value": " text." }
+      ]
+    },
+    {
+      "type": "code",
+      "lang": "mermaid",
+      "meta": null,
+      "value": "graph TD\nA-->B"
+    }
+  ]
+}
 ```
 
 The Mermaid block surfaces as a `code` node tagged `"lang":"mermaid"` — the
 spec-correct mdast representation — so downstream tools can pick diagrams out of
-the tree. With `--parse-mermaid`, that same node is instead rendered to an inline
+the tree. With `--parse-mmd`, that same node is instead rendered to an inline
 `<div class="mermaid"><svg …>…</svg></div>` in the HTML output.
 
 ---

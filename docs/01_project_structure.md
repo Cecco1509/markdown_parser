@@ -38,7 +38,7 @@ markdown_parser/
 │   └── mermaid/                         # standalone mermaid engine headers
 │
 ├── src/
-│   ├── main.cpp                         # CLI: --json / --debug / --parse-mermaid
+│   ├── main.cpp                         # CLI: --json / --debug / --parse-mmd
 │   ├── wasm_bindings.cpp                # Emscripten bindings for the web demo
 │   ├── markdown_parser/
 │   │   ├── parser/{ScannedLine,SpineHandler,InlineParser,block_rules}.cpp

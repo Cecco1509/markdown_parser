@@ -10,50 +10,68 @@
 
 using namespace markdown_parser;
 
-int main(int argc, char *argv[]) {
-  bool json_mode    = false;
-  bool debug_mode   = false;
+int main(int argc, char *argv[])
+{
+  bool json_mode = false;
+  bool debug_mode = false;
   std::string input_file;
   std::vector<std::string> active_flags;
 
-  for (int i = 1; i < argc; ++i) {
+  for (int i = 1; i < argc; ++i)
+  {
     std::string arg(argv[i]);
-    if (arg == "--json") {
+    if (arg == "--json")
+    {
       json_mode = true;
-    } else if (arg == "--debug") {
+    }
+    else if (arg == "--debug")
+    {
       debug_mode = true;
-    } else if (arg == "--parse-mermaid") {
+    }
+    else if (arg == "--parse-mmd")
+    {
       active_flags.push_back("mermaid");
-    } else if (arg == "--parse-math") {
+    }
+    else if (arg == "--parse-math")
+    {
       active_flags.push_back("math");
-    } else {
+    }
+    else
+    {
       input_file = arg;
     }
   }
 
-  if (input_file.empty()) {
+  if (input_file.empty())
+  {
     std::cerr << "Usage: " << argv[0]
-              << " [--json] [--debug] [--parse-mermaid] [--parse-math]"
+              << " [--json] [--debug] [--parse-mmd] [--parse-math]"
               << " <input_file>\n";
     return 1;
   }
 
   std::ifstream file(input_file);
-  if (!file) {
+  if (!file)
+  {
     std::cerr << "Error: cannot open file '" << input_file << "'\n";
     return 1;
   }
 
   std::string source((std::istreambuf_iterator<char>(file)),
-                      std::istreambuf_iterator<char>());
+                     std::istreambuf_iterator<char>());
 
-  if (json_mode) {
+  if (json_mode)
+  {
     JsonRenderer jr;
     std::cout << parse(source, jr, debug_mode) << '\n';
-  } else if (debug_mode) {
+  }
+  else if (debug_mode)
+  {
     HtmlRendererDebug hr;
     std::cout << parse(source, hr, debug_mode);
-  } else {
+  }
+  else
+  {
     HtmlRenderer hr = HtmlRendererFactory::create(active_flags);
     std::cout << parse(source, hr);
   }
