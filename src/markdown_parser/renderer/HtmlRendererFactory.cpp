@@ -6,8 +6,8 @@ namespace markdown_parser {
 HtmlRenderer HtmlRendererFactory::create(const std::vector<std::string> &flags) {
   HtmlRenderer hr;
   for (const auto &flag : flags)
-    for (const auto &alias : HandlerRegistry::getGroup(flag))
-      if (auto fn = HandlerRegistry::get(alias))
+    if (auto fn = HandlerRegistry::getGroupFn(flag))
+      for (const auto &alias : HandlerRegistry::getGroup(flag))
         hr.registerHandler(alias, fn);
   return hr;
 }

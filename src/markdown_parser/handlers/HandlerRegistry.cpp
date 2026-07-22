@@ -16,6 +16,7 @@ bool HandlerRegistry::add(const std::string &group,
   for (const auto &alias : aliases)
     self.lang_map_[alias] = fn;
   self.group_map_[group] = std::vector<std::string>(aliases);
+  self.group_fn_[group]  = fn;
   return true;
 }
 
@@ -33,6 +34,14 @@ const std::vector<std::string> &HandlerRegistry::getGroup(const std::string &gro
   if (it != self.group_map_.end())
     return it->second;
   return empty_;
+}
+
+HandlerFn HandlerRegistry::getGroupFn(const std::string &group) {
+  auto &self = instance();
+  auto it = self.group_fn_.find(group);
+  if (it != self.group_fn_.end())
+    return it->second;
+  return nullptr;
 }
 
 } // namespace markdown_parser

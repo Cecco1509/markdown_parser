@@ -25,11 +25,17 @@ public:
   // Return all lang aliases registered under a group name (e.g. "math").
   static const std::vector<std::string> &getGroup(const std::string &group);
 
+  // Return the handler function registered for a group name. Unlike get(),
+  // this is keyed by group, so distinct groups may share a lang alias (e.g.
+  // both "mermaid" and "mermaidjs" handle the ```mermaid``` tag).
+  static HandlerFn getGroupFn(const std::string &group);
+
 private:
   HandlerRegistry() = default;
 
   std::unordered_map<std::string, HandlerFn>             lang_map_;
   std::unordered_map<std::string, std::vector<std::string>> group_map_;
+  std::unordered_map<std::string, HandlerFn>             group_fn_;
 
   static const std::vector<std::string> empty_;
 };
