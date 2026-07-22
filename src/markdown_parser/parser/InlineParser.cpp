@@ -1095,14 +1095,6 @@ std::unique_ptr<InlineNode> InlineParser::handleBracketCloser(
     return literal_bracket();
   }
 
-  // Helper: collect literal text of nodes after the bracket opener node.
-  auto get_bracket_text = [&]() -> std::string {
-    std::string text;
-    for (auto it = nodes_.begin() + bracket.node_idx + 1; it != nodes_.end(); ++it)
-      text += (*it)->literal;
-    return text;
-  };
-
   std::size_t save = pos_;
   std::optional<std::string> dest, title, label;
   bool resolved = false;
@@ -1189,8 +1181,14 @@ std::unique_ptr<InlineNode> InlineParser::handleBracketCloser(
   // Used for shortcut/collapsed lookups to avoid backslash-processing effects.
   auto raw_bracket_label = [&]() -> std::string {
     std::size_t end = save - 1; // save is pos_ after ']++'
-    if (bracket.src_pos <= end)
+    if (bracket.src_pos <= end) {
+      // A link label holds at most 999 characters (spec §4.7), so a longer
+      // span can never match a definition. Bailing out before building and
+      // case-folding the key keeps nested brackets linear instead of O(n^2).
+      if (end - bracket.src_pos > 999)
+        return {};
       return std::string(input_.substr(bracket.src_pos, end - bracket.src_pos));
+    }
     return {};
   };
 

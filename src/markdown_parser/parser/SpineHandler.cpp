@@ -633,6 +633,10 @@ bool SpineHandler::tryScanOneLinkRefDef(std::string_view content,
   }
   if (p >= len || content[p] != ']')
     return false;
+  // A link label holds at most 999 characters (spec §4.7); a longer one is not
+  // a definition at all, so the line stays paragraph text.
+  if (p - label_start > 999)
+    return false;
   std::string raw_label(content.substr(label_start, p - label_start));
   ++p; // skip ']'
 
