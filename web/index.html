@@ -8,16 +8,28 @@
     <!-- GitHub Markdown CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.5.1/github-markdown-light.min.css">
 
+    <!-- KaTeX (client-side math rendering) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+
     <!-- Editor UI styles -->
     <link rel="stylesheet" href="style.css">
+
+    <!-- Client-side rendering libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 <body>
     <header>
         <span class="logo">Markdown Parser</span>
-        <label id="mermaid-toggle-label">
-            <input type="checkbox" id="mermaid-toggle" checked> Mermaid
-        </label>
+        <span class="mermaid-group">
+            <label id="mermaid-native-label">
+                <input type="checkbox" id="mermaid-native" checked> Mermaid (native)
+            </label>
+            <label id="mermaid-js-label">
+                <input type="checkbox" id="mermaid-js"> Mermaid (mermaid.js)
+            </label>
+        </span>
         <label id="math-toggle-label">
-            <input type="checkbox" id="math-toggle"> Math
+            <input type="checkbox" id="math-toggle" checked> Math
         </label>
         <span id="status" class="status loading">Loading WASM...</span>
     </header>
@@ -38,11 +50,16 @@
 
     <script src="dist/markdown_parser.js"></script>
     <script>
-        const editor        = document.getElementById('editor');
-        const preview       = document.getElementById('preview');
-        const status        = document.getElementById('status');
-        const mermaidToggle = document.getElementById('mermaid-toggle');
-        const mathToggle    = document.getElementById('math-toggle');
+        const editor         = document.getElementById('editor');
+        const preview        = document.getElementById('preview');
+        const status         = document.getElementById('status');
+        const mermaidNative  = document.getElementById('mermaid-native');
+        const mermaidJs      = document.getElementById('mermaid-js');
+        const mathToggle     = document.getElementById('math-toggle');
+
+        if (window.mermaid) {
+            mermaid.initialize({ startOnLoad: false });
+        }
 
         Module.onRuntimeInitialized = () => {
             status.textContent = 'Ready';
@@ -50,14 +67,36 @@
             render();
         };
 
+        // Selection rules between the two mermaid engines:
+        //   - Native selected      → mermaid.js can be added as a *fallback*.
+        //   - mermaid.js selected  → native cannot be selected (it is locked).
+        function syncMermaidControls() {
+            const jsPrimary = mermaidJs.checked && !mermaidNative.checked;
+            mermaidNative.disabled = jsPrimary;
+        }
+
+        // The fenced-code handler group passed to the WASM parser.
+        //   native on              → "mermaid"   (server-side SVG; mermaid.js,
+        //                                         if also on, renders any
+        //                                         fallback <div class="mermaid">)
+        //   native off, js on      → "mermaidjs" (pure client-side passthrough)
+        function mermaidFlag() {
+            if (mermaidNative.checked) return 'mermaid';
+            if (mermaidJs.checked)     return 'mermaidjs';
+            return null;
+        }
+
         function activeFlags() {
             const flags = [];
-            if (mermaidToggle.checked) flags.push('mermaid');
-            if (mathToggle.checked)    flags.push('math');
+            const mflag = mermaidFlag();
+            if (mflag)              flags.push(mflag);
+            if (mathToggle.checked) flags.push('math');
             return flags.join(',');
         }
 
         function render() {
+            syncMermaidControls();
+
             const md    = editor.value;
             const flags = activeFlags();
 
@@ -72,10 +111,42 @@
 
             preview.innerHTML = html;
 
+            renderMermaidJs();
+            renderMath();
+        }
+
+        // Run mermaid.js over any raw-source <div class="mermaid"> blocks. This
+        // covers both pure mermaid.js mode and the native-fallback case (native
+        // emits raw source into a mermaid div when its own parser fails). Blocks
+        // the native renderer already turned into <svg> are skipped.
+        function renderMermaidJs() {
+            if (!mermaidJs.checked || !window.mermaid) return;
+            const nodes = Array.from(preview.querySelectorAll('div.mermaid'))
+                .filter(el => !el.querySelector('svg') && !el.dataset.processed);
+            if (nodes.length === 0) return;
+            try {
+                mermaid.run({ nodes });
+            } catch (e) {
+                /* leave the raw source in place on failure */
+            }
+        }
+
+        // Render <div class="math"> blocks with KaTeX.
+        function renderMath() {
+            if (!window.katex) return;
+            preview.querySelectorAll('div.math').forEach(el => {
+                const tex = el.textContent;
+                try {
+                    katex.render(tex, el, { displayMode: true, throwOnError: false });
+                } catch (e) {
+                    /* leave the raw source in place on failure */
+                }
+            });
         }
 
         editor.addEventListener('input', render);
-        mermaidToggle.addEventListener('change', render);
+        mermaidNative.addEventListener('change', render);
+        mermaidJs.addEventListener('change', render);
         mathToggle.addEventListener('change', render);
 
         // Default content shown on load
@@ -103,6 +174,12 @@
             '    B -- Yes --> C[Great!]',
             '    B -- No  --> D[Debug]',
             '    D --> A',
+            '```',
+            '',
+            '## Math',
+            '',
+            '```math',
+            'E = mc^2',
             '```',
         ].join('\n');
     </script>
