@@ -23,12 +23,13 @@ static bool icontains(std::string_view hay, std::string_view needle) {
   char lower_needle[32];
   const std::size_t nlen = needle.size();
   for (std::size_t j = 0; j < nlen; ++j)
-    lower_needle[j] = static_cast<char>(
-        std::tolower(static_cast<unsigned char>(needle[j])));
+    lower_needle[j] =
+        static_cast<char>(std::tolower(static_cast<unsigned char>(needle[j])));
   for (std::size_t i = 0; i + nlen <= hay.size(); ++i) {
     bool ok = true;
     for (std::size_t j = 0; j < nlen && ok; ++j)
-      ok = std::tolower(static_cast<unsigned char>(hay[i + j])) == lower_needle[j];
+      ok = std::tolower(static_cast<unsigned char>(hay[i + j])) ==
+           lower_needle[j];
     if (ok)
       return true;
   }
@@ -203,10 +204,15 @@ ContinuationResult continuationMatches(const BlockNode &node,
     return {ok};
   }
 
-  case NodeType::ThematicBreak:
+  case NodeType::ThematicBreak: {
     CONT_LOG(false, "ThematicBreak is single-line");
     return {false};
   }
+
+  case NodeType::Definition:
+    return {false};
+  }
+
   return {false};
 
 #undef CONT_LOG

@@ -19,7 +19,8 @@ static void collectAlt(const InlineNode &n, std::string &alt) {
 // ────────────────────────────────────────────────────────────────
 
 void HtmlRenderer::registerHandler(const std::string &lang, HandlerFn fn) {
-  if (!fn) throw std::invalid_argument("null handler for lang: " + lang);
+  if (!fn)
+    throw std::invalid_argument("null handler for lang: " + lang);
   fenced_handlers_[lang] = std::move(fn);
 }
 
@@ -80,10 +81,14 @@ void HtmlRenderer::visit(const BlockNode &node) {
 
   case NodeType::Heading: {
     const auto &hd = std::get<HeadingData>(node.data);
-    out_ += "<h"; out_ += std::to_string(hd.level); out_ += ">";
+    out_ += "<h";
+    out_ += std::to_string(hd.level);
+    out_ += ">";
     for (const auto &il : node.inline_children)
       visit(*il);
-    out_ += "</h"; out_ += std::to_string(hd.level); out_ += ">\n";
+    out_ += "</h";
+    out_ += std::to_string(hd.level);
+    out_ += ">\n";
     break;
   }
 
@@ -109,9 +114,10 @@ void HtmlRenderer::visit(const BlockNode &node) {
 
     if (ld.list_type == ListType::Ordered) {
       if (ld.start != 1) {
-        out_ += "<ol start=\""; out_ += std::to_string(ld.start); out_ += "\">\n";
-      }
-      else
+        out_ += "<ol start=\"";
+        out_ += std::to_string(ld.start);
+        out_ += "\">\n";
+      } else
         out_ += "<ol>\n";
     } else {
       out_ += "<ul>\n";
@@ -165,8 +171,13 @@ void HtmlRenderer::visit(const BlockNode &node) {
     break;
   }
 
-  case NodeType::HtmlBlock:
+  case NodeType::HtmlBlock: {
     out_ += node.string_content;
+    break;
+  }
+
+  case NodeType::Definition:
+    // Definitions are not rendered in HTML output.
     break;
   }
 }
@@ -194,8 +205,11 @@ void HtmlRenderer::visit(const InlineNode &node) {
     // them raw, so convert here.
     std::string code = node.literal;
     for (char &ch : code)
-      if (ch == '\n') ch = ' ';
-    out_ += "<code>"; out_ += string_utils::escapeHtml(code); out_ += "</code>";
+      if (ch == '\n')
+        ch = ' ';
+    out_ += "<code>";
+    out_ += string_utils::escapeHtml(code);
+    out_ += "</code>";
     break;
   }
 
@@ -219,9 +233,13 @@ void HtmlRenderer::visit(const InlineNode &node) {
 
   case InlineType::Link: {
     const auto &ld = std::get<LinkData>(node.data);
-    out_ += "<a href=\""; out_ += string_utils::escapeUrl(ld.destination); out_ += "\"";
+    out_ += "<a href=\"";
+    out_ += string_utils::escapeUrl(ld.destination);
+    out_ += "\"";
     if (ld.title) {
-      out_ += " title=\""; out_ += string_utils::escapeHtml(*ld.title); out_ += "\"";
+      out_ += " title=\"";
+      out_ += string_utils::escapeHtml(*ld.title);
+      out_ += "\"";
     }
     out_ += ">";
     for (const auto &child : node.children)
@@ -236,10 +254,16 @@ void HtmlRenderer::visit(const InlineNode &node) {
     std::string alt;
     for (const auto &child : node.children)
       collectAlt(*child, alt);
-    out_ += "<img src=\""; out_ += string_utils::escapeUrl(ld.destination); out_ += "\"";
-    out_ += " alt=\""; out_ += string_utils::escapeHtml(alt); out_ += "\"";
+    out_ += "<img src=\"";
+    out_ += string_utils::escapeUrl(ld.destination);
+    out_ += "\"";
+    out_ += " alt=\"";
+    out_ += string_utils::escapeHtml(alt);
+    out_ += "\"";
     if (ld.title) {
-      out_ += " title=\""; out_ += string_utils::escapeHtml(*ld.title); out_ += "\"";
+      out_ += " title=\"";
+      out_ += string_utils::escapeHtml(*ld.title);
+      out_ += "\"";
     }
     out_ += " />";
     break;
