@@ -9,11 +9,8 @@
 namespace markdown_parser {
 namespace block_rules {
 
-namespace {
-constexpr std::size_t kMaxHeadingLevel = 6;
-constexpr std::size_t kMaxListDigits = 9;
-constexpr std::size_t kFenceMinRun = 3;
-} // namespace
+// All CommonMark spec limits (kMaxHeadingLevel, kMaxListDigits, kFenceMinRun,
+// …) live in commonmark_constants.hpp; referenced here as commonmark::kName.
 
 // ── Internal helpers ─────────────────────────────────────────────────────────
 
@@ -141,7 +138,7 @@ ContinuationResult continuationMatches(const BlockNode &node,
   case NodeType::CodeBlock: {
     const auto &cbd = std::get<CodeBlockData>(node.data);
     if (cbd.fenced) {
-      if (line.indent() <= current_col + 3) {
+      if (line.indent() <= current_col + commonmark::kMaxBlockIndent) {
         const std::size_t start = line.next_non_space();
         std::size_t run = 0;
         while (start + run < line.content().size() &&
@@ -175,7 +172,7 @@ ContinuationResult continuationMatches(const BlockNode &node,
       CONT_LOG(true, "indent=" << line.indent()
                                << " >= 4=" << (commonmark::kCodeBlockIndent)
                                << "  consume=4");
-      return {true, 4};
+      return {true, commonmark::kCodeBlockIndent};
     }
     CONT_LOG(false, "indent=" << line.indent() << " < base+4="
                               << (current_col + commonmark::kCodeBlockIndent));
@@ -309,11 +306,12 @@ static std::optional<OpenResult> tryOpenAtxHeading(const ScannedLine &line) {
   const std::string_view s = line.content();
   std::size_t i = line.next_non_space();
   int level = 0;
-  while (i < s.size() && s[i] == '#' && level <= kMaxHeadingLevel) {
+  while (i < s.size() && s[i] == '#' && level <= commonmark::kMaxHeadingLevel) {
     ++i;
     ++level;
   }
-  if (level < 1 || level > 6)
+  if (level < commonmark::kMinHeadingLevel ||
+      level > commonmark::kMaxHeadingLevel)
     return std::nullopt;
   // Must be followed by space/tab or end of line.
   if (i < s.size() && s[i] != ' ' && s[i] != '\t')
@@ -350,7 +348,7 @@ static std::optional<OpenResult> tryOpenFencedCode(const ScannedLine &line) {
   std::size_t run = 0;
   while (i + run < s.size() && s[i + run] == fc)
     ++run;
-  if (run < kFenceMinRun)
+  if (run < commonmark::kFenceMinRun)
     return std::nullopt;
   std::string_view info = s.substr(i + run);
   info = trimLeft(trimRight(info));
@@ -577,7 +575,7 @@ static std::optional<OpenResult> tryOpenThematicBreak(const ScannedLine &line) {
       continue;
     return std::nullopt;
   }
-  if (count < 3)
+  if (count < static_cast<int>(commonmark::kThematicBreakMinChars))
     return std::nullopt;
   return OpenResult{NodeType::ThematicBreak,
                     std::monostate{},
@@ -613,7 +611,7 @@ static std::optional<OpenResult> tryOpenListItem(const ScannedLine &line,
     std::size_t j = i;
     int num = 0, digits = 0;
     while (j < s.size() && std::isdigit(static_cast<unsigned char>(s[j])) &&
-           digits < kMaxListDigits) {
+           digits < commonmark::kMaxListDigits) {
       num = num * 10 + (s[j] - '0');
       ++j;
       ++digits;
@@ -667,7 +665,10 @@ static std::optional<OpenResult> tryOpenListItem(const ScannedLine &line,
   // capped_spaces. Relative to where the item opens, not the line start.
   // This makes continuation matching independent of how many cols parent
   // containers consumed on the continuation line vs. the opening line.
-  const int capped_spaces = (empty_item || spaces > 4) ? 1 : spaces;
+  const int capped_spaces = (empty_item ||
+                             spaces > static_cast<int>(commonmark::kMaxListMarkerSpaces))
+                                ? 1
+                                : spaces;
   const int padding =
       static_cast<int>(line.indent()) + marker_width + capped_spaces;
   const std::size_t cols_consumed = static_cast<std::size_t>(
@@ -698,7 +699,8 @@ static std::optional<OpenResult> tryOpenIndentedCode(const ScannedLine &line,
   if (line.is_blank())
     return std::nullopt;
   return OpenResult{
-      NodeType::CodeBlock, CodeBlockData{false, 0, 0, 0, {}}, {}, {}, false, 4};
+      NodeType::CodeBlock, CodeBlockData{false, 0, 0, 0, {}}, {}, {},
+      false,     commonmark::kCodeBlockIndent};
 }
 
 // ── §3.2 Public entry point

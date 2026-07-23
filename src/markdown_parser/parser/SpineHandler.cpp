@@ -359,7 +359,7 @@ void SpineHandler::step3AppendText(const ScannedLine &cur,
     if (debug_) {
       std::cerr << "  STEP3  para text_start=" << cur.next_non_space() << "\n";
     }
-    if (cur.next_non_space() <= 3)
+    if (cur.next_non_space() <= commonmark::kMaxBlockIndent)
       text_start = cur.next_non_space();
   }
   appendText(cur, text_start);
@@ -618,7 +618,8 @@ bool SpineHandler::tryScanOneLinkRefDef(std::string_view content,
   // 0–3 spaces of leading indentation (4+ would have been a code block
   // already)
   std::size_t indent = 0;
-  while (indent < 3 && p < len && content[p] == ' ') {
+  while (indent < commonmark::kMaxBlockIndent && p < len &&
+         content[p] == ' ') {
     ++p;
     ++indent;
   }
@@ -640,7 +641,7 @@ bool SpineHandler::tryScanOneLinkRefDef(std::string_view content,
     return false;
   // A link label holds at most 999 characters (spec §4.7); a longer one is not
   // a definition at all, so the line stays paragraph text.
-  if (p - label_start > 999)
+  if (p - label_start > commonmark::kMaxLinkLabelLen)
     return false;
   std::string raw_label(content.substr(label_start, p - label_start));
   ++p; // skip ']'

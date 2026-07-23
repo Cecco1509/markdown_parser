@@ -644,7 +644,7 @@ std::unique_ptr<InlineNode> InlineParser::parseAutolink() {
   std::size_t sp = pos_;
   if (sp < input_.size() &&
       std::isalpha(static_cast<unsigned char>(input_[sp]))) {
-    while (sp < input_.size() && sp - pos_ < 32) {
+    while (sp < input_.size() && sp - pos_ < commonmark::kMaxAutolinkSchemeLen) {
       char sc = input_[sp];
       if (std::isalpha(static_cast<unsigned char>(sc)) ||
           (sp > pos_ && (std::isdigit(static_cast<unsigned char>(sc)) ||
@@ -801,8 +801,9 @@ std::unique_ptr<InlineNode> InlineParser::parseHtmlInline() {
       return nullptr; // unclosed comment
     }
     // CDATA: <![CDATA[...]]>
-    if (pos_ + 7 < input_.size() && input_.substr(pos_, 8) == "![CDATA[") {
-      pos_ += 8;
+    if (pos_ + commonmark::kCDataPrefixLen - 1 < input_.size() &&
+        input_.substr(pos_, commonmark::kCDataPrefixLen) == "![CDATA[") {
+      pos_ += commonmark::kCDataPrefixLen;
       while (pos_ + 2 < input_.size()) {
         if (input_[pos_] == ']' && input_[pos_ + 1] == ']' &&
             input_[pos_ + 2] == '>') {
@@ -1175,7 +1176,7 @@ std::unique_ptr<InlineNode> InlineParser::handleBracketCloser(
     ++pos_;
     std::size_t ls = pos_;
     bool label_ok = true;
-    while (pos_ < input_.size() && pos_ - ls < 999) {
+    while (pos_ < input_.size() && pos_ - ls < commonmark::kMaxLinkLabelLen) {
       char lc = input_[pos_];
       if (lc == ']')
         break;
@@ -1213,7 +1214,7 @@ std::unique_ptr<InlineNode> InlineParser::handleBracketCloser(
       // A link label holds at most 999 characters (spec §4.7), so a longer
       // span can never match a definition. Bailing out before building and
       // case-folding the key keeps nested brackets linear instead of O(n^2).
-      if (end - bracket.src_pos > 999)
+      if (end - bracket.src_pos > commonmark::kMaxLinkLabelLen)
         return {};
       return std::string(input_.substr(bracket.src_pos, end - bracket.src_pos));
     }

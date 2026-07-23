@@ -3,6 +3,11 @@
 #include <cstdint>
 #include <cstring>
 
+// A numeric character reference has at most 6 hex or 7 decimal digits
+// (CommonMark spec §2.5): &#xFFFFFF; / &#1114111;.
+static constexpr std::size_t kMaxNumericRefHexDigits = 6;
+static constexpr std::size_t kMaxNumericRefDecDigits = 7;
+
 // ── Unicode codepoint → UTF-8 string ─────────────────────────────────────────
 
 static std::string cpToUtf8(uint32_t cp) {
@@ -370,8 +375,8 @@ std::string decode(std::string_view input, std::size_t &pos) {
 
     std::size_t start = i;
     uint32_t cp = 0;
-    // Spec limits: 1-6 hex digits, 1-7 decimal digits.
-    const std::size_t max_digits = is_hex ? 6 : 7;
+    const std::size_t max_digits =
+        is_hex ? kMaxNumericRefHexDigits : kMaxNumericRefDecDigits;
     if (is_hex) {
       while (i < input.size() && (i - start) < max_digits &&
              std::isxdigit(static_cast<unsigned char>(input[i]))) {
