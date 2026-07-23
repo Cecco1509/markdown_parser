@@ -49,3 +49,29 @@ jobs:
           git add web/dist/markdown_parser.js web/dist/markdown_parser.wasm
           git diff --cached --quiet || git commit -m "chore: rebuild WASM [skip ci]"
           git push
+
+  # ── Job 3: deploy /web to GitHub Pages ───────────────────────────────────
+  deploy:
+    name: Deploy Pages
+    runs-on: ubuntu-latest
+    needs: build-wasm
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main       # pull the commit that build-wasm just pushed
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+      - name: Upload /web as Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./web     # only this directory gets served
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
