@@ -12,7 +12,7 @@ namespace lrgen {
 namespace {
 
 std::string sanitize(const std::string &name) {
-  if (name == "$end") return "End";
+  if (name == kEndSymbol) return "End";
   std::string r;
   for (char c : name) r += (std::isalnum((unsigned char)c) || c == '_') ? c : '_';
   if (!r.empty() && std::isdigit((unsigned char)r[0])) r = "_" + r;

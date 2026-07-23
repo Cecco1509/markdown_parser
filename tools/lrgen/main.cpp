@@ -10,6 +10,12 @@
 
 using namespace lrgen;
 
+// Exit codes follow the BSD sysexits(3) convention.
+namespace {
+constexpr int kExitUsage = 64;     // EX_USAGE: bad invocation
+constexpr int kExitDataError = 65; // EX_DATAERR: grammar is not LR(1)
+} // namespace
+
 namespace {
 
 std::string read_file(const std::string &path) {
@@ -31,7 +37,7 @@ int main(int argc, char **argv) {
   if (argc < 3) {
     std::cerr << "usage: lrgen <grammar> <out_base>\n"
                  "  emits <out_base>.hpp and <out_base>.cpp\n";
-    return 64;
+    return kExitUsage;
   }
   const std::string grammar_path = argv[1];
   const std::string out_base = argv[2];
@@ -54,7 +60,7 @@ int main(int argc, char **argv) {
         std::cerr << "  state " << c.state << " on '"
                   << g.symbols[c.terminal].name << "': " << c.kind << " ("
                   << c.detail << ")\n";
-      return 65;
+      return kExitDataError;
     }
 
     emit(g, states, tables, out_base, base_name(out_base) + ".hpp");

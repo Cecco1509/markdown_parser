@@ -242,7 +242,7 @@ private:
     // terminals (declaration order), then $end
     for (const std::string &t : term_order_)
       add_symbol(t, SymKind::Terminal, term_type_[t]);
-    g_.end_sym = add_symbol("$end", SymKind::Terminal, std::nullopt);
+    g_.end_sym = add_symbol(kEndSymbol, SymKind::Terminal, std::nullopt);
 
     // nonterminals (first-appearance order), then $accept
     for (const std::string &nt : nt_order_) {
@@ -250,7 +250,7 @@ private:
       if (auto it = nt_type_.find(nt); it != nt_type_.end()) ty = it->second;
       add_symbol(nt, SymKind::Nonterminal, ty);
     }
-    g_.aug_sym = add_symbol("$accept", SymKind::Nonterminal, std::nullopt);
+    g_.aug_sym = add_symbol(kAcceptSymbol, SymKind::Nonterminal, std::nullopt);
 
     if (!g_.ids.count(start_name_))
       fail("%start '" + start_name_ + "' is not a defined nonterminal");

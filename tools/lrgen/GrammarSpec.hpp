@@ -11,6 +11,11 @@
 
 namespace lrgen {
 
+// Reserved sentinel symbol names the generator adds during augmentation.
+// `kEndSymbol` is also matched by name in the emitter, so both sites must agree.
+inline constexpr const char *kEndSymbol = "$end";       // end-of-input terminal
+inline constexpr const char *kAcceptSymbol = "$accept"; // augmented start rule
+
 enum class SymKind { Terminal, Nonterminal };
 
 struct Symbol {
