@@ -276,3 +276,59 @@ markdown_parser/
 ```
 
 See [`docs/index.md`](docs/index.md) for the complete design documentation.
+
+## AI usage: chat-to-commit map
+
+This project was built with AI assistance; the full prompt record is in [`prompts/`](prompts/) (indexed by [`prompts/README.md`](prompts/README.md)). Each chat file names the commits it produced, and the tables below map every conversation to that code.
+
+Every chat file lists, in its header, the commits it produced (**Related commits:**).
+The table below gathers that in one place, so a reader can go straight from a
+conversation to the code it resulted in. Some early conversations were learning or
+design only and produced no direct commit; separately, a number of bug-fix and
+refactor commits have no saved chat at all (they are listed in the report appendix,
+"Commits without a recorded chat").
+
+### Early design and learning (claude.ai)
+
+| Chat | File | Commits |
+| --- | --- | --- |
+| What is Markdown (.md) and whe | `prompts/web/01-what-is-markdown-md.md` | _none (research)_ |
+| Mermaid diagram handling in cmark parser | `prompts/web/02-mermaid-diagram-handling-in-cmark-parser.md` | `90eea37` |
+| Smart pointers in C++ | `prompts/web/03-smart-pointers-in-cpp.md` | `18303cc`, `9a057dd` |
+| C++ project structure and file conventions | `prompts/web/04-cpp-project-structure-and-file-conventions.md` | `834f683`, `25b78a8` |
+| Markdown parser architecture and component design | `prompts/web/05-markdown-parser-architecture-and-component-design.md` | `053d360`, `3e30935`, `6ae7eeb` |
+| Markdown to HTML and JSON specification | `prompts/web/06-markdown-to-html-and-json-specification.md` | `4dfd2cc`, `f42de5e` |
+| GitHub workflows and automated testing | `prompts/web/07-github-workflows-and-automated-testing.md` | `0e2b8a7`, `ceba43f` |
+| HTML rendering rules for list items | `prompts/web/08-html-rendering-rules-for-list-items.md` | `8722ae1`, `817995f`, `7722ba9` |
+| Deploying C++ parser to web | `prompts/web/09-deploying-cpp-parser-to-web.md` | `011b672`, `523342e` |
+| CommonMark block quote code parsing | `prompts/web/10-commonmark-block-quote-code-parsing.md` | `0e17dec`, `378f572`, `c8c27c8` |
+| Markdown blockquote indentation spacing | `prompts/web/11-markdown-blockquote-indentation-spacing.md` | `4670163`, `56081cb`, `8c345b6` |
+| Hosting a parser on GitHub pages | `prompts/web/12-hosting-a-parser-on-github-pages.md` | `dc0da1a`, `3f21252`, `d58bfb5` |
+| Mermaid block types | `prompts/web/13-mermaid-block-types.md` | `42f53a4`, `0209274` |
+
+### Development sessions (Claude Code)
+
+| Session | File | Commits |
+| --- | --- | --- |
+| Mermaid design debate — how (and where) to render | `prompts/01-mermaid-rendering-approach.md` | `0b014d7`, `90eea37` |
+| Fence handlers: visitor override, factory, Meyers singleton | `prompts/02-fence-handlers-factory-singleton.md` | `90eea37`, `4638baa` |
+| Project-wide namespace unification | `prompts/03-namespace-unification.md` | `466541d`, `1e25aa6` |
+| Templating parse() and defining the Renderer concept | `prompts/04-renderer-concept-and-templates.md` | `57b64a5`, `3ac6500` |
+| Restructuring include/ and src/ into directories | `prompts/05-directory-restructure.md` | `57b64a5`, `511f0f2`, `022af05` |
+| Pivot to Path B — native C++ Mermaid parsing | `prompts/06-mermaid-native-parsing-pivot.md` | `0e7421b`, `42f53a4`, `0209274` |
+| Flowchart grammar and the decision to generate a parser | `prompts/07-grammar-and-generator-design.md` | `42f53a4`, `0e7421b` |
+| LR(1)/LALR item sets and the lrgen generator | `prompts/08-lr1-generator-implementation.md` | `4ab3331` |
+| AST types, token adapter, and the lowering stage | `prompts/09-mermaid-ast-and-lowering.md` | `c4473cb` |
+| Golden-file verification against the official Mermaid library | `prompts/10-golden-verification-vs-mermaid.md` | `9dff979`, `106d944`, `89daa4f` |
+| Sugiyama layout: ranking, ordering, coordinates | `prompts/11-layout-sugiyama.md` | `c4473cb`, `ab77280` |
+| WASM integration, emscripten::val and text measurement | `prompts/12-wasm-integration-and-text-measurement.md` | `4714bd7`, `46e5652`, `7526636` |
+| SVG shapes, edge routing and layout debugging | `prompts/13-svg-shapes-and-layout-debugging.md` | `80baf5c`, `0829719`, `ab77280`, `08e87f9`, `bd9983e` |
+| Delivery review and test-folder restructure | `prompts/14-delivery-prep-and-test-structure.md` | `495e860` |
+| The --json flag and aligning the AST with mdast | `prompts/15-json-output-and-mdast-alignment.md` | `4dfd2cc`, `5228dc0`, `f42de5e` |
+| Link reference definitions as first-class nodes | `prompts/16-link-definitions-and-references.md` | `0166741`, `6d31019` |
+| Who normalizes: parser or renderer? | `prompts/17-normalization-parser-vs-renderer.md` | `f2e0cf3`, `60c84d7` |
+| Shared test reporting, README and docs rewrite | `prompts/18-test-suite-refactor-and-docs.md` | `c189134`, `31caff8`, `0b67771` |
+| Is a leak possible? Ownership audit of the node tree | `prompts/19-memory-ownership-and-leak-investigation.md` | `0b67771` |
+| Profiling and fixing the O(n^2) bracket/label path | `prompts/20-quadratic-bracket-path.md` | `8c21e84` |
+| Recursive destruction, nesting caps and stack size | `prompts/21-recursive-destructor-and-nesting-caps.md` | `8c21e84` |
+
